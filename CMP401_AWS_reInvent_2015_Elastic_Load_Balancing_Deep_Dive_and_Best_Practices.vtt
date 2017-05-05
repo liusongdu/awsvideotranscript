@@ -1,0 +1,2602 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:12.000
+okay good afternoon so my name is calm
+I'm principal engineer on elastic load
+balancing which is a service hopefully
+
+2
+00:00:12.000 --> 00:00:18.000
+every year everyone here is probably at
+least a little bit familiar with so
+actually joined it'll be about a year
+
+3
+00:00:18.000 --> 00:00:27.000
+ago I work today list quite a bit longer
+than that but I joined he'll be about a
+year ago spent the last year not just
+
+4
+00:00:27.000 --> 00:00:35.000
+working on lb but also meeting a lot of
+our customers and figuring out how they
+use the lb what we can do better for
+
+5
+00:00:35.000 --> 00:00:42.000
+them all those kinds of things and
+pretty much everything that's in this
+presentation comes from that comes from
+
+6
+00:00:42.000 --> 00:00:51.000
+best practices that I've learned from
+customers how their how they're using
+ELB the patterns they're applying and
+
+7
+00:00:51.000 --> 00:00:58.000
+how to building it into their businesses
+us we're going to cover that and then
+we're going to cover some some deep
+
+8
+00:00:58.000 --> 00:01:07.000
+dives into parts of the internal
+architecture of ELB how we do some
+specific security things how we manage
+
+9
+00:01:07.000 --> 00:01:14.000
+our availability things like that so
+hopefully there'll be a lot to learn
+from just a very very quick primer on
+
+10
+00:01:14.000 --> 00:01:25.000
+elastic load balancer so we you create
+an elastic load balancer has listeners
+they listen on a tcp/ip port pair and
+
+11
+00:01:25.000 --> 00:01:34.000
+they take traffic ordinarily will
+terminate ssl as well for customers
+that's pretty popular where will do will
+
+12
+00:01:34.000 --> 00:01:42.000
+do I manage the encryption and then you
+register instances or auto scaling
+groups behind the load balancer and we
+
+13
+00:01:42.000 --> 00:01:48.000
+direct traffic to it right so that's elb
+at the very very high level but we're
+going to get into it a lot more detail
+
+14
+00:01:48.000 --> 00:01:59.000
+than that I'm we're going to cover a
+tree do it in three sections first is
+going to be security so how ALB provides
+
+15
+00:01:59.000 --> 00:02:07.000
+a managed security for the applications
+that are behind it and some of how we
+implement our own security features the
+
+16
+00:02:07.000 --> 00:02:18.000
+second thing we're going to cover is
+scalability right how elb helps
+you scale for your numbers of requests
+
+17
+00:02:18.000 --> 00:02:23.000
+whether it's very small number is a very
+large numbers whether it's low bandwidth
+are very high bandwidth and finally
+
+18
+00:02:23.000 --> 00:02:31.000
+we're going to cover availability how
+will be integrates into keeping keeping
+your installation online all the time ok
+
+19
+00:02:31.000 --> 00:02:42.000
+so we'll start with security so I want
+to emphasize that everything I'm going
+to cover here in the Security section is
+
+20
+00:02:42.000 --> 00:02:52.000
+true independent of where they use
+elastic load balancer as a loud bouncer
+right so I'll get a giving an example I
+
+21
+00:02:52.000 --> 00:03:03.000
+run my own personal just toy instance
+and website on ec2 I have a t2 that
+micro because I don't I can't justify
+
+22
+00:03:03.000 --> 00:03:12.000
+spending any more money than that on my
+own toey project I was just got some
+very old blogs and things that I just
+
+23
+00:03:12.000 --> 00:03:19.000
+want to keep online but it's not
+availability critical or anything like
+that but just from my own can a peace of
+
+24
+00:03:19.000 --> 00:03:28.000
+mind the ease of use I actually run that
+even though it's one instance behind an
+elastic load balancer and there's now
+
+25
+00:03:28.000 --> 00:03:33.000
+partly that's because i work on elb and
+i want to be able to use in a day-to-day
+basis and stay very familiar with how it
+
+26
+00:03:33.000 --> 00:03:40.000
+works but it's also partially because
+it's doing things for me like ssl that I
+no longer have to worry about on the
+
+27
+00:03:40.000 --> 00:03:49.000
+back end and helps protect me from from
+various threats so one best practice
+when it comes to security stuff is is to
+
+28
+00:03:49.000 --> 00:03:56.000
+think about your trap model right water
+what are the things we're defending
+against and there's some specific things
+
+29
+00:03:56.000 --> 00:04:07.000
+that having that elb helps us with here
+the the tree of highlighted are
+defending against weaknesses and
+
+30
+00:04:07.000 --> 00:04:14.000
+cryptographic protocols so we'll go into
+that software vulnerabilities so just
+vulnerability in the software that you
+
+31
+00:04:14.000 --> 00:04:20.000
+might be running behind the knee lb
+explain a little little bit how we help
+with that and and things like account
+
+32
+00:04:20.000 --> 00:04:26.000
+disclosure such as simple things like
+passwords and so on get lost right and I
+might it might seem
+
+33
+00:04:26.000 --> 00:04:31.000
+strange and unfamiliar that he can help
+with those things but what I find out
+from talking to customers is that it's
+
+34
+00:04:31.000 --> 00:04:39.000
+actually a really really common a common
+reason why people are using a lb
+surprise me so I thought it was worth
+
+35
+00:04:39.000 --> 00:04:51.000
+going into here so the first of those is
+probably our most popular feature and
+and thing that we've seen the most
+
+36
+00:04:51.000 --> 00:04:59.000
+activity on over the last 18 months in
+particular which is SSL and defending
+and scripted graphic vulnerabilities so
+
+37
+00:04:59.000 --> 00:05:09.000
+the last 18 months have seen a lot of
+new research and progress in the
+analysis of encryption modes and
+
+38
+00:05:09.000 --> 00:05:17.000
+security properties various protocols
+which is great that's a really positive
+development the people are really
+
+39
+00:05:17.000 --> 00:05:24.000
+scrutinizing these things and finding
+every weakness that's there so they can
+be improved but it also means we've had
+
+40
+00:05:24.000 --> 00:05:34.000
+to turn around and respond very quickly
+to each of those as they're found so by
+terminating ssl on the EOB we manage all
+
+41
+00:05:34.000 --> 00:05:41.000
+that right so some examples of things
+that we've done there is when the poodle
+vulnerability came out which essentially
+
+42
+00:05:41.000 --> 00:05:48.000
+said that sslv3 is no longer secure so
+that came out of november last year the
+the very same day the paper was released
+
+43
+00:05:48.000 --> 00:05:57.000
+and made public we had a new lb security
+policy to disable sslv3 and that was our
+new default we created a new elb that
+
+44
+00:05:57.000 --> 00:06:04.000
+day it would no longer have sslv3 I mean
+also encouraged all of our customers to
+take their existing lbs and migrate from
+
+45
+00:06:04.000 --> 00:06:10.000
+them to that policy it's very easy to do
+you can do it in the console very
+quickly or with our API we saw a very
+
+46
+00:06:10.000 --> 00:06:18.000
+quick adoption with that in when a day
+or two sixty-two percent of REO bees who
+converted to that new security policy
+
+47
+00:06:18.000 --> 00:06:28.000
+within a month it was in the high 90s so
+we saw great adoption there we also saw
+earlier this year the the log jam
+
+48
+00:06:28.000 --> 00:06:37.000
+vulnerability was disclosed which was
+just improvements in how diffie-hellman
+encryption can be attacked and
+
+49
+00:06:37.000 --> 00:06:43.000
+and it was disclosed that you know
+certain key sizes and sewn on wanelo
+were no longer secure and so we took it
+
+50
+00:06:43.000 --> 00:06:50.000
+took a very close look at that again the
+same day it was released we actually had
+new security policies available they're
+
+51
+00:06:50.000 --> 00:07:00.000
+just completely disabled diffie-hellman
+encryption on your e lbs that's okay
+diffie-hellman encryption plays a role
+
+52
+00:07:00.000 --> 00:07:05.000
+in mus court called perfect forward
+secrecy I'll talk about that in a few
+slides but there's actually a much more
+
+53
+00:07:05.000 --> 00:07:11.000
+modern alternative available based on
+elliptic curves and so we felt that the
+most pragmatic thing to do was just turn
+
+54
+00:07:11.000 --> 00:07:18.000
+off turn off diffie-hellman we released
+that policy that same day and again we
+saw a lot of people upgrading very
+
+55
+00:07:18.000 --> 00:07:27.000
+quickly when when the harp lead software
+vulnerability was disclosed against
+openssl again on the same day we had
+
+56
+00:07:27.000 --> 00:07:39.000
+upgraded every ELB without downtime
+which is a pretty neat and it not quite
+a clear you know day on which the rc4
+
+57
+00:07:39.000 --> 00:07:46.000
+encryption algorithm was just simply
+declared insecure it's more a thing that
+kind of gradually became consensus over
+
+58
+00:07:46.000 --> 00:07:53.000
+a period of months and years we had we
+have removed the rc4 encryption
+algorithm from our default security
+
+59
+00:07:53.000 --> 00:08:01.000
+policies quite quite far in advance of
+the coming out of things like the
+ratings tools that give you an SSL
+
+60
+00:08:01.000 --> 00:08:10.000
+rating or various compliance programs
+and so on so we're doing so we're
+keeping up-to-date with these policies
+
+61
+00:08:10.000 --> 00:08:19.000
+essentially so you don't have to write
+so when one of these things come out
+switch your policy to the latest thing
+
+62
+00:08:19.000 --> 00:08:26.000
+and you should be you should be in a
+pretty good position one of the reasons
+we're able to do this and respond so
+
+63
+00:08:26.000 --> 00:08:35.000
+quickly to these things is we've
+actually been working and released over
+the summer our own implementation of SSL
+
+64
+00:08:35.000 --> 00:08:44.000
+and TLS so it's called s twin which is
+short for signal to noise it's on github
+and go look at the code you can see how
+
+65
+00:08:44.000 --> 00:08:50.000
+the project's doing it's written in
+about five times five thousand lines of
+car
+
+66
+00:08:50.000 --> 00:08:59.000
+world which compares to about 150,000
+lines of code to do the same
+functionality in openssl so we feel it's
+
+67
+00:08:59.000 --> 00:09:06.000
+it's it's probably in a much better
+position against security
+vulnerabilities and so on we're not
+
+68
+00:09:06.000 --> 00:09:12.000
+using this yet in ALB we're going to
+take a very conservative approach to
+migrating the service over to it we're
+
+69
+00:09:12.000 --> 00:09:18.000
+going to a lot of extensive security
+reviews we're working with a lot of
+people in the community to analyze it as
+
+70
+00:09:18.000 --> 00:09:25.000
+closely as possible but would be made
+will be migrating a SS is including lb
+to it but in the meantime it also means
+
+71
+00:09:25.000 --> 00:09:34.000
+we have a deep expertise in SSL and TLS
+we know it at the implementation level
+I'm involved in the community you know
+
+72
+00:09:34.000 --> 00:09:42.000
+we attend things like the SSL
+standardization meetings and so on and
+so when these papers come out we're
+
+73
+00:09:42.000 --> 00:09:51.000
+pretty well positioned to make judgments
+around what to do I'll explain our
+thinking process there a little right so
+
+74
+00:09:51.000 --> 00:09:58.000
+if you go to our console if you go to
+our API you'll see that we support these
+security policies and we also have
+
+75
+00:09:58.000 --> 00:10:06.000
+custom policies so security policies are
+just a pre-baked set of policies here's
+the ciphers we support our default is
+
+76
+00:10:06.000 --> 00:10:15.000
+always a set that we think is balances
+trade-offs between security and
+compatibility and a custom one you can
+
+77
+00:10:15.000 --> 00:10:20.000
+you can pick and choose whatever you
+like you can literally go through all of
+the various protocols that we support
+
+78
+00:10:20.000 --> 00:10:27.000
+and decide which ones you want and don't
+want and so as I said we're trying to
+manage balance trade-offs between
+
+79
+00:10:27.000 --> 00:10:38.000
+security and compatibility right if we
+literally boiled everything down to just
+the absolutely most secure you know most
+
+80
+00:10:38.000 --> 00:10:44.000
+cpu intensive encryption algorithm very
+very few clients would work with that
+right and and your sites and
+
+81
+00:10:44.000 --> 00:10:50.000
+installations just wouldn't work so that
+wouldn't be acceptable and then on the
+other hand if we just included
+
+82
+00:10:50.000 --> 00:10:56.000
+everything obviously there would be
+insecure protocols and mouths in there
+so what we do is we take the set that's
+
+83
+00:10:56.000 --> 00:11:04.000
+available which is quite a lot and we
+first pare it down to encryption
+algorithms that's our secure at all
+
+84
+00:11:04.000 --> 00:11:14.000
+so today we're in our default policies
+we support AES and three days encryption
+and then we always always always prefer
+
+85
+00:11:14.000 --> 00:11:20.000
+perfect forward secrecy so what that
+means is if that's an encryption mode
+where even if your certificate was
+
+86
+00:11:20.000 --> 00:11:27.000
+somehow compromised even if the private
+key leaked you know even if somebody
+lost it it was on a USB drive somewhere
+
+87
+00:11:27.000 --> 00:11:34.000
+or something somebody who got that key
+wouldn't be able to go back and decrypt
+any of your traffic that they had
+
+88
+00:11:34.000 --> 00:11:41.000
+previously collected right so it's a
+really really good mode to operate in so
+we always always prefer that and we see
+
+89
+00:11:41.000 --> 00:11:50.000
+you know today thanks to browsers which
+all have adopted this now we see if your
+if your clients are generally browsers
+
+90
+00:11:50.000 --> 00:11:59.000
+you know way into the 90s percent of
+traffic now uses perfect forward secrecy
+which is great after that we always
+
+91
+00:11:59.000 --> 00:12:08.000
+prefer AES the encryption at the aes
+encryption algorithm over three days
+which is the other one we support on a
+
+92
+00:12:08.000 --> 00:12:15.000
+default some of our policies still
+include or c4 not our default policy we
+wouldn't recommend using those policies
+
+93
+00:12:15.000 --> 00:12:22.000
+and next you need them for extreme
+backwards compatibility reasons but even
+in those cases we D prioritize orosi for
+
+94
+00:12:22.000 --> 00:12:29.000
+all the way down and then there's things
+called authentication modes which are
+just around making sure the traffic
+
+95
+00:12:29.000 --> 00:12:38.000
+can't be forged or tampered with on the
+on the wire and there's several
+different modes in these protocols we
+
+96
+00:12:38.000 --> 00:12:47.000
+use GCM which is a galois counter mode
+that's a preferred mode that's the the
+most modern most secure mode over cbc
+
+97
+00:12:47.000 --> 00:12:54.000
+and age mac so we always prefer those
+and then when we do is we take those
+sets ever proposed okay here's what we
+
+98
+00:12:54.000 --> 00:13:03.000
+think we should do right and we simulate
+what would happen with that set of
+cipher Suites against literally billions
+
+99
+00:13:03.000 --> 00:13:12.000
+of connections from real world clients
+that are hitting sites like amazon com
+right so we are we have systems and
+
+100
+00:13:12.000 --> 00:13:17.000
+measurement processes set up where we
+can take a look and we can say okay we
+want to take this size
+
+101
+00:13:17.000 --> 00:13:24.000
+her out is that going to be safe are we
+going to drop so much traffic that it's
+going to cause and availability issues
+
+102
+00:13:24.000 --> 00:13:30.000
+or is pretty much everything out there
+it already has the more modern things
+and it's going to be fine right so
+
+103
+00:13:30.000 --> 00:13:39.000
+that's a process some legacy clients can
+like cause trickiness there thankfully
+we don't see this a lot right if your if
+
+104
+00:13:39.000 --> 00:13:47.000
+your clients are mostly phones right or
+browsers everything's really up to date
+right we see a lot you know great
+
+105
+00:13:47.000 --> 00:13:57.000
+software update uptake rate with those
+but if your if your clients are you know
+embedded systems firmwares on
+
+106
+00:13:57.000 --> 00:14:04.000
+televisions things that were you know
+shipped six years ago and nobody thought
+to include an auto update mechanism then
+
+107
+00:14:04.000 --> 00:14:13.000
+it may still only support you know sslv3
+and so on so in those cases you can take
+a really close look and you can say well
+
+108
+00:14:13.000 --> 00:14:20.000
+the traffic i'm sending you know there's
+no credit card data there's no password
+data it's probably okay to still use
+
+109
+00:14:20.000 --> 00:14:31.000
+those protocols in those cases you can
+you can run on an old security policy if
+you really really choose to always
+
+110
+00:14:31.000 --> 00:14:40.000
+recommend our most recent which is 2015
+dash 0 5 so I want to talk a little bit
+about how you can go about making that
+
+111
+00:14:40.000 --> 00:14:50.000
+analysis if you are in one of those kind
+of corner cases so it's a long-standing
+feature ELB has which is access logs
+
+112
+00:14:50.000 --> 00:14:57.000
+right great feature it always recommend
+turning it on we'll we'll talk a little
+more about in detail later but
+
+113
+00:14:57.000 --> 00:15:06.000
+essentially we log every request that we
+see and with a bunch of parameters that
+we record for each one and we'll upload
+
+114
+00:15:06.000 --> 00:15:16.000
+it to s3 periodically right it's we have
+partner integration so you can take from
+s3 and feed it into our various partners
+
+115
+00:15:16.000 --> 00:15:23.000
+and they can provide you with nice ways
+to analyze that data and various gooeys
+and analytics and so on which is really
+
+116
+00:15:23.000 --> 00:15:31.000
+really cool but two weeks ago we
+released two new fields that we we now
+record
+
+117
+00:15:31.000 --> 00:15:39.000
+in the access logs which is we actually
+record this the ssl cipher suite that
+was negotiated by the client for this
+
+118
+00:15:39.000 --> 00:15:48.000
+request and the protocol version right
+so if in future you you're having to sit
+down and think you know I need to
+
+119
+00:15:48.000 --> 00:15:56.000
+disable say TLS one point out right
+because maybe the next pci certification
+requires me to well i want to i want to
+
+120
+00:15:56.000 --> 00:16:02.000
+make an informed decision about what
+impact that's going to have on my user
+base right am I going to drop an
+
+121
+00:16:02.000 --> 00:16:09.000
+unacceptable percentage of my clients
+and so you can now do that with the logs
+right you can you can look at the we
+
+122
+00:16:09.000 --> 00:16:15.000
+always prioritize things so that the
+leaf security protocols come last right
+that's that's what their prioritization
+
+123
+00:16:15.000 --> 00:16:23.000
+process achieves so you can look the
+logs and you can say well how many
+clients are still using TLS 1.2 even
+
+124
+00:16:23.000 --> 00:16:28.000
+though it's even though it's very last
+in the list right so you know if you
+turned it off they wouldn't be able to
+
+125
+00:16:28.000 --> 00:16:34.000
+connect anymore and you can do a you
+know request by request analysis you can
+look at the user agents and you can say
+
+126
+00:16:34.000 --> 00:16:40.000
+that's these clients I need to get them
+to upgrade or that's this customer of
+mine I need to talk to them and so you
+
+127
+00:16:40.000 --> 00:16:50.000
+can gauge the impact before it happens
+which is pretty neat so I actually did
+this exercise with a customer a few
+
+128
+00:16:50.000 --> 00:16:56.000
+months ago where we were we were turning
+our fastest lv3 and we were worried we
+were because they're our first kind of
+
+129
+00:16:56.000 --> 00:17:04.000
+pastor and I even Alice's showed that
+almost a percent 0.8 percent of traffic
+was still coming in over sslv3 and for
+
+130
+00:17:04.000 --> 00:17:13.000
+them 0.8 percent of traffic is a lot
+they didn't didn't want to just lose it
+and so we went through the logs there
+
+131
+00:17:13.000 --> 00:17:21.000
+they turned on access logs we went
+through those access loves with them one
+by one and we found that actually the
+
+132
+00:17:21.000 --> 00:17:31.000
+clients were web scrapers was nuisance
+robot traffic that had been just running
+on bots and so on for years and no one
+
+133
+00:17:31.000 --> 00:17:37.000
+was keeping them up to date and we were
+there actually pleased to block them
+they were became enthusiastic it's like
+
+134
+00:17:37.000 --> 00:17:43.000
+no no let's turn off sslv3 now we know
+we were always trying to find creative
+ways to keep the web scrapers away
+
+135
+00:17:43.000 --> 00:17:57.000
+so that was that was pretty interesting
+so access logs also form a part of how
+people are applying ELB as a form of
+
+136
+00:17:57.000 --> 00:18:09.000
+network compartmentalization and so
+witty lb you can you can spin up e lbs
+in V pcs vbc is a virtual private cloud
+
+137
+00:18:09.000 --> 00:18:16.000
+where you can have your own data center
+in the cloud and you can spin up
+publicly Obie's that have public IP
+
+138
+00:18:16.000 --> 00:18:24.000
+addresses that take internet traffic
+right those are your front and dl bees
+and we support private ones to where
+
+139
+00:18:24.000 --> 00:18:32.000
+they have internal IP addresses and we
+can bounce traffic from either of those
+two instances and so on but what we're
+
+140
+00:18:32.000 --> 00:18:43.000
+seeing is people setting up bo bees or
+their policies such that you know the
+public subnet can only be e lbs right so
+
+141
+00:18:43.000 --> 00:18:48.000
+that it's all front-end traffic
+everything that comes in from the
+Internet has to at least go through a
+
+142
+00:18:48.000 --> 00:19:00.000
+knee lb and the effect of that is that
+they have a certain form of governance
+or our firewalling on the traffic so l
+
+143
+00:19:00.000 --> 00:19:07.000
+bees are inbound only right inbound will
+take traffic from the internet we'll
+pass it on to the instances but there's
+
+144
+00:19:07.000 --> 00:19:13.000
+there's no way to go the other way so if
+all you can provision in your public
+subnet of ZL bees that gives you a layer
+
+145
+00:19:13.000 --> 00:19:20.000
+to layer of defense against things like
+data exfiltration or or just somebody
+spinning up in incidents in the public
+
+146
+00:19:20.000 --> 00:19:29.000
+subnet and now it has full internet
+access and so on but then they can also
+be set up with access logs enabled on
+
+147
+00:19:29.000 --> 00:19:37.000
+various other kinds of logging enabled
+to really scrutinize the traffic as it
+comes in it's a few things that it can
+
+148
+00:19:37.000 --> 00:19:43.000
+do right so the first is just regular
+VPC security group integration so you
+can set up security group rules on the
+
+149
+00:19:43.000 --> 00:19:52.000
+eol bees different ndl bees to say
+here's where i want traffic to be
+permitted from we this can all be locked
+
+150
+00:19:52.000 --> 00:20:01.000
+down using our identity and access
+management
+systems with roll accounts such that you
+
+151
+00:20:01.000 --> 00:20:08.000
+know you can blast or or provide a
+policy that says this particular role
+account and only this particular role
+
+152
+00:20:08.000 --> 00:20:17.000
+account can access the elb API can
+create a lbs in the public subnet
+nothing else can create public IPS in
+
+153
+00:20:17.000 --> 00:20:22.000
+the public subnet so therefore only the
+people with that role account which
+might be people in the security
+
+154
+00:20:22.000 --> 00:20:34.000
+department or somebody with a privilege
+level of access can can give that front
+end access can do things like load the
+
+155
+00:20:34.000 --> 00:20:40.000
+ssl certificate right so and they don't
+need to use a password right they can
+set it up with tokens and so on because
+
+156
+00:20:40.000 --> 00:20:47.000
+it's more security sensitive operation
+and so the effect of that straight away
+is that now anything that's happening in
+
+157
+00:20:47.000 --> 00:20:54.000
+your private sub Nancy it's a little
+easier to be more liberal about what
+people can spin up instances there and
+
+158
+00:20:54.000 --> 00:21:02.000
+get get their work done without having
+to risk you know exposing some new
+public endpoint there's some new ssl
+
+159
+00:21:02.000 --> 00:21:13.000
+certificate and so on if the account
+where to be compromised in some way this
+is very privileged account somehow if it
+
+160
+00:21:13.000 --> 00:21:18.000
+was using a password and password was
+simply lost and so on we do support
+cloud try logging so every action and
+
+161
+00:21:18.000 --> 00:21:25.000
+you'll be creating anyway you'll be and
+so on it shows up in the cloud trail log
+so you can be you can see what's going
+
+162
+00:21:25.000 --> 00:21:33.000
+on we have lbs own access logging which
+we just covered and and if you're really
+super interested you can also enable vb
+
+163
+00:21:33.000 --> 00:21:42.000
+z flour logging and see literally every
+packet that comes into the elb i'm like
+why it might be getting dropped if a
+
+164
+00:21:42.000 --> 00:21:49.000
+security group is dropping and so on and
+so the effect of all that right is that
+we're protecting against cryptographic
+
+165
+00:21:49.000 --> 00:21:56.000
+weaknesses using the mechanisms and
+policies the software vulnerabilities
+one is a little more interesting so
+
+166
+00:21:56.000 --> 00:22:09.000
+because it because everything is going
+through the elb and being access loved
+it and then being uploaded by us
+
+167
+00:22:09.000 --> 00:22:18.000
+2 2 s 3 if there is a software
+vulnerability in the code on your
+instance right so you know I'm just
+
+168
+00:22:18.000 --> 00:22:24.000
+running my blog on my instance and I'm
+not always keeping my blog software up
+to date because I just forgot to and
+
+169
+00:22:24.000 --> 00:22:32.000
+occasionally there's some vulnerability
+in there where you know they can the
+attacker can post a URL and they get
+
+170
+00:22:32.000 --> 00:22:38.000
+database access or system access and so
+on and they get onto my box and the
+first thing they'll do is delete the
+
+171
+00:22:38.000 --> 00:22:45.000
+logs that are on my box right they want
+to cover their own cover their own
+tracks well because the elb logged it
+
+172
+00:22:45.000 --> 00:22:52.000
+separately now we have a record actually
+here's where the attacker came in here's
+the request they made here's what their
+
+173
+00:22:52.000 --> 00:23:02.000
+IP address was and so on so makes it
+easier to defend things against and the
+campus tour sure we cover by iams it's
+
+174
+00:23:02.000 --> 00:23:13.000
+pretty straightforward so that's that
+security and I want to move on to
+scalability so fundamentally what I
+
+175
+00:23:13.000 --> 00:23:21.000
+think of scalability what I think it's
+about is is speed right it's about
+maintaining an acceptable level of
+
+176
+00:23:21.000 --> 00:23:34.000
+latency or smoothness of operation or
+consistency of operation towards end
+users as the load increases and so in
+
+177
+00:23:34.000 --> 00:23:47.000
+systems theory and in kind of the
+academic ways of modeling large systems
+we generally model load and systems and
+
+178
+00:23:47.000 --> 00:23:55.000
+servers and all those things using
+queueing theory right using queues and
+probably the most fundamental kind of
+
+179
+00:23:55.000 --> 00:24:04.000
+foundational theorem of queueing theory
+is littles law that's Li TT le I'm from
+ireland's and my T's don't come out all
+
+180
+00:24:04.000 --> 00:24:14.000
+the time but I'm what that says
+essentially is that in a long-running
+system or a system that's saturated
+
+181
+00:24:14.000 --> 00:24:23.000
+there's various technicalities the
+overall a number of
+operations in the system or people in
+
+182
+00:24:23.000 --> 00:24:33.000
+the system where we will call we would
+call load or capacity is just equal to
+the rate of arrival times the average
+
+183
+00:24:33.000 --> 00:24:40.000
+wait time right and we can flip those
+terms around because we're more
+interested in the wait time that's what
+
+184
+00:24:40.000 --> 00:24:47.000
+we're trying to optimize I put it in
+simpler terms all it's really saying is
+that if your system can be modeled like
+
+185
+00:24:47.000 --> 00:24:57.000
+a queue which these systems can be it
+we're saying that latency is is
+proportionate to the total load that
+
+186
+00:24:57.000 --> 00:25:06.000
+you're receiving / the troop what you
+can do right so the more throughput you
+can do the lower your Layton sees right
+
+187
+00:25:06.000 --> 00:25:19.000
+really straightforward really obvious
+when when when put like that and but not
+only our you know systems and servers
+
+188
+00:25:19.000 --> 00:25:29.000
+and instances model able as cues and elb
+is it sows model model able as a queue
+and you could break down a system
+
+189
+00:25:29.000 --> 00:25:35.000
+further and you could say inside a
+system that's several queues because
+each CPU has its own cue and it's this
+
+190
+00:25:35.000 --> 00:25:44.000
+very complicated recursive pattern but
+it still ultimately boils down to the
+faster your systems were responding the
+
+191
+00:25:44.000 --> 00:25:50.000
+more users they can do per second the
+lower your Layton sees will be the more
+consistent they will be really really
+
+192
+00:25:50.000 --> 00:25:58.000
+straightforward but we're going to see
+how we exploit that law in lo banh seem
+to kind of smooth over common issues so
+
+193
+00:25:58.000 --> 00:26:08.000
+there's three common patterns that kind
+of fight us here that make latency
+harder than it should be right really
+
+194
+00:26:08.000 --> 00:26:18.000
+really common in a lot of systems the
+first one I want to highlight is garbage
+collection right so this is a graph of a
+
+195
+00:26:18.000 --> 00:26:30.000
+typical memory usage on a system let's
+say a JVM or a ruby process or even a
+PHP process where it'll allocate memory
+
+196
+00:26:30.000 --> 00:26:35.000
+and it'll use more and more memory over
+time
+all these objects are being allocated as
+
+197
+00:26:35.000 --> 00:26:44.000
+by the code as it's executing and it's
+running whatever service or website it
+is you're providing and at some point it
+
+198
+00:26:44.000 --> 00:26:51.000
+reaches some magic limit and the system
+kicks in and decides to perform garbage
+collection and free up some of that
+
+199
+00:26:51.000 --> 00:26:59.000
+memory right and will typically see a
+pause and performance at that point
+right we've seen systems with heaps and
+
+200
+00:26:59.000 --> 00:27:07.000
+garbage collection parameters set so
+large that you know literally the memory
+can just a crew for gigs and gigs for
+
+201
+00:27:07.000 --> 00:27:13.000
+days and days and days and then finally
+garbage collection kicks in and there
+the system pause is literally four
+
+202
+00:27:13.000 --> 00:27:21.000
+minutes right not not even milliseconds
+but we really hard pauses so the system
+can be very very very interest to the
+
+203
+00:27:21.000 --> 00:27:28.000
+garbage collection pretty much all
+modern programming languages the code we
+use is written in our garbage collected
+
+204
+00:27:28.000 --> 00:27:37.000
+it's very convenient pattern for
+developers I mean I love to use it it's
+it's something a lot of research goes
+
+205
+00:27:37.000 --> 00:27:44.000
+into to tune garbage collection but we
+still see this property a lot right so
+this is fighting us write occasionally
+
+206
+00:27:44.000 --> 00:27:53.000
+systems will just pause and that
+obviously has an impact of latency the
+second thing we see is caching right so
+
+207
+00:27:53.000 --> 00:28:00.000
+caching is pretty pervasive in in modern
+systems architectures right we even have
+our own cashing services that we provide
+
+208
+00:28:00.000 --> 00:28:08.000
+and people use my caches are a great way
+to speed up most technical problems
+right there great great things but they
+
+209
+00:28:08.000 --> 00:28:14.000
+also lead to this variance in
+performance where you know everything's
+a cache hit cache hit cache hit cache
+
+210
+00:28:14.000 --> 00:28:20.000
+hit and then all of a sudden you get a
+cache miss because finally your cache
+entry expires and your latency goes
+
+211
+00:28:20.000 --> 00:28:26.000
+through the roof because now you're
+going to go do the work to generate that
+entry that was cached right maybe you
+
+212
+00:28:26.000 --> 00:28:35.000
+got a query a database or figure out
+some somewhere cloud or access disk when
+ordinarily wouldn't and so this is a
+
+213
+00:28:35.000 --> 00:28:41.000
+very similar looking graph to the
+previous one right you just have these
+long periods of everything being
+
+214
+00:28:41.000 --> 00:28:46.000
+relatively ok and low latency and then
+all of a sudden you've got a big spike
+and
+
+215
+00:28:46.000 --> 00:28:56.000
+hurt and then the third thing is just
+kind of the natural distribution of
+workload and response time in any given
+
+216
+00:28:56.000 --> 00:29:05.000
+system so in general pretty much any
+system I've measured it follows an
+exponential distribution where the most
+
+217
+00:29:05.000 --> 00:29:14.000
+requests are small right vast majority
+requests take small number of
+milliseconds but there's there are mixed
+
+218
+00:29:14.000 --> 00:29:23.000
+in there a long tail of larger workloads
+and all that's really going on is you
+know you've got a bunch of small
+
+219
+00:29:23.000 --> 00:29:31.000
+requests things like get / which just
+retrieves the homepage might just be a
+static page or a very simple front page
+
+220
+00:29:31.000 --> 00:29:38.000
+where all the objects are cached it's
+access so frequently that everything's
+hot and it's uh it's it's pretty quick
+
+221
+00:29:38.000 --> 00:29:44.000
+and responsive but then you might have
+another URL on the same system where you
+know here we're getting the monthly
+
+222
+00:29:44.000 --> 00:29:51.000
+report right maybe the monthly report
+needs to go query you know several
+million rows in a database somewhere and
+
+223
+00:29:51.000 --> 00:29:57.000
+do some kind of pivot joint on it and a
+lot of memory allocation and figure out
+what the report should look like for the
+
+224
+00:29:57.000 --> 00:30:03.000
+month and someone only calls it once a
+month so it's not worth optimizing all
+right it's not weird fixing it so that
+
+225
+00:30:03.000 --> 00:30:11.000
+it's much much faster but it ends up
+mixed in there right and so we got this
+property where you know a server the
+
+226
+00:30:11.000 --> 00:30:18.000
+reason we can model it as a queue is
+because really in in raw physics terms
+it can only do one thing at a time right
+
+227
+00:30:18.000 --> 00:30:24.000
+ultimately there's a CPU down there
+that's doing some work can only do one
+thing at a time and there's a scheduler
+
+228
+00:30:24.000 --> 00:30:32.000
+and cue managers and so on that are
+figuring out what it's a lab deal at any
+given time and so queues build up right
+
+229
+00:30:32.000 --> 00:30:39.000
+in the case of a server you've got a
+scheduling q you've also got an accept
+backlog of requests that are pending and
+
+230
+00:30:39.000 --> 00:30:45.000
+so on and things just have to wait on
+each other right so you can sometimes
+end up with small requests having to
+
+231
+00:30:45.000 --> 00:30:52.000
+wait on big request to finish and so
+when you do the math and you take this
+distribution which we looked at which is
+
+232
+00:30:52.000 --> 00:31:00.000
+just a plot of you know request size
+versus how come and they are
+by slow versus how come and I are you do
+
+233
+00:31:00.000 --> 00:31:06.000
+the math and you turn that into a
+probability distribution of like what's
+the average wait time for a request it
+
+234
+00:31:06.000 --> 00:31:16.000
+ends up looking like this right it's
+just kind of a pretty gentle curve and
+and says most requests don't have to
+
+235
+00:31:16.000 --> 00:31:21.000
+wait too long right they're probably
+small there's probably only some other
+small requests in front of them but
+
+236
+00:31:21.000 --> 00:31:26.000
+occasionally there'll be a big request
+in front of me and I got it and I gotta
+wait so if you just had one server one
+
+237
+00:31:26.000 --> 00:31:34.000
+big server that's what your load plot
+would look like right and you'll see you
+know you'll see reasonable average
+
+238
+00:31:34.000 --> 00:31:41.000
+response times they'll probably be
+reasonably reasonably close to the fast
+response times but your higher percent
+
+239
+00:31:41.000 --> 00:31:49.000
+our response times so say your 99th
+percentile will probably be quite high
+right so if you've got just one server
+
+240
+00:31:49.000 --> 00:31:59.000
+one paying managing a request to it and
+your average request time is say 10
+milliseconds your penis your p99 is
+
+241
+00:31:59.000 --> 00:32:06.000
+probably over 100 maybe even over a
+second wouldn't be unusual for this kind
+of plot ah so the first thing we can do
+
+242
+00:32:06.000 --> 00:32:15.000
+right with loud bouncing to fix this
+well increase capacity but we want to
+scale horizontally because we can't just
+
+243
+00:32:15.000 --> 00:32:27.000
+build infinitely bigger and bigger boxes
+so we we split the request across
+multiple house right and so here I these
+
+244
+00:32:27.000 --> 00:32:33.000
+it's it's kind of a weighted round-robin
+style low bouncing there's not nothing
+smart going on order then we're saying
+
+245
+00:32:33.000 --> 00:32:39.000
+okay we've got four instances I'm gonna
+take a request and it's got a one in
+four chance of going to any particular
+
+246
+00:32:39.000 --> 00:32:47.000
+server and we just kind of allocated
+there more or less at random okay I like
+to think about this like a supermarket
+
+247
+00:32:47.000 --> 00:32:54.000
+checkout right because you've got
+multiple checkouts and you pick one and
+you know well if you go to my
+
+248
+00:32:54.000 --> 00:32:59.000
+supermarket odds are there's someone
+with really big loud in front of you all
+the time and he's just gonna have to
+
+249
+00:32:59.000 --> 00:33:04.000
+wait on them to finish but even if you
+just do that right even if all you do is
+increase the number of instances and
+
+250
+00:33:04.000 --> 00:33:11.000
+split things at random it improves
+things dramatically so I curve i showed
+you that's that's the
+
+251
+00:33:11.000 --> 00:33:18.000
+the dotted orange one becomes the green
+one right everything pulls in a little
+which means your average goes down your
+
+252
+00:33:18.000 --> 00:33:28.000
+average response time gets much better
+but more importantly your p99 those that
+higher percentile of response times gets
+
+253
+00:33:28.000 --> 00:33:36.000
+dramatically better quickly and all
+we've done here is is done some simple
+weighted round-robin low bouncing so
+
+254
+00:33:36.000 --> 00:33:44.000
+this is actually the mode we operate in
+if you're using elb is a tcp low bouncer
+so if you if you terminate tcp on us tcp
+
+255
+00:33:44.000 --> 00:33:53.000
+directly on us you can enable SSL if you
+want that still works what's do still
+manage the SSL for you we will act as a
+
+256
+00:33:53.000 --> 00:34:00.000
+weighted round-robin low bouncer towards
+the back ends and this is the kind of
+improvement that you'll see right it's
+
+257
+00:34:00.000 --> 00:34:10.000
+pretty good and pretty dramatic but we
+can do better again right so if we try
+to line things up so that instead of
+
+258
+00:34:10.000 --> 00:34:17.000
+like the checkout queue it's more like
+the queue at a bank right where
+everybody lines up in one line and then
+
+259
+00:34:17.000 --> 00:34:27.000
+takes the next server available that's a
+more optimal strategy now key to success
+here right is that the thing doing the
+
+260
+00:34:27.000 --> 00:34:34.000
+dispatching which in our case is elb is
+not itself the bottleneck right if it
+was the ball neck this wouldn't work so
+
+261
+00:34:34.000 --> 00:34:42.000
+it has to be faster at processing things
+then the instances are now that's true
+in our case because you know you'll be
+
+262
+00:34:42.000 --> 00:34:49.000
+when we take a request and we go to
+direct and figure out where it should be
+we're not you know we're making a very
+
+263
+00:34:49.000 --> 00:34:54.000
+simple decision around here's where it
+should go next we can do that quite
+quickly we're not having to actually
+
+264
+00:34:54.000 --> 00:35:02.000
+generate a page right we're not having
+to actually you know query data access
+disks do all the complex work that goes
+
+265
+00:35:02.000 --> 00:35:09.000
+into rendering a page or an API response
+and so on it's pretty easy to see why
+routing requests can be much much faster
+
+266
+00:35:09.000 --> 00:35:20.000
+than actually handling requests which is
+which is why this works at all and what
+that does it improves things more
+
+267
+00:35:20.000 --> 00:35:26.000
+dramatically again right so the blue
+line here is
+what it looks like what what we call
+
+268
+00:35:26.000 --> 00:35:37.000
+least connections load-balancing that's
+just an industry standard term so what
+what the load balancer does is it looks
+
+269
+00:35:37.000 --> 00:35:44.000
+at all of the instances and says okay
+well which instance has the least
+outstanding requests against it at the
+
+270
+00:35:44.000 --> 00:35:52.000
+moment so we're counting requests to
+each back-end right to each instance and
+you know if three of them have ten and
+
+271
+00:35:52.000 --> 00:35:57.000
+one of them have eight one of them has
+eight the next request will go to the
+one that has eight right so we're
+
+272
+00:35:57.000 --> 00:36:04.000
+looking at the we're looking at the
+server that is the least loaded and that
+pulls everything into being this kind of
+
+273
+00:36:04.000 --> 00:36:14.000
+hockey stick and so this has an even
+more dramatic effect on p99 s it will it
+will typically bring the p90 down p99
+
+274
+00:36:14.000 --> 00:36:22.000
+down much much closer to the average
+because when you do get occasional
+outliers like that monthly report and so
+
+275
+00:36:22.000 --> 00:36:27.000
+on it'll pretty much go to one server
+and it might have that server for a
+while well that report is being
+
+276
+00:36:27.000 --> 00:36:33.000
+generated but it doesn't really impact
+the other requests because now the lower
+bounds are smart enough to know i'm not
+
+277
+00:36:33.000 --> 00:36:42.000
+gonna send anything to that to that guy
+he's too busy right which is a which is
+pretty good so this smooths out and make
+
+278
+00:36:42.000 --> 00:36:52.000
+things makes a lot of things much much
+better right it'll it'll kind of paper
+over garbage collection little paper
+
+279
+00:36:52.000 --> 00:37:01.000
+over cache misses a little paper over
+just differences in your workload it's
+great like that but just have one big
+
+280
+00:37:01.000 --> 00:37:10.000
+dangerous property right which is if you
+have a back-end or an instance that is
+not handling traffic correctly so let's
+
+281
+00:37:10.000 --> 00:37:17.000
+say it's returning five hundreds all the
+time doing something harmful but it's
+doing it very very quickly right we're
+
+282
+00:37:17.000 --> 00:37:24.000
+gonna send all the requests there right
+that's that's not a that's not a good
+thing right it's gonna it's going to
+
+283
+00:37:24.000 --> 00:37:31.000
+attract it's going to gravitate all
+those requests to it almost the very
+worst place for them so that's why it's
+
+284
+00:37:31.000 --> 00:37:37.000
+key as we'll see later to configure hell
+checks correctly so we actually know the
+healthiness of that instance
+
+285
+00:37:37.000 --> 00:37:44.000
+and would avoid sending it request even
+though it's the fastest and the lease
+loaded right so that's really important
+
+286
+00:37:44.000 --> 00:37:53.000
+takeaway none of this works as I said if
+he lb is itself the bottleneck right if
+the requests we're getting choked up on
+
+287
+00:37:53.000 --> 00:38:02.000
+elb itself this would fall apart so we
+we ourselves have to scale right we'll
+talk a little bit about how we do that
+
+288
+00:38:02.000 --> 00:38:16.000
+so two different ways that we scale our
+low bouncers today both pre-emptive and
+reactive so a pre-emptive love bouncing
+
+289
+00:38:16.000 --> 00:38:27.000
+is that if you register some instances
+behind your low bouncer either directly
+or true auto scaling groups will assume
+
+290
+00:38:27.000 --> 00:38:33.000
+you're adding those instances for a
+reason right we'll assume you're adding
+those instances because you're expecting
+
+291
+00:38:33.000 --> 00:38:40.000
+a workload you're going to be going to
+do something with them and we'll go
+ahead and preemptively scale the elb to
+
+292
+00:38:40.000 --> 00:38:48.000
+march right so we'll make the elb at
+least as large more likely twice as
+large as whatever you've scale to
+
+293
+00:38:48.000 --> 00:38:58.000
+because of our availability zone
+configurations and we'll do that very
+quickly generally within two minutes and
+
+294
+00:38:58.000 --> 00:39:05.000
+we'll keep it like that for at least 24
+hours so even if even if you don't send
+us any load even if nothing happens
+
+295
+00:39:05.000 --> 00:39:13.000
+we'll leave it that high for at least
+the next 24 hours after 24 hours we'll
+kind of slowly ramp down and go back to
+
+296
+00:39:13.000 --> 00:39:20.000
+our predictive model or reactive model
+and the way the reactive model works is
+you actually look at the load that's
+
+297
+00:39:20.000 --> 00:39:26.000
+coming in to the load balancer like how
+many requests you're getting how many
+packets per second you're getting how
+
+298
+00:39:26.000 --> 00:39:34.000
+many bytes per second all of these
+things in and out various parameters if
+you're using SSL we'll look at how much
+
+299
+00:39:34.000 --> 00:39:43.000
+CPU is being consumed by all the various
+SSL parameters and so on and we'll will
+scale the elb to to to match that we've
+
+300
+00:39:43.000 --> 00:39:51.000
+got pretty healthy safety margins on top
+of that we actually scale every elb so
+that we could lose an entire
+
+301
+00:39:51.000 --> 00:39:58.000
+availability zones worth of capacity at
+a moment's notice and still be fully
+scaled to respond to your load so
+
+302
+00:39:58.000 --> 00:40:05.000
+there's quite a bit of a safety margin
+in there and this is something we've
+done a lot of work on just improving
+
+303
+00:40:05.000 --> 00:40:15.000
+steadily and steadily over the last two
+years to the point now where the system
+scales so rapidly that we've seen people
+
+304
+00:40:15.000 --> 00:40:23.000
+handling the large super bowl style
+events and you know everybody hitting us
+at once advertisement links and so on
+
+305
+00:40:23.000 --> 00:40:32.000
+without needing to do anything special
+the system will just scale to match it
+it's it's it's pretty neat to see you
+
+306
+00:40:32.000 --> 00:40:43.000
+can also use ELB to help scale your own
+instances right we we provide 13 try
+blocks matrix with every elastic load
+
+307
+00:40:43.000 --> 00:40:51.000
+balancer i'll talk about them in a while
+but all of those can be used to trigger
+auto scaling as well so if if your load
+
+308
+00:40:51.000 --> 00:40:58.000
+can be scaled on a parameter that
+corresponds to one of those metrics so
+really common one is just requests right
+
+309
+00:40:58.000 --> 00:41:05.000
+or bytes rather than having to build on
+metric yourself or do any kind of
+aggregation you just use the metric that
+
+310
+00:41:05.000 --> 00:41:11.000
+comes from elb you can say well scale my
+auto auto scaling group based on what
+the elb in front of it is seeing which
+
+311
+00:41:11.000 --> 00:41:22.000
+is which is pretty neat it's a it is
+important to choose the right metrics
+right you need insight into your own
+
+312
+00:41:22.000 --> 00:41:29.000
+workload if you if you're very data
+heavy right then maybe bytes per second
+is more appropriate than requests per
+
+313
+00:41:29.000 --> 00:41:35.000
+second on the other hand if you very CPU
+intensive and you've got a lot of work
+per request but they're not necessarily
+
+314
+00:41:35.000 --> 00:41:42.000
+large then requested a way to go and you
+got to make that decision based on your
+own workload and what you think works
+
+315
+00:41:42.000 --> 00:41:52.000
+best in your environment the as you
+mentioned is 13 cloud web metrics
+there's things like I just mentioned
+
+316
+00:41:52.000 --> 00:41:59.000
+like requests and bites there's also
+ones around the health of the load
+balancer itself how we're doing in terms
+
+317
+00:41:59.000 --> 00:42:06.000
+of response times and so on everything's
+provided a one-minute granularity
+so they're pretty live pretty up today
+
+318
+00:42:06.000 --> 00:42:17.000
+help respond to things in real time I
+think configure alarms on everything if
+you like to someone that's particularly
+
+319
+00:42:17.000 --> 00:42:27.000
+interesting is the healthy host count
+metric so that actually exposes our view
+of your instance help right so you got
+
+320
+00:42:27.000 --> 00:42:33.000
+instances behind the load balancer hope
+you've got health checks configured
+we're help checking them all the time
+
+321
+00:42:33.000 --> 00:42:41.000
+this metric tells you okay well we're
+currently seeing seven of your your
+instances healthy out of tan say and you
+
+322
+00:42:41.000 --> 00:42:48.000
+can look at that on a zonal basis you
+can look at that on a you can look you
+can look at the IRA get to across the
+
+323
+00:42:48.000 --> 00:42:56.000
+load balancer it's pretty neat if you
+want to see how the performance of your
+sites doing you can look at our latency
+
+324
+00:42:56.000 --> 00:43:03.000
+metrics so here we measure a bunch of
+different time values we measure the
+time requests come into the elb and then
+
+325
+00:43:03.000 --> 00:43:11.000
+we send it to the instance with the
+request the time that the the instance
+take to respond and so on we provide you
+
+326
+00:43:11.000 --> 00:43:17.000
+with the min and Max and average and so
+on of all those numbers and you can get
+a sense for the overall responsiveness
+
+327
+00:43:17.000 --> 00:43:27.000
+of your site site at the moment and see
+how that's going if you want really
+super granular detail into individual
+
+328
+00:43:27.000 --> 00:43:41.000
+requests that's where access logs will
+come in cover that a bit we also expose
+search q and spillover metrics so the
+
+329
+00:43:41.000 --> 00:43:51.000
+search q is just an internal Q a buffer
+of requests that the elb will hold on to
+when your instances are refusing them
+
+330
+00:43:51.000 --> 00:43:58.000
+right so let's say you've got some
+instances in the low bouncer we send
+them some requests but then they run out
+
+331
+00:43:58.000 --> 00:44:05.000
+of their own capacity having quite auto
+scale yet so we don't have another
+instance we can send send traffic to
+
+332
+00:44:05.000 --> 00:44:13.000
+will actually just buffer up to a
+thousand of them just hold on to them
+for for a short while and then if an
+
+333
+00:44:13.000 --> 00:44:18.000
+instance does become available again
+will replay them
+and we'll we'll send them there and we
+
+334
+00:44:18.000 --> 00:44:28.000
+can recover spillover is when we can't
+even do that right when your instances
+are overwhelmed they're not keeping up
+
+335
+00:44:28.000 --> 00:44:36.000
+with the request r/a we've nowhere left
+to send traffic the search q fills then
+we spill over which essentially means we
+
+336
+00:44:36.000 --> 00:44:43.000
+start returning 50 trees on your behalf
+that's our last resort hopefully at that
+point your client might be able to do
+
+337
+00:44:43.000 --> 00:44:50.000
+something smart like maybe try an
+alternative site or do exponential
+back-off in case the client is
+
+338
+00:44:50.000 --> 00:44:57.000
+constantly trying and overloading the
+site or something like that but both of
+these metrics they're really useful to
+
+339
+00:44:57.000 --> 00:45:03.000
+look at they're generally assigned that
+your instances are under scaled and you
+don't need to put them on larger
+
+340
+00:45:03.000 --> 00:45:12.000
+instance types or auto scale to just
+more of them they're super useful to
+have great thing to configure alarms on
+
+341
+00:45:12.000 --> 00:45:23.000
+so access logs all right here's the
+secret key to all of these fields you'll
+find this in our documentation to but on
+
+342
+00:45:23.000 --> 00:45:30.000
+a per request level we're exposing
+pretty much everything that's in one of
+those 13 metrics and then cipher suite
+
+343
+00:45:30.000 --> 00:45:41.000
+and SSL protocol version which we which
+we just added and you can do some really
+neat stuff with these right something I
+
+344
+00:45:41.000 --> 00:45:47.000
+like to do with these is I will I'll
+sometimes just write simple scripts that
+go through the access logs and I'll find
+
+345
+00:45:47.000 --> 00:45:55.000
+you know what are the slowest requests
+like I'll just order them very simple
+awk shell script and say well here's my
+
+346
+00:45:55.000 --> 00:46:03.000
+you know top 10 bottom 10 depending on
+which way you want to view it worse
+requests what are they right now I'll
+
+347
+00:46:03.000 --> 00:46:10.000
+dig in and I'll go why is this request
+so slow and it's a great way to uncover
+little problems and systems a great way
+
+348
+00:46:10.000 --> 00:46:17.000
+to view the data another thing you use
+before you could replay requests right
+if you if you're trying to validate a
+
+349
+00:46:17.000 --> 00:46:24.000
+new stack or a new architecture you've
+got this great repository of you know
+requests real people generated that you
+
+350
+00:46:24.000 --> 00:46:33.000
+can try against the new stack and
+see how that goes as I mentioned earlier
+we upload these two s3 either once every
+
+351
+00:46:33.000 --> 00:46:40.000
+five minutes or once an hour whichever
+you prefer you can you can choose either
+way if you're worried about Ashley
+
+352
+00:46:40.000 --> 00:46:47.000
+storage costs you can also use a tree
+data life cycle policies and so on so
+they only keep however much data you're
+
+353
+00:46:47.000 --> 00:46:55.000
+comfortable with you know a day or two
+days or a year whatever whatever it is
+you he feels the right choice for you
+
+354
+00:46:55.000 --> 00:47:05.000
+from my own instance I've kept every log
+ever that's a pretty small number of
+requests so fine with that if you need
+
+355
+00:47:05.000 --> 00:47:17.000
+to scale beyond even a single region
+that is something we support so yell be
+has integration with Amazon route 53 a
+
+356
+00:47:17.000 --> 00:47:28.000
+dns service where if either for very
+availability critical operations or a
+very latency sensitive operations you
+
+357
+00:47:28.000 --> 00:47:34.000
+can use route 50 trees latency based
+routing or now geographic based routing
+to take you know different parts of the
+
+358
+00:47:34.000 --> 00:47:43.000
+world and send requests to different
+regions and have al bees bees in those
+regions handle them right it's pretty
+
+359
+00:47:43.000 --> 00:47:53.000
+neat all right so none of these matters
+right if we don't actually keep the
+website up if we don't if you don't keep
+
+360
+00:47:53.000 --> 00:48:06.000
+it up keep things going with you three
+plays are pretty important role there as
+we'll see but the first kind of big
+
+361
+00:48:06.000 --> 00:48:17.000
+availability van benefit sorry that I
+wanted to point out which is something
+that is so obvious it never occurred to
+
+362
+00:48:17.000 --> 00:48:26.000
+me until I started talking to customers
+about it is that having a low balance or
+in front of your instance means you can
+
+363
+00:48:26.000 --> 00:48:34.000
+do upgrades and replacements without
+downtime right so really surprised me
+the number of customers I spoke to just
+
+364
+00:48:34.000 --> 00:48:41.000
+totally all the one of the biggest
+reasons they use in ALB so that you know
+it used to be they would
+
+365
+00:48:41.000 --> 00:48:47.000
+their software or they would replace the
+stock they have to schedule it at two in
+the morning and you know there'd be a
+
+366
+00:48:47.000 --> 00:48:52.000
+10-minute interruption as one server
+went away and lurk aim back and they
+made some dns changes and all those
+
+367
+00:48:52.000 --> 00:48:59.000
+things and so on how we handle things a
+little different when you d register an
+EOB or sorry when you d register an
+
+368
+00:48:59.000 --> 00:49:07.000
+instance from a knee lb or when the
+health checks on that instance start
+failing we won't send any new traffic to
+
+369
+00:49:07.000 --> 00:49:14.000
+it but the old stuff stays going right
+if there any connections in flight to
+that instance will keep them alive so
+
+370
+00:49:14.000 --> 00:49:20.000
+you can just register a new instance
+it'll start getting traffic pretty much
+straight away you can watch traffic
+
+371
+00:49:20.000 --> 00:49:30.000
+drain on the old instance and when it's
+done it's done right no downtime pretty
+great way to keep availability this all
+
+372
+00:49:30.000 --> 00:49:40.000
+works partially because of hell checks
+right so how checks probably the most
+important part of getting the
+
+373
+00:49:40.000 --> 00:49:48.000
+availability configuration correct
+behind an EOB right so when you when you
+add instances the lb you can define a
+
+374
+00:49:48.000 --> 00:49:59.000
+haltech they can be as simple as can we
+connect to a TCP port or as complex as
+nope this is a full HTTPS request has to
+
+375
+00:49:59.000 --> 00:50:07.000
+get a 200 response to be considered
+healthy right and again these are
+something you've got to be diligent
+
+376
+00:50:07.000 --> 00:50:14.000
+about I'm smart about in terms of it
+matching your workload and what's
+appropriate for your site right so for
+
+377
+00:50:14.000 --> 00:50:21.000
+example if your application depends on
+say a database right then maybe your
+he'll check should check if the database
+
+378
+00:50:21.000 --> 00:50:29.000
+is a lot right and shouldn't be
+returning 200 if the database is having
+a problem because maybe it's better to
+
+379
+00:50:29.000 --> 00:50:35.000
+fail the hell check and have the logo
+elsewhere to a different instance that's
+using a different database and
+
+380
+00:50:35.000 --> 00:50:45.000
+everything can be everything can be
+better the the thing I like about how
+checks too is that they're they're kind
+
+381
+00:50:45.000 --> 00:50:54.000
+of always happening all the time in the
+data plane right so they're incredibly
+reliable with
+
+382
+00:50:54.000 --> 00:51:02.000
+really really really really reliable way
+of making sure that there's a problem it
+won't spread another thing that's worth
+
+383
+00:51:02.000 --> 00:51:10.000
+paying close attention to is their idle
+time outs so we let you configure the
+idle timeout default 60 seconds you can
+
+384
+00:51:10.000 --> 00:51:17.000
+set it raise it up to an hour and that's
+how long we will keep a connection alive
+even if there is no traffic on that
+
+385
+00:51:17.000 --> 00:51:30.000
+connection so this is useful if you're
+using keep-alive connections so if the
+if an instance response to us with a
+
+386
+00:51:30.000 --> 00:51:37.000
+connection keep-alive Heather says you
+know it's safe to reuse this connection
+which helps with latency this avoids all
+
+387
+00:51:37.000 --> 00:51:46.000
+those setup costs especially using SSL
+takes four round trips to establish a
+connection to the back end so there's a
+
+388
+00:51:46.000 --> 00:51:55.000
+time saver but you got to be careful
+with this value because idle time it's
+also kick in if you know if your system
+
+389
+00:51:55.000 --> 00:52:03.000
+just pauses or crashes and it's just in
+a hang state you want you want to kill
+any connections that are genuinely idol
+
+390
+00:52:03.000 --> 00:52:10.000
+right that there's really a problem with
+so you want this value to match whatever
+is appropriate for your site you also
+
+391
+00:52:10.000 --> 00:52:17.000
+want to think about like what's going to
+happen when clients retry right so if
+you've got one idle timeout in your
+
+392
+00:52:17.000 --> 00:52:24.000
+system the thing you know keep
+connections open for an hour but your
+client has an idle timeout that's set up
+
+393
+00:52:24.000 --> 00:52:31.000
+for like well just 60 seconds what's
+going to happen is the clients going to
+abandon it at 60 seconds but because
+
+394
+00:52:31.000 --> 00:52:37.000
+that's setting on the inside is still an
+hour you know we might keep that work
+darling even though there's no client
+
+395
+00:52:37.000 --> 00:52:47.000
+around to listen for it anymore excuse
+me so it always recommend setting up
+staggered idle time else they get
+
+396
+00:52:47.000 --> 00:52:56.000
+smaller and smaller the further you are
+from the client right to avoid that I've
+effect avoids cascading failures which
+
+397
+00:52:56.000 --> 00:53:06.000
+is which is pretty cool the other kind
+of leg of availability is using multiple
+availability zones so on elb we will
+
+398
+00:53:06.000 --> 00:53:12.000
+always always provision
+these multiple availability zones even
+if you're only using one yourself or
+
+399
+00:53:12.000 --> 00:53:19.000
+your own instances so when you create an
+e i'll be in a VPC you give us a subnet
+in each availability zone and that's
+
+400
+00:53:19.000 --> 00:53:28.000
+where we actually launched the elb we
+have route 53 sitting in front of our
+availability zones using DNS health
+
+401
+00:53:28.000 --> 00:53:35.000
+checks as a protection mechanism so if
+an availability zone where they have say
+a power outage and so on what's actually
+
+402
+00:53:35.000 --> 00:53:42.000
+happening is that the rule 53 health
+checks will kick in detect that and take
+it out of service without us having to
+
+403
+00:53:42.000 --> 00:53:51.000
+do anything right so when availabilities
+arm fails we're not going and making any
+changes or doing anything complicated at
+
+404
+00:53:51.000 --> 00:53:58.000
+all the DNS system is just saying stop
+returning stop returning those IP
+addresses please which is great that's
+
+405
+00:53:58.000 --> 00:54:04.000
+another example of the kind of constant
+work factor pattern in general that we
+see what he'll checks whether it's those
+
+406
+00:54:04.000 --> 00:54:11.000
+route 53 he'll checks or our health
+checks towards your instances where
+instead of a system where when things go
+
+407
+00:54:11.000 --> 00:54:17.000
+wrong we suddenly start making a bunch
+of API calls and generating a bunch of
+changes you know that may or may not
+
+408
+00:54:17.000 --> 00:54:23.000
+succeed in the heat of an event we have
+systems that just do the same amount of
+work all the time whether things are
+
+409
+00:54:23.000 --> 00:54:35.000
+healthy or on and healthy the as I said
+you need to register different subnets a
+subnet per zone in order for us to be
+
+410
+00:54:35.000 --> 00:54:43.000
+able to balance them this all comes with
+one slight challenge though which is
+because we're doing simple dns loud
+
+411
+00:54:43.000 --> 00:54:49.000
+bouncing in front of you'll be at the
+availability zone level we're using
+round robin load balancing effectively
+
+412
+00:54:49.000 --> 00:54:58.000
+there you can see imbalances in load
+between the availability zones so here
+for example we've got three availability
+
+413
+00:54:58.000 --> 00:55:05.000
+zones and the green ones getting more
+traffic than the other two the reason
+for that is there may be very few DNS
+
+414
+00:55:05.000 --> 00:55:14.000
+servers that are actually being queried
+and so one is sticky and one gets more
+goes to the green availability zone this
+
+415
+00:55:14.000 --> 00:55:20.000
+is because sorry this is generally not
+because DNS details are being honored
+it's generally just because there
+
+416
+00:55:20.000 --> 00:55:27.000
+sometimes like mobile networks in
+particular to just may only be three
+painters in play we do have a workaround
+
+417
+00:55:27.000 --> 00:55:33.000
+for this I'm not gonna go to it in
+detail included on the slide in case
+you're interested in it you can grab it
+
+418
+00:55:33.000 --> 00:55:40.000
+later but essentially uses wild cards
+and see names and it's a crazy
+embarrassing hack but does work to
+
+419
+00:55:40.000 --> 00:55:46.000
+essentially boost caches on mobile
+resolvers if you really really need to
+with a few people doing this on mobile
+
+420
+00:55:46.000 --> 00:55:54.000
+apps but while we generally recommend
+here is just enable cross on load
+balancing right so if you enable cross
+
+421
+00:55:54.000 --> 00:56:04.000
+hold up so not bouncing then our lb in
+availability zone d here for example can
+actually route two instances in the
+
+422
+00:56:04.000 --> 00:56:10.000
+other availability zone and so the load
+converges right we cross on loud
+bouncing enabled we see a more even
+
+423
+00:56:10.000 --> 00:56:18.000
+spread requests between the availability
+zone which is uh which is which is
+pretty neat we we effectively end up
+
+424
+00:56:18.000 --> 00:56:26.000
+absorbing that imbalance that comes out
+because of dns kashi which is pretty
+neat and then the very last thing i
+
+425
+00:56:26.000 --> 00:56:37.000
+wanted to cover is something we're
+seeing more and more off which is just
+elb devops so today we're already
+
+426
+00:56:37.000 --> 00:56:45.000
+tightly integrated with cloud formation
+and ops works if you use the elastic
+Beanstalk you can get a lbs that way
+
+427
+00:56:45.000 --> 00:56:53.000
+you'll be using us to container service
+or API gateway or even third party tools
+like Netflix is a scared and so on
+
+428
+00:56:53.000 --> 00:57:01.000
+there's a lot of automation and systems
+built around spinning up and managing
+your bees we're seeing a lot of people
+
+429
+00:57:01.000 --> 00:57:10.000
+do Bluegreen deployments using lb as
+their gateway as their latch mechanism
+of how to switch and lastly because all
+
+430
+00:57:10.000 --> 00:57:19.000
+of this can be done programmatically
+with with Clare trail logs and so on and
+roll back we're seeing more people
+
+431
+00:57:19.000 --> 00:57:24.000
+create whole stacks with a new Yale be
+at the top and their new flips and
+that's something we're building tighter
+
+432
+00:57:24.000 --> 00:57:30.000
+and tighter support for making sure that
+al bees are provisioned ever more
+quickly to support those work clothes
+
+433
+00:57:30.000 --> 00:57:37.000
+and that's the final section that's
+scalable
+so thank you all for coming hopefully
+you've learned some things about how la
+balancing works and some things that can
+be applied in your workloads

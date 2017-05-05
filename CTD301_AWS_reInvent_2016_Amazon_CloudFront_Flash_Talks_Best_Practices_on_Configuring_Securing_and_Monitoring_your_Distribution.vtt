@@ -1,0 +1,2470 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:06.000
+good morning everybody I'm very
+impressed with the turnout given the
+given the festivities last night so
+
+2
+00:00:06.000 --> 00:00:14.000
+thank you very much for we can I just
+let the feedback thank you okay thanks
+everybody for coming and we're going to
+
+3
+00:00:14.000 --> 00:00:21.000
+talk to you today about some best
+practices for configuring security and
+monitoring your Amazon CloudFront
+
+4
+00:00:21.000 --> 00:00:29.000
+distributions very privileged to be
+joined by a Cherie Wang Anton Raglan and
+efferent Fuentes who will be giving you
+
+5
+00:00:29.000 --> 00:00:36.000
+some of those details I'm going to start
+by giving you a little bit of context
+regarding how content how CloudFront
+
+6
+00:00:36.000 --> 00:00:42.000
+delivers content and some of the
+terminology that we'll use throughout
+the throughout the presentation and give
+
+7
+00:00:42.000 --> 00:00:47.000
+you a little bit of explanation about
+just have some of the some of our
+routing works sure we will talk to you
+
+8
+00:00:47.000 --> 00:00:55.000
+about configuring your cache on CloudFront
+Anton's going to discuss measuring
+your performance with with real user
+
+9
+00:00:55.000 --> 00:00:59.000
+monitoring and maybe you shouldn't be
+talking about rum this early in the
+morning but we're going to go for that
+
+10
+00:00:59.000 --> 00:01:09.000
+anyway and finally efrain will be
+talking about stopping malicious viewers
+with CloudFront and the AWS
+
+11
+00:01:09.000 --> 00:01:16.000
+so before we get too far into it I want to
+tell you a couple of terms that we use
+within within CloudFront and just what
+
+12
+00:01:16.000 --> 00:01:23.000
+they mean so we're talking about a
+viewer from the CloudFront perspective
+it's it's basically a it's we like to
+
+13
+00:01:23.000 --> 00:01:33.000
+think of it as a present person but
+ultimately it's a device generally on a
+on a consumer of viewer network of some
+
+14
+00:01:33.000 --> 00:01:40.000
+sort such as in the u.s. Comcast or ATT
+mobile so it could be a mobile device or
+a desktop some sort of
+
+15
+00:01:40.000 --> 00:01:47.000
+internet-connected device like a smart
+TV or an increasing number of IoT
+devices so that that viewer is kind of
+
+16
+00:01:47.000 --> 00:01:53.000
+the consumer and the end consumer of the
+content the idea is that is not content
+then going to some other thing and when
+
+17
+00:01:53.000 --> 00:02:00.000
+the contact is to that device is being
+rendered processed downloaded process
+you don't used what have you
+
+18
+00:02:00.000 --> 00:02:07.000
+our CloudFront pops is our network of 68 edge
+locations spread throughout the world
+located in data centers in major
+
+19
+00:02:07.000 --> 00:02:17.000
+metropolitan areas these differ from the
+AWS regions in that the whole point of a CDN of
+
+20
+00:02:17.000 --> 00:02:24.000
+a CloudFront pop is to be close to
+other networks and other viewers so by
+definition those pops need to be in
+
+21
+00:02:24.000 --> 00:02:30.000
+cities and in generally in high-rise
+buildings right next to where all sorts
+of other carriers have their equipments
+
+22
+00:02:30.000 --> 00:02:36.000
+we can connect to them and deliver
+content to your viewers as quickly as
+possible in physical terms they tend to
+
+23
+00:02:36.000 --> 00:02:43.000
+be several racks of servers and network
+equipment and they are the they are the
+actual endpoint that terminates that
+
+24
+00:02:43.000 --> 00:02:47.000
+viewer connection so when your viewers
+are connecting to CloudFront they are
+actually having that connection
+
+25
+00:02:47.000 --> 00:02:58.000
+terminated in one of those locations in
+the metropolitan area such as in Atlanta
+or San Francisco or Chicago so each of
+
+26
+00:02:58.000 --> 00:03:07.000
+these locations is more or less
+identical and the idea behind the CDN
+is that the location that you pick
+
+27
+00:03:07.000 --> 00:03:13.000
+is relevant from a performance
+standpoint but it's not relevant from a
+content standpoint so whichever location
+
+28
+00:03:13.000 --> 00:03:19.000
+you pick you want to pick the one that
+provides you with the best performance
+but they all look the same in terms of
+
+29
+00:03:19.000 --> 00:03:26.000
+the services and the content that they
+provide but that location selection is
+critical because from the viewer
+
+30
+00:03:26.000 --> 00:03:33.000
+perspective as I said minimizing the
+latency and maximizing the throughput is
+is imperative and that's a lot of the
+
+31
+00:03:33.000 --> 00:03:39.000
+work that we do at CloudFront and we
+have multiple teams dedicated just
+figuring out how to consistently get
+
+32
+00:03:39.000 --> 00:03:44.000
+that get that content delivered by the
+best pop for each individual viewer and
+we'll talk a bit about how we make those
+
+33
+00:03:44.000 --> 00:03:51.000
+decisions and why sometimes it seems
+like we make and the decision you
+wouldn't think would be intuitively
+
+34
+00:03:51.000 --> 00:03:58.000
+obvious from the clock front perspective
+obviously the customer experience is of
+paramount importance to us but in
+
+35
+00:03:58.000 --> 00:04:05.000
+addition to that availability
+is our second priority only to
+security which is for all of AWS always
+
+36
+00:04:05.000 --> 00:04:13.000
+our top priority but in the event that a
+location is unavailable we want to be
+able want to you know quick as quickly
+
+37
+00:04:13.000 --> 00:04:18.000
+make sure that viewers are not routed
+away from that location to another
+location in addition we're able to
+
+38
+00:04:18.000 --> 00:04:25.000
+manage capacity so you know in
+certain metropolitan areas such as New
+York I believe we have
+
+39
+00:04:25.000 --> 00:04:31.000
+four edge locations so being able to detect
+saying well this particular location in New York
+
+40
+00:04:31.000 --> 00:04:35.000
+might be might be busier so being able
+to move traffic between locations is
+critical in terms of managing our
+
+41
+00:04:35.000 --> 00:04:43.000
+capacity and maximizing that and that
+customer experience and finally location
+we'll talk a bit more about how location
+
+42
+00:04:43.000 --> 00:04:52.000
+factors in but the location is
+clearly important so we talked about
+routing and there's routing can mean
+
+43
+00:04:52.000 --> 00:04:57.000
+multiple things depending on your
+context if you're a network engineer
+routing generally means packet routing
+
+44
+00:04:57.000 --> 00:05:04.000
+packet routing I don't like to call it
+dumb but it's very simple it's designed
+to move huge volumes of traffic very
+
+45
+00:05:04.000 --> 00:05:13.000
+quickly and be able to make decisions at
+terabit speeds in a very small
+physical footprint so basically the only
+
+46
+00:05:13.000 --> 00:05:21.000
+thing it takes into account is a
+destination address so if this is our
+our viewer and this is CloudFront and
+
+47
+00:05:21.000 --> 00:05:27.000
+this is the CloudFront address that you
+were given and this is the blob known as
+the Internet the client is basically
+
+48
+00:05:27.000 --> 00:05:32.000
+saying I want to connect to to this
+address and the internet takes care of
+just routing routing it there there's no
+
+49
+00:05:32.000 --> 00:05:38.000
+notion of capacity management there's
+certainly manual actions that network
+engineers can take in some course
+
+50
+00:05:38.000 --> 00:05:44.000
+capacity management but generally
+speaking a link could be entirely
+congested and the network will just keep
+
+51
+00:05:44.000 --> 00:05:50.000
+on trying to cram packets down it
+because it doesn't have the context of
+the full path to be able to
+
+52
+00:05:50.000 --> 00:05:57.000
+intelligently manage that capacity
+that's just not the way the global
+routing algorithms work so but how do
+
+53
+00:05:57.000 --> 00:06:03.000
+you actually get this address
+because these these IP addresses they
+that we see them as
+
+54
+00:06:03.000 --> 00:06:10.000
+software developers and engineers but we
+never want to expose that to our viewers
+directly this is where we request
+
+55
+00:06:10.000 --> 00:06:15.000
+routing comes into place and this is
+again when we're talking
+amongst the CloudFront team because in
+
+56
+00:06:15.000 --> 00:06:20.000
+within Amazon the actual network
+engineering team is separate from the
+from the service team which has
+
+57
+00:06:20.000 --> 00:06:25.000
+CloudFront that manages the application on
+top of the network the vast majority of
+the time we're talking about routing its
+
+58
+00:06:25.000 --> 00:06:31.000
+request routing and in those cases we
+are able to do because of the fact that
+that happens at a higher layer we're
+
+59
+00:06:31.000 --> 00:06:37.000
+able to take into account the latency of
+the end-to-end path the throughput
+that's available the capacity of our of
+
+60
+00:06:37.000 --> 00:06:43.000
+our locations in those regions as well as the
+geography in the event that we don't have some of
+
+61
+00:06:43.000 --> 00:06:48.000
+those other metrics available it's
+generally done at the DNS layer or
+potentially higher
+
+62
+00:06:48.000 --> 00:06:56.000
+depending on the application so in
+practice what this looks like
+is you have a viewer and they will do a
+
+63
+00:06:56.000 --> 00:07:04.000
+DNS request now I've simplified the DNS
+lookup here but what happens is that
+the viewer will
+
+64
+00:07:04.000 --> 00:07:12.000
+ask for customer.com which will then go
+to their ISPs recursive name server that
+will then eventually contact the
+
+65
+00:07:12.000 --> 00:07:19.000
+CloudFront fleet of DNS servers that actually
+is part of our Route 53
+service we make heavy use of Route 53 as
+
+66
+00:07:19.000 --> 00:07:25.000
+part of CloudFront this server will
+decide based on some information we'll
+talk about in a minute which address
+
+67
+00:07:25.000 --> 00:07:31.000
+we're using that notional address of 1.1.1.1 which
+think it's passed back cached for a certain period
+
+68
+00:07:31.000 --> 00:07:37.000
+of time in this server give it to the
+viewer which then goes uses that same
+path that same well that work that
+
+69
+00:07:37.000 --> 00:07:43.000
+packet routing logic we talked about to
+actually get the content so first of all
+it figures out which address to contact
+
+70
+00:07:43.000 --> 00:07:50.000
+and then it uses the internet packet
+routing to actually get the content but
+here's where things can get can go a
+
+71
+00:07:50.000 --> 00:07:57.000
+little bit sideways sometimes so if we
+have our user in we're heavy user an
+example user in Chicago now both from a
+
+72
+00:07:57.000 --> 00:08:04.000
+geography perspective as well as a speed
+of light perspective and assuming that
+that there's a that in the normal case
+
+73
+00:08:04.000 --> 00:08:13.000
+what we would want a user in Chicago to
+be directed to one of our Chicago edge
+locations makes perfect sense but in
+
+74
+00:08:13.000 --> 00:08:19.000
+this case the viewer so we're talking about a viewer
+
+75
+00:08:19.000 --> 00:08:28.000
+here the viewer is their ISP DNS
+server is actually in San Francisco
+so what happens is the viewer asks
+
+76
+00:08:28.000 --> 00:08:35.000
+the ISPs DNS server for customer.com
+that request then goes to the Route 53
+infrastructure but the Route 53
+
+77
+00:08:35.000 --> 00:08:42.000
+infrastructure doesn't see the customers
+IP address we can't identify what that
+customer is what we see is the ISP's DNS
+
+78
+00:08:42.000 --> 00:08:48.000
+server so we say hey great we've got
+locations in the San Francisco area we
+said in the app we send the address of
+
+79
+00:08:48.000 --> 00:08:54.000
+one of our Palo Alto locations so that goes
+back the IP address goes back to the viewer
+
+80
+00:08:54.000 --> 00:08:58.000
+of the Palo Alto location and now this
+viewer in Chicago is getting a higher
+latency experience than they would
+
+81
+00:08:58.000 --> 00:09:06.000
+otherwise because they're talking to
+that edge location in Palo Alto instead
+of the one in Chicago so what happened
+
+82
+00:09:06.000 --> 00:09:14.000
+this is what we refer to within CloudFront
+as a divergent resolver so ideally
+and many ISPs do this but there are
+
+83
+00:09:14.000 --> 00:09:20.000
+there are situations where in certain
+networks and certain types of
+footprints you have a wide distribution
+
+84
+00:09:20.000 --> 00:09:30.000
+of viewers using a DNS server might be
+across multiple networks it might be
+across multiple geographies but it
+
+85
+00:09:30.000 --> 00:09:37.000
+results in this kind of sub-optimal routing
+a common example of this is the distributed
+
+86
+00:09:37.000 --> 00:09:43.000
+corporate network that might for example
+have a lot of their infrastructure in
+Seattle which might result
+
+87
+00:09:43.000 --> 00:09:48.000
+in all of their requests when they're in
+Vegas being served out of Seattle I
+don't know just random example anyway
+
+88
+00:09:48.000 --> 00:09:56.000
+what can be done so the obvious answer
+is to use a local resolver but given
+that many of you like we have you know
+
+89
+00:09:56.000 --> 00:10:01.000
+you know hundreds of thousands and
+millions of users getting each of them
+to change each of their connections may
+
+90
+00:10:01.000 --> 00:10:07.000
+not be practical it could be depends on
+your application that could be a
+practical application but another option
+
+91
+00:10:07.000 --> 00:10:18.000
+is to use a resolver the supports the EDNS0
+client-subnet extension area so
+this is an extension that was developed
+
+92
+00:10:18.000 --> 00:10:26.000
+Oh several years ago and
+the idea is that that it uses the EDNS
+extension protocol as part of DNS to
+
+93
+00:10:26.000 --> 00:10:37.000
+provide a portion of the actual
+client IP request the IP address of the
+subnet so the /24 subnet of the
+
+94
+00:10:37.000 --> 00:10:46.000
+viewer requesting the address no client
+side resolver and modifications are
+necessary this is purely an extension
+
+95
+00:10:46.000 --> 00:10:56.000
+that exists between the ISPs recursive
+resolver and the CloudFront Route 53
+authoritative servers some common open
+
+96
+00:10:56.000 --> 00:11:04.000
+resolvers such as the Google 8.8.8.8
+anycast resolver supported
+and so in those cases if you do have
+
+97
+00:11:04.000 --> 00:11:13.000
+customers who have that problem you
+can transfer them from that previous
+state of affairs to this one
+
+98
+00:11:13.000 --> 00:11:18.000
+so again you have to use the viewer in
+Chicago who's in the Chicago edge
+location and they hit the Google public
+
+99
+00:11:18.000 --> 00:11:24.000
+DNS now again that server may
+not be in mountain view because it's
+anycasted with not really talking about
+
+100
+00:11:24.000 --> 00:11:35.000
+anycast here but the point is that
+it's a DNS server that supports
+ECS so now that DNS query may come from
+
+101
+00:11:35.000 --> 00:11:44.000
+Mountain View, California, but it includes
+the subnet of the IP address of this
+user now we make a large number of
+
+102
+00:11:44.000 --> 00:11:50.000
+latency measurements on a very regular
+basis from a lot of properties including
+the Amazon retail properties where we
+
+103
+00:11:50.000 --> 00:11:59.000
+constantly measure of performance based
+on the traffic from viewer networks
+
+104
+00:11:59.000 --> 00:12:05.000
+so we have a huge corpus of data in
+terms of which pops perform which of our
+locations will perform best for
+
+105
+00:12:05.000 --> 00:12:13.000
+which viewers so based on that we are
+able to look up that subnet
+and say okay well this came from
+
+106
+00:12:13.000 --> 00:12:20.000
+Mountain View but actually we know this
+users in Chicago due to the duty ECS so
+then that bubbles all the way back it
+
+107
+00:12:20.000 --> 00:12:27.000
+sends back the address of the Chicago
+pop and now the user is having this nice
+low latency high throughput connection
+
+108
+00:12:27.000 --> 00:12:39.000
+to the local network to the local pop as opposed
+to going to California so fundamentally the key
+
+109
+00:12:39.000 --> 00:12:45.000
+takeaway here I'd like to leave you with
+as we get to Sheree talking about
+configuring your distribution is where
+
+110
+00:12:45.000 --> 00:12:51.000
+your router depends on a number of
+factors your network, your geographic
+location, as well as the the status of
+
+111
+00:12:51.000 --> 00:12:58.000
+our individual locations. DNS is an
+imperfect mechanism for this you know
+these kinds of problems you would say
+
+112
+00:12:58.000 --> 00:13:06.000
+why would you use DNS the ubiquity of
+DNS is being used being in literally
+every device out there is really
+
+113
+00:13:06.000 --> 00:13:13.000
+challenging you know
+a benefit to overcome so we put up with
+a lot of challenges because of
+
+114
+00:13:13.000 --> 00:13:20.000
+it but if you do have customers who are
+having who are having routing problems
+getting them to use ECS-enabled
+
+115
+00:13:20.000 --> 00:13:28.000
+resolvers will significantly
+improve their experience with that its
+head off to Sheree wrong the senior
+
+116
+00:13:28.000 --> 00:13:40.000
+engineering manager I'm cloud from
+textfree good morning guys the first
+question I have for you guys is why
+
+117
+00:13:40.000 --> 00:13:46.000
+would we cache our whole raison d'etre
+for this is what I call or what I'm
+gonna give you as two laws and the two
+
+118
+00:13:46.000 --> 00:13:52.000
+themes that will resonate throughout my
+presentation the first one is we want
+better performance for your viewers by
+
+119
+00:13:52.000 --> 00:14:00.000
+serving it from our edge locations and
+number two we want less load on your
+origin what should you expect most of
+
+120
+00:14:00.000 --> 00:14:06.000
+you have probably used CloudFront or
+CDN I wanted to show you how we cache
+what we do with your request and how you
+
+121
+00:14:06.000 --> 00:14:15.000
+can dictate what we cache and for how
+long then we'll talk about a couple of
+best practices first of all Alex was
+
+122
+00:14:15.000 --> 00:14:22.000
+mentioning we have 68 edge locations
+which I've kind of put only a couple of
+them on the bottom of the screen in
+
+123
+00:14:22.000 --> 00:14:28.000
+green all of these edge locations or
+points of presence or what we call pumps
+have to reach your origin for content
+
+124
+00:14:28.000 --> 00:14:36.000
+the blue layer here is something that is
+new and that we just announced this week
+we've created regional edge caches part
+
+125
+00:14:36.000 --> 00:14:40.000
+of the reason we did this is we are
+getting a lot of customer feedback
+around as your network is growing in
+
+126
+00:14:40.000 --> 00:14:46.000
+terms of the number of pops you have I'm
+getting more and more hits to my origin
+and that violates our law number two
+
+127
+00:14:46.000 --> 00:14:52.000
+that we just mentioned and so we created
+these regional edge caches where
+multiple edge locations will now go into
+
+128
+00:14:52.000 --> 00:14:59.000
+one of nine different regions which will
+then make requests to your origin so
+this means we're a request that are
+
+129
+00:14:59.000 --> 00:15:06.000
+coming in if it's the first time we've
+seen those requests and the object is
+not in cache they will then ask our
+
+130
+00:15:06.000 --> 00:15:14.000
+regional edge caches for your content
+which will then send one request to your
+origin her regional edge cache so in this
+
+131
+00:15:14.000 --> 00:15:20.000
+case instead of having eight different request
+to your origin you now just get those two
+
+132
+00:15:20.000 --> 00:15:25.000
+so what happens within each edge
+location well first of all whenever your
+request comes in we asked a simple
+
+133
+00:15:25.000 --> 00:15:31.000
+question is it in our cache if not we
+have to go and fetch it from your
+eegional edge cache and your origin if it
+
+134
+00:15:31.000 --> 00:15:39.000
+is in cache is it expired if not
+fantastic but if it is now we have to go
+and revalidate with your origin so we're
+
+135
+00:15:39.000 --> 00:15:44.000
+gonna send a conditional get to your
+origin and if modified since or if none
+match depending on if you're using last
+
+136
+00:15:44.000 --> 00:15:49.000
+modified or an e-tag your origin will
+respond with a 304 it hasn't been
+modified go ahead and serve it out of
+
+137
+00:15:49.000 --> 00:15:57.000
+cache or a 200 and here's the new object
+will cache it and then we'll respond to
+the viewer so let's talk about this
+
+138
+00:15:57.000 --> 00:16:04.000
+green box a little bit how do we
+actually cache or rather how do we
+generate a cache game we used your host
+
+139
+00:16:04.000 --> 00:16:12.000
+header your d123.cloudfriend.net or
+your cname example.com to create a
+canonical URL removal the query strings
+
+140
+00:16:12.000 --> 00:16:18.000
+are protocol and add the accept-encoding
+header which effectively filters down to
+gzip and identity for every single
+
+141
+00:16:18.000 --> 00:16:25.000
+object we create an individual cache
+identity key which is your canonical URL
+and all the very parameters that you
+
+142
+00:16:25.000 --> 00:16:32.000
+specified in your cache behavior we'll
+talk about that in a second every object
+we have hierarchical cache case so we
+
+143
+00:16:32.000 --> 00:16:38.000
+also have a base cache identity key which
+is a hash of your d123.cloudfriend.net
+concatenated with the accept encoding
+
+144
+00:16:38.000 --> 00:16:45.000
+header we do that so that when you asked
+us to invalidate objects we can easily
+go in and invalidate all the variants of
+
+145
+00:16:45.000 --> 00:16:57.000
+that object as well so how would you
+tell us what to cache and for how long
+you can use the expires headers this is
+
+146
+00:16:57.000 --> 00:17:03.000
+part of HTTP1.0 this does we do
+honor the expires header but it does
+come with a couple of different gotchas
+
+147
+00:17:03.000 --> 00:17:10.000
+it's a fixed point in time the accuracy
+relies on clock synchronization and if
+you're using an S3 origin it's typically
+
+148
+00:17:10.000 --> 00:17:17.000
+a value that was set by somebody when you first
+uploaded the object to S3 so you can
+
+149
+00:17:17.000 --> 00:17:24.000
+actually have a last modified date that
+is after and expires date and so those
+are a couple of different things that we
+
+150
+00:17:24.000 --> 00:17:30.000
+warned about and so it may not be
+something that you necessarily want to
+use more importantly most of the time
+
+151
+00:17:30.000 --> 00:17:36.000
+you want to invalidate are you
+have an object expire in a relative
+point of time from when the viewer
+
+152
+00:17:36.000 --> 00:17:43.000
+actually asked for it so that brings us
+to cache control you can set
+cache-control directives that give you
+
+153
+00:17:43.000 --> 00:17:49.000
+much more fine-grained control over exactly what
+is cached and for how long and
+
+154
+00:17:49.000 --> 00:17:57.000
+in which location so if you were to set max age
+which is in seconds so in this case
+three hundred or five minutes we would
+
+155
+00:17:57.000 --> 00:18:02.000
+catch that object for five minutes and
+also the browser can cache that object
+for five minutes but if you think about
+
+156
+00:18:02.000 --> 00:18:09.000
+max-age and s-maxage the s-maxage
+will apply to the shared edge cache or
+essentially CloudFront and max-age will
+
+157
+00:18:09.000 --> 00:18:14.000
+apply to your browser so you can
+actually have a browser cache for a
+different period of time than
+
+158
+00:18:14.000 --> 00:18:23.000
+CloudFront this is specifically useful for
+customers like display ad for display ad
+use cases so you may not want the
+
+159
+00:18:23.000 --> 00:18:28.000
+browser to actually cache your ad and
+because you want to actually serve from
+an education to be able to get a count
+
+160
+00:18:28.000 --> 00:18:35.000
+of exactly how many times it's been
+rendered so in this case you can set max-age
+to 0 and set the s-maxage to a large
+
+161
+00:18:35.000 --> 00:18:40.000
+period of time or in this case one day
+you can go to your clapeyron access logs
+to know how many times that object is
+
+162
+00:18:40.000 --> 00:18:48.000
+served but you don't have to hit your
+origin and so here are a couple of
+examples of what you could set cache
+
+163
+00:18:48.000 --> 00:18:53.000
+control headers to if you have static
+assets or media fragments that don't
+change very often you can set it to a
+
+164
+00:18:53.000 --> 00:18:59.000
+very long period of time or in this case
+one year you have live streaming
+manifests we're going to talk about
+
+165
+00:18:59.000 --> 00:19:04.000
+dynamic content in just a second but you
+can cache it and you can set that cache
+period to be something that's very low
+
+166
+00:19:04.000 --> 00:19:12.000
+from 02 seconds etc and lastly when
+you're thinking about login landing
+pages you can still catch those assets
+
+167
+00:19:12.000 --> 00:19:19.000
+and in this case what we've done is we
+said if you have a cookie set such that
+you have some user information or a
+
+168
+00:19:19.000 --> 00:19:26.000
+session ID don't cache it but otherwise
+catch it for 30 seconds the set cookie
+is also important because it tells cloud
+
+169
+00:19:26.000 --> 00:19:33.000
+front to strip the cookie header so that
+you don't run the risk of leaking
+session IDs across users dynamic content
+
+170
+00:19:33.000 --> 00:19:38.000
+most of you will thank dynamic content
+is really not catchable but it it is and
+we want to reduce the load to your
+
+171
+00:19:38.000 --> 00:19:45.000
+origin law number two in this case what
+you can do is you can set no cache or a
+max-age of 0 which essentially means
+
+172
+00:19:45.000 --> 00:19:49.000
+will cache but every single time we get a request
+for we will send that conditional get to
+
+173
+00:19:49.000 --> 00:19:55.000
+the origin is this the latest object if
+not please send us the latest one this
+will reduce the load to your origin or
+
+174
+00:19:55.000 --> 00:20:01.000
+the amount of times you have to transfer
+that data from your origin and if you do
+have content that you don't want stored
+
+175
+00:20:01.000 --> 00:20:07.000
+at all at a CloudFront edge location
+you can use no store or private the
+difference is private does allow your
+
+176
+00:20:07.000 --> 00:20:17.000
+browser to cache that so now that you've
+seen how we cache how you can control it
+how do you manage it in CloudFront you
+
+177
+00:20:17.000 --> 00:20:24.000
+can create cache behaviors cache behaviors
+are different cache configurations that
+are based off of the URL file path or in
+
+178
+00:20:24.000 --> 00:20:31.000
+this case I have a screenshot of those
+going through your request coming
+through your images file path and so
+
+179
+00:20:31.000 --> 00:20:40.000
+you'll see at the bottom hey we have
+some minimum TTLs maximum TTLs how does
+that work with Max agent s max age if
+
+180
+00:20:40.000 --> 00:20:46.000
+you set max-age x max age or expires
+in between our min and max will use it,
+if it goes outside of the range,
+
+181
+00:20:46.000 --> 00:20:51.000
+your cache behavior takes over, and if you
+don't specify message at all, we'll use
+the default TTL that you specified in
+
+182
+00:20:51.000 --> 00:21:01.000
+your cache behavior so a couple of
+different tips that we wanted to share
+with you the first one is we do cache
+
+183
+00:21:01.000 --> 00:21:08.000
+errors that are coming from your origin
+we get overworked and sometimes your
+origin will get overworked as well I
+
+184
+00:21:08.000 --> 00:21:15.000
+needs a break so what you can do is for any
+HTTP error that is coming back from an origin
+
+185
+00:21:15.000 --> 00:21:21.000
+you can set a custom error page you can change the
+response code and we can cache that for a
+certain period of time so in this case
+
+186
+00:21:21.000 --> 00:21:28.000
+if you're getting a 404 error page or a
+404 error from your HTTP from your
+origin it may mean that there's a bad
+
+187
+00:21:28.000 --> 00:21:34.000
+link up there and you don't necessarily
+want your origin to take that load so
+you can set you can have a custom error
+
+188
+00:21:34.000 --> 00:21:41.000
+page and you can set this we can cache
+that response for a longer period of
+time or in this case an hour but if
+
+189
+00:21:41.000 --> 00:21:48.000
+you're getting a 504 or gateway timeout
+from your origin you can set that
+caching time period to be much lower or
+
+190
+00:21:48.000 --> 00:21:55.000
+as much time as you need your origin to
+recover for example one second or 10
+seconds the default is five minutes and
+
+191
+00:21:55.000 --> 00:22:00.000
+what we've noticed is that for customers
+that have very real time
+data like media streaming they want to
+
+192
+00:22:00.000 --> 00:22:10.000
+set that TTL to be very low like one
+second. next, version your assets while
+CloudFront supports invalidating objects
+
+193
+00:22:10.000 --> 00:22:17.000
+it's much easier to roll forward and
+roll back any content that you have that
+you're getting errors with by just
+
+194
+00:22:17.000 --> 00:22:23.000
+versing the URLs that you have so in
+this case you can add a version ID or if
+you want to obfuscate it a little bit more
+
+195
+00:22:23.000 --> 00:22:30.000
+you can add a file size for an
+empty fivesome if you are using md5 sum
+you will want to enable query string
+
+196
+00:22:30.000 --> 00:22:39.000
+forward into your origin reminder when
+you're using your cache behaviors to
+minimize the forwarded values as much as
+
+197
+00:22:39.000 --> 00:22:46.000
+possible as you saw with how we created
+our cache keys any additional headers
+will actually get added to your cache
+
+198
+00:22:46.000 --> 00:22:52.000
+games so they will dramatically reduce
+your cacheability and if you forward
+all headers your origin we effectively
+
+199
+00:22:52.000 --> 00:23:02.000
+cache nothing it's a full proxy mode to
+your origin when in doubt check the logs
+enable CloudFront access logs and here
+
+200
+00:23:02.000 --> 00:23:07.000
+at kind of the standard Nginx and
+Apache logs with our request ideas in
+there you can even come up with your own
+
+201
+00:23:07.000 --> 00:23:11.000
+request at ease but for anything that
+you're doing with troubleshooting is
+always helpful to have the request ID
+
+202
+00:23:11.000 --> 00:23:17.000
+and if you do have to open a support
+case with us will usually try to know
+what your request IDs are just so that
+
+203
+00:23:17.000 --> 00:23:27.000
+we can help dive into exactly what your
+users are having problems with as well
+key takeaways remember just at your
+
+204
+00:23:27.000 --> 00:23:32.000
+Cache-Control headers that does give you
+a lot more control over what we cache
+and for how long you should also could
+
+205
+00:23:32.000 --> 00:23:40.000
+be creating cache behaviors you can cache
+dynamic content with a TTL of 0 and so
+that you can reduce the load to your
+
+206
+00:23:40.000 --> 00:23:47.000
+origin by having us just ascends
+conditional gets down forward only what
+you need version your assets and please
+
+207
+00:23:47.000 --> 00:23:58.000
+log your request studies and now I'll
+give support anton
+my name is Anton travelin I'm an
+
+208
+00:23:58.000 --> 00:24:03.000
+engineering manager with Claude front
+and I'm gonna talk to you about
+measuring application performance with
+
+209
+00:24:03.000 --> 00:24:10.000
+rum could you guys hear that first part
+all right so before we get into that
+let's just break down a few of the
+
+210
+00:24:10.000 --> 00:24:17.000
+things that we're going to discuss here
+so we're going to talk about synthetic
+monitoring as opposed to rum which is
+
+211
+00:24:17.000 --> 00:24:22.000
+real user monitoring and we're also
+going to talk about what that means in
+terms of baseline of your performance
+
+212
+00:24:22.000 --> 00:24:30.000
+and gaining situational insight so what
+is synthetic monitoring to start with I
+like to think of that as you
+
+213
+00:24:30.000 --> 00:24:38.000
+artificially generating traffic to
+either your origin or your CDN to
+determine what is the performance and
+
+214
+00:24:38.000 --> 00:24:44.000
+availability of your application so this
+is outside of the regular processes that
+your application that your users are
+
+215
+00:24:44.000 --> 00:24:51.000
+going through so what are some of the
+pros of this you can get consistent
+signal as to the health of your service
+
+216
+00:24:51.000 --> 00:24:58.000
+it's easy to set up generally this can
+be as simple as you know spinning up an
+EC2 instance in every region setting up
+
+217
+00:24:58.000 --> 00:25:05.000
+a curl on a cron job every five minutes
+that's detecting what the status code is
+of your application another application
+
+218
+00:25:05.000 --> 00:25:11.000
+of this can be baselining your
+performance so what you can do is use
+this information to save you know I'll
+
+219
+00:25:11.000 --> 00:25:18.000
+deploy to nine different regions and
+determine from Germany Japan from u.s.
+East here is the baseline rtts and
+
+220
+00:25:18.000 --> 00:25:23.000
+throughput that I name that I'm able to
+get from my application one thing to
+note here is that I'm going to be
+
+221
+00:25:23.000 --> 00:25:30.000
+talking about how you do this from a
+browser perspective generally but you
+can get this kind of information for
+
+222
+00:25:30.000 --> 00:25:35.000
+synthetic monitoring from something say
+an SDK or there are many other
+applications like that and I'm actually
+
+223
+00:25:35.000 --> 00:25:43.000
+pretty passionate about this and I'm
+happy to discuss more ways that you can
+use this after so that's the pros but
+
+224
+00:25:43.000 --> 00:25:49.000
+let's talk about the happy case and then
+the sad case when you're using synthetic
+monitoring so in this case that I'm
+
+225
+00:25:49.000 --> 00:25:55.000
+actually describing here we have you
+know we've set up nine different
+endpoints where we're doing the
+
+226
+00:25:55.000 --> 00:26:00.000
+synthetic monitoring from we're
+collating all of that data we're
+aggregating the availability of our
+
+227
+00:26:00.000 --> 00:26:07.000
+service now the problem with this is
+that your only testing what you know
+about
+
+228
+00:26:07.000 --> 00:26:13.000
+your application so you're going to go
+you there's no way for you to possibly
+enumerate every single way that a user
+
+229
+00:26:13.000 --> 00:26:19.000
+is going to use your application so when
+you're using synthetic monitoring you're
+really just getting a baseline for how
+
+230
+00:26:19.000 --> 00:26:25.000
+your application is performing how is
+generally available but in terms of
+network connectivity if you look at this
+
+231
+00:26:25.000 --> 00:26:34.000
+user here he's connecting to your
+application from save you know South
+America all of your endpoints around the
+
+232
+00:26:34.000 --> 00:26:41.000
+world are saying hey we're green four
+hundred percent available great
+performance but in actuality he has no
+
+233
+00:26:41.000 --> 00:26:45.000
+network connectivity to actually reach
+your endpoint now you're not going to
+detect this because you don't have
+
+234
+00:26:45.000 --> 00:26:52.000
+anything running from where your end
+user is actually reaching your
+application from so some of the cons
+
+235
+00:26:52.000 --> 00:26:57.000
+that you can see there are that the
+network path is going to be completely
+different from your synthetic monitors
+
+236
+00:26:57.000 --> 00:27:04.000
+than it is from your monitors that you
+might get from real user measurement not
+to mention that the special cases and
+
+237
+00:27:04.000 --> 00:27:09.000
+snowflakes that you might have in these
+scenarios are also going to be very
+different for every end user that's
+
+238
+00:27:09.000 --> 00:27:18.000
+using your application so how do you
+feel about rum I love it I love it in
+both many ways we use it at CloudFront
+
+239
+00:27:18.000 --> 00:27:24.000
+in fact we use synthetic monitoring a
+cloud friend as well but we really rely
+on real user measurements because to us
+
+240
+00:27:24.000 --> 00:27:31.000
+that's a real indication of how our
+customers are using and using cloud
+front and what the performance and
+
+241
+00:27:31.000 --> 00:27:38.000
+availability is that they're getting so
+how is this applied in this scenario I'm
+going to talk to Derek Lee about browser
+
+242
+00:27:38.000 --> 00:27:45.000
+performance and availability but there's
+many other applications so generally
+these are injected scripts into web
+
+243
+00:27:45.000 --> 00:27:53.000
+pages which are actually timing the
+resources that are being loaded for your
+application these are then sent back to
+
+244
+00:27:53.000 --> 00:27:59.000
+some collation service or some
+aggregation layer that's actually going
+to generate some stats for you to be
+
+245
+00:27:59.000 --> 00:28:03.000
+able to look at there's many run
+providers out there that can do this but
+there's also many ways that you can
+
+246
+00:28:03.000 --> 00:28:09.000
+actually do this yourself so what I'm
+going to do next is just talk a little
+bit about if you wanted to implement it
+
+247
+00:28:09.000 --> 00:28:14.000
+yourself what are some of the things
+that you could actually look at or find
+or resources you could look at to
+
+248
+00:28:14.000 --> 00:28:21.000
+actually be able to do this yourself so
+what can rum tell you what I have up
+here on the board
+
+249
+00:28:21.000 --> 00:28:26.000
+actually something that you can find in
+many different places it's just the
+resource timing API these are some of
+
+250
+00:28:26.000 --> 00:28:31.000
+the different events that you can
+trigger your your your monitoring based
+off of so I'm not going to go through
+
+251
+00:28:31.000 --> 00:28:40.000
+all of these but let's just cover a few
+important ones what you see there around
+app cache you see the reaction fetch
+
+252
+00:28:40.000 --> 00:28:46.000
+start so that's an event that actually
+is generated when it's looking in your
+application or your browser just
+
+253
+00:28:46.000 --> 00:28:53.000
+determine if it's actually in your cache
+and what's important about that is that
+this will not necessarily result in a
+
+254
+00:28:53.000 --> 00:29:00.000
+request to your origin as she was saying
+earlier you can actually set s max age
+and max age to determine what's actually
+
+255
+00:29:00.000 --> 00:29:09.000
+cast at the browser and what's cacheed at
+your CDN or in your origin so if it
+doesn't get past the fetch start you you
+
+256
+00:29:09.000 --> 00:29:17.000
+may see that reflected in the metrics
+that you're gathered another important
+one here is response start and response
+
+257
+00:29:17.000 --> 00:29:24.000
+end so responsible art is what people
+typically think of as time to first byte
+at a first bite latency which is
+
+258
+00:29:24.000 --> 00:29:29.000
+something that people index on to
+determine what the apps actual
+performance is of your application it's
+
+259
+00:29:29.000 --> 00:29:34.000
+an important one but it's not the only
+one what we like to look at as well when
+we're looking at our own metrics is
+
+260
+00:29:34.000 --> 00:29:39.000
+response to end because throughput
+ultimately is one of the biggest
+performance boosts that you're going to
+
+261
+00:29:39.000 --> 00:29:47.000
+get from a CDN and you dependent on your
+use case are going to find that
+important so let's actually dive into an
+
+262
+00:29:47.000 --> 00:29:53.000
+example i actually just pulled out some
+trivial examples of looking at websites
+and going into the network tab and let's
+
+263
+00:29:53.000 --> 00:30:00.000
+talk a little bit about what we're
+seeing here and what some of those
+optimizations can be so if you look at
+
+264
+00:30:00.000 --> 00:30:05.000
+the example that I have here this is
+just the connection portion of a request
+made from the browser this is for an
+
+265
+00:30:05.000 --> 00:30:13.000
+object on a random website so you'll see
+the queuing stalled and blocking time
+are generally the track time around
+
+266
+00:30:13.000 --> 00:30:21.000
+proxying requests or if you have head of
+line problems with HTTP 1.1 you may see
+that reflected here in this request that
+
+267
+00:30:21.000 --> 00:30:27.000
+you see here that's a really low time so
+you know not much to say here about
+optimizations there next we look at DNS
+
+268
+00:30:27.000 --> 00:30:33.000
+lookup once again really low one
+millisecond super super low that
+probably means that the user already had
+
+269
+00:30:33.000 --> 00:30:38.000
+that in there
+local resolver cache then we have the
+initial connection time and what's
+
+270
+00:30:38.000 --> 00:30:42.000
+interesting about this is that it
+actually makes up more than ninety
+percent of the entire connection of this
+
+271
+00:30:42.000 --> 00:30:50.000
+request and that includes SSL
+negotiation and the TCP connect time so
+that's really interesting because that's
+
+272
+00:30:50.000 --> 00:30:56.000
+a total of 74 milliseconds if you saw
+that in your stats as you're collecting
+your own measurements you have to look
+
+273
+00:30:56.000 --> 00:31:01.000
+at that and say okay this seems like an
+interesting place that we can actually
+optimize for which we'll talk about in a
+
+274
+00:31:01.000 --> 00:31:09.000
+minute so let's look at the whole
+request now what we have here is both
+the connection time and the request time
+
+275
+00:31:09.000 --> 00:31:15.000
+when you look at the request time below
+you'll see things like request sent
+which is the actual time it takes for
+
+276
+00:31:15.000 --> 00:31:23.000
+your browser to send that request to
+your origin then you have time to first
+byte time to first byte here is 41
+
+277
+00:31:23.000 --> 00:31:29.000
+milliseconds which makes sense because
+our connection time was you know it
+looks like the TCP connection time here
+
+278
+00:31:29.000 --> 00:31:35.000
+was around the same amount of time which
+means the first bite was actually served
+very quickly from the origin but most of
+
+279
+00:31:35.000 --> 00:31:42.000
+the time was spent in negotiating and
+rtts and lastly there you have content
+download which you can translate into
+
+280
+00:31:42.000 --> 00:31:49.000
+throughput but is essentially the time
+to last bite so we'll talk about some
+specific things that you might want to
+
+281
+00:31:49.000 --> 00:31:55.000
+change when you see things like this in
+a moment what other thing I wanted to
+talk about here just as an example this
+
+282
+00:31:55.000 --> 00:32:00.000
+is not necessarily an example of head of
+line blocking but this is the impact to
+your latency that you could see if you
+
+283
+00:32:00.000 --> 00:32:07.000
+had it so if your time to first byte for
+each one of the objects on your page for
+instance was 100 milliseconds like this
+
+284
+00:32:07.000 --> 00:32:14.000
+one was in HTTP 1.1 there's pipelining
+but it's not fully it's not fully
+multiplex so you're actually going to
+
+285
+00:32:14.000 --> 00:32:23.000
+end up potentially sequentially
+requesting objects and if each object is
+100 milliseconds of latency and across a
+
+286
+00:32:23.000 --> 00:32:33.000
+hundred objects on the page that adds up
+very very quickly so what can we do
+about things like this some of the key
+
+287
+00:32:33.000 --> 00:32:39.000
+takeaways that you can actually look at
+this is evaluate your user base in the
+first example we talked about how the
+
+288
+00:32:39.000 --> 00:32:47.000
+round-trip time and TCP negotiation time
+was actually 70 milliseconds so you need
+to understand where are you
+
+289
+00:32:47.000 --> 00:32:55.000
+users do you need an origin and us least
+one do you need an origin in Sydney do
+you need an origin in South America
+
+290
+00:32:55.000 --> 00:32:59.000
+these are all going to make a big
+difference when you're actually
+establishing connections and serving
+
+291
+00:32:59.000 --> 00:33:06.000
+content to users so that globally so
+it's really key that you understand
+where are your users the second thing is
+
+292
+00:33:06.000 --> 00:33:14.000
+know your data this is super important
+in the example that I showed it had a
+really really low content download time
+
+293
+00:33:14.000 --> 00:33:21.000
+which means it was a small object in
+this case given the rtts that were
+probably there so in another case you
+
+294
+00:33:21.000 --> 00:33:26.000
+could be looking at video downloads in
+which case your total TCP connection
+time is not going to impact the overall
+
+295
+00:33:26.000 --> 00:33:32.000
+video stream that much because
+ultimately you're going to be impacted
+by things like your congestion window
+
+296
+00:33:32.000 --> 00:33:37.000
+and the available throughput from the
+machines that they're connecting to so
+all of these things are going to show up
+
+297
+00:33:37.000 --> 00:33:43.000
+when you're looking at real user
+measurements and it's really important
+that you understand what that data is
+
+298
+00:33:43.000 --> 00:33:51.000
+where are they and how you use it so
+what how can you optimize some of this
+stuff use club front that's a starter
+
+299
+00:33:51.000 --> 00:33:57.000
+we're globally you can use us to
+actually optimize all of these things i
+I'm pretty sure I looked at all of the
+
+300
+00:33:57.000 --> 00:34:01.000
+requests that I looked at and they
+weren't using a CDM so that's super
+important that you look at that if
+
+301
+00:34:01.000 --> 00:34:09.000
+connection time and is really important
+to you as well as throughput bring your
+origin as close to your end users as
+
+302
+00:34:09.000 --> 00:34:15.000
+possible it's super important that when
+they're connecting that you have
+something close to your users I can't
+
+303
+00:34:15.000 --> 00:34:22.000
+say it enough that's why we have cdns in
+lieu of using a CDN make sure that you
+have your origin as close to where your
+
+304
+00:34:22.000 --> 00:34:31.000
+target demographic is actually going to
+be the third thing is HTTP to which
+Cloud Print supports now and that will
+
+305
+00:34:31.000 --> 00:34:35.000
+actually help you tackle that head of
+line blocking problem that I described
+earlier as you'll be able to actually
+
+306
+00:34:35.000 --> 00:34:43.000
+parallel eyes all of the requests you're
+actually serving from your origin so
+lastly here's a few best practices as
+
+307
+00:34:43.000 --> 00:34:50.000
+you're configuring rum I've encountered
+some of these mistakes as I've talked to
+customers over the years make sure that
+
+308
+00:34:50.000 --> 00:34:55.000
+if you are implementing rum that you
+were monitoring the things that are
+actually critical for your application
+
+309
+00:34:55.000 --> 00:35:02.000
+so in the case of a website don't just
+monitor a sink
+jpg at the bottom of the page monitor
+
+310
+00:35:02.000 --> 00:35:09.000
+your index page monitor your CSS if
+that's important to be able to actually
+structure the page in the case of video
+
+311
+00:35:09.000 --> 00:35:16.000
+make sure you're actually monitoring the
+video manifest is your video are you
+able to even find the fragments that are
+
+312
+00:35:16.000 --> 00:35:24.000
+necessary to serve your video just add
+in critical page loads you can actually
+monitor the entire page load time and
+
+313
+00:35:24.000 --> 00:35:31.000
+determine is it taking longer for some
+users is it actually available are there
+some assets meaning missing these are
+
+314
+00:35:31.000 --> 00:35:39.000
+all possible to get from rum and lastly
+which I'm open to talk about afterwards
+as well first bite latency is not always
+
+315
+00:35:39.000 --> 00:35:45.000
+the most important thing I know that
+some people over index on that and I
+just wanted to say it's know your data
+
+316
+00:35:45.000 --> 00:36:01.000
+because it's going to be different for
+every different user so next we have a
+friend coming up hello my name is Ethan
+
+317
+00:36:01.000 --> 00:36:08.000
+Fuentes and I am an enterprise solutions
+architect with AWS so today I'm going to
+talk about how you can stop malicious
+
+318
+00:36:08.000 --> 00:36:18.000
+viewers using Amazon CloudFront and AWS
+Web Application Firewall or WAF and so
+specifically I'm going to cover for best
+
+319
+00:36:18.000 --> 00:36:26.000
+practices on securing your CloudFront
+distribution that you can implement in
+your own AWS environment and the four
+
+320
+00:36:26.000 --> 00:36:33.000
+best practices I'm going to be talking
+about is one leveraging AWS WAF with
+pre-configured protections so
+
+321
+00:36:33.000 --> 00:36:38.000
+pre-configured protections is a solution
+that we develop to help you kind of get
+started with WAF and we'll talk about
+
+322
+00:36:38.000 --> 00:36:46.000
+the architecture of the solution and
+dive a little bit deeper into some of
+the rules that are part of it next we'll
+
+323
+00:36:46.000 --> 00:36:53.000
+talk about configuring CloudFront to
+serve private content so serving private
+content within CloudFront is actually a
+
+324
+00:36:53.000 --> 00:36:59.000
+two-step process we'll walk through both
+of those steps next we'll talk about
+automating security response by using
+
+325
+00:36:59.000 --> 00:37:06.000
+services like AWS Lambda, SNS. we'll walk
+through a couple of examples just to
+give you an idea of you know how that
+
+326
+00:37:06.000 --> 00:37:13.000
+would look and then lastly we'll talk
+about leveraging a DBS certificate
+manager for ssl/tls
+
+327
+00:37:13.000 --> 00:37:23.000
+advocates both for your CloudFront
+distribution and for your ELB origin so
+AWS WAF gives you control over which
+
+328
+00:37:23.000 --> 00:37:32.000
+graphic to allow or block to your web
+applications by defining customizable
+web security rules so the service was
+
+329
+00:37:32.000 --> 00:37:39.000
+released about a year ago and since then
+we've added important capabilities like
+CloudTrail integration new match
+
+330
+00:37:39.000 --> 00:37:49.000
+conditions and then IPv6 support more
+recently we've also added AWS WAF to
+the lists of PCI DSS 3.2 level 1
+
+331
+00:37:49.000 --> 00:37:59.000
+compliant AWS services this year as well
+so AWS WAF includes some native rules
+for things like cross-site-scripting and
+
+332
+00:37:59.000 --> 00:38:07.000
+SQL-injection however one of the most
+powerful features of AWS WAF is the
+capability to allow you to create your
+
+333
+00:38:07.000 --> 00:38:13.000
+own custom rules based on the traffic
+that you're seeing and it's a great
+capability customers use it all the time
+
+334
+00:38:13.000 --> 00:38:21.000
+however sometimes it's difficult to come
+up with a web application firewall
+strategy and create these custom rules
+
+335
+00:38:21.000 --> 00:38:28.000
+especially if you know you don't have
+dedicated security teams that you're
+working with and so what we did is we
+
+336
+00:38:28.000 --> 00:38:37.000
+developed a solution to simplify this
+process that uses a CloudFormation
+template and automatically deploy is a
+
+337
+00:38:37.000 --> 00:38:46.000
+set of AWS web rules that are designed
+to filter common web based attacks and
+so when you deploy this CloudFormation
+
+338
+00:38:46.000 --> 00:38:54.000
+template you can select which of the
+rules you want to enable and then you
+also set some parameters for some of
+
+339
+00:38:54.000 --> 00:39:01.000
+those rules that are specific to each of
+those so I'm going to walk through this
+architecture at a high level and then
+
+340
+00:39:01.000 --> 00:39:08.000
+we'll dive into the three customize a
+components of the solution that are
+implemented through Lambda functions so
+
+341
+00:39:08.000 --> 00:39:18.000
+the solution includes six different
+components the first one is a bad bot
+and scraper protection component and so
+
+342
+00:39:18.000 --> 00:39:26.000
+the way that that is implemented is
+through an Amazon API Gateway
+endpoint it's essentially a honeypot
+
+343
+00:39:26.000 --> 00:39:34.000
+that you embed into your web application the next
+two components the SQL-server injection protection
+
+344
+00:39:34.000 --> 00:39:42.000
+and the cross-site-scripting protection
+are two native rules with AWS WAF
+then we have the HTTP flood scanner and
+
+345
+00:39:42.000 --> 00:39:50.000
+pro-protection and so that's also
+implemented through a Lambda function
+that parses the CloudFront access logs
+
+346
+00:39:50.000 --> 00:39:57.000
+as they're delivered into S3 and then
+the last component of the solution here
+is the known attacker protection so
+
+347
+00:39:57.000 --> 00:40:04.000
+again this is a Lambda function that is
+triggered by a CloudWatch event on an
+hourly schedule that goes out
+
+348
+00:40:04.000 --> 00:40:14.000
+and obtains IP list a queries third
+party IP reputation listen and take the
+takes those in and updates AWS WAF
+
+349
+00:40:14.000 --> 00:40:24.000
+based on that so let's go into each of
+these custom components so the first one
+is the access handler and so the access
+
+350
+00:40:24.000 --> 00:40:31.000
+handler is what protects you against the
+bad bots and scrapers and the way that
+this is implemented is through an API
+
+351
+00:40:31.000 --> 00:40:39.000
+gateway endpoint that you essentially
+embed within your web application and
+then once you embed it within your web
+
+352
+00:40:39.000 --> 00:40:48.000
+application you update your robots.txt
+file to explicitly disallow that
+particular endpoint when a scraper
+
+353
+00:40:48.000 --> 00:40:59.000
+or a bot accesses that page on your site
+and it tries to hit that API gateway a
+honeypot endpoint it triggers an AW the
+
+354
+00:40:59.000 --> 00:41:07.000
+AWS Lambda access handler function and
+that access handler function that
+updates the IP block list based on that
+
+355
+00:41:07.000 --> 00:41:16.000
+activity so the next component I'll talk
+about is the law of parser component so
+the log parser component again is
+
+356
+00:41:16.000 --> 00:41:22.000
+implemented through Lambda function and
+the way that this works is as the Amazon
+CloudFront access logs are delivered
+
+357
+00:41:22.000 --> 00:41:32.000
+within the Amazon S3 bucket it triggers
+that AWS land a log parser function that
+examines logs and determined based on
+
+358
+00:41:32.000 --> 00:41:41.000
+that examination whether the IP list
+should be updated to block against those
+and again this is all extensible right
+
+359
+00:41:41.000 --> 00:41:48.000
+so we have this configured and ready to
+go for you but you can extend these
+Lambda functions as you need to and
+
+360
+00:41:48.000 --> 00:41:58.000
+customize them further the last
+component I'll talk about is the IP list
+parser so this this component here it
+
+361
+00:41:58.000 --> 00:42:07.000
+uses a Amazon CloudWatch of that that's
+scheduled to kick off on an hourly basis
+in that triggers the Lambda function
+
+362
+00:42:07.000 --> 00:42:17.000
+that goes out and fetches IP list from
+three different sources so it currently
+accesses this Spamhaus do not router
+
+363
+00:42:17.000 --> 00:42:25.000
+peerless and then the extent that do not
+router peer list we also pull IPs from
+the tor exit nodes list and then the
+
+364
+00:42:25.000 --> 00:42:32.000
+proof point emerging threats IP list so
+those are the three that are part of the
+solution but again if you have other
+
+365
+00:42:32.000 --> 00:42:38.000
+requirement if you have other providers
+of these types of reputation lists you
+could certainly implement that or extend
+
+366
+00:42:38.000 --> 00:42:46.000
+this to accommodate that and so the
+solution is available you no doubt you
+can download it off our site i have the
+
+367
+00:42:46.000 --> 00:42:52.000
+URL here and you know we'll provide the
+presentation so you can get to it again
+it's a CloudFormation template so
+
+368
+00:42:52.000 --> 00:42:58.000
+there's a lot of points of customization
+before you deployed but it's a very
+quick and easy way to get up and running
+
+369
+00:42:58.000 --> 00:43:06.000
+with some of these customized rules to
+protect your CloudFront distributions
+okay so the next best practice i'll talk
+
+370
+00:43:06.000 --> 00:43:14.000
+about is preserving private content or
+configuring CloudFront to serve private
+contact and again it's a two-step
+
+371
+00:43:14.000 --> 00:43:21.000
+process right so the first part of this
+process is to restrict the origin access
+the second part of the process is to use
+
+372
+00:43:21.000 --> 00:43:29.000
+sign URLs or signed cookies to protect
+your content now you may not have a need
+to do the second part of it but
+
+373
+00:43:29.000 --> 00:43:35.000
+restricting origin access is the best
+practice regardless of if you have
+content that you want to explicitly
+
+374
+00:43:35.000 --> 00:43:43.000
+protect so this so there's two ways that
+you could do this depending on you know
+whether you're using S3 as your origin
+
+375
+00:43:43.000 --> 00:43:49.000
+or whether you have a custom origin
+whether it be on EC2 or even in your own
+data center so I'm the first way if
+
+376
+00:43:49.000 --> 00:43:56.000
+you're using
+S3 static content in your distribution
+then you can go ahead and use origin
+
+377
+00:43:56.000 --> 00:44:06.000
+access identity to prevent direct access
+to that S3 bucket so that in that that
+prevents viewers from circumventing the
+
+378
+00:44:06.000 --> 00:44:12.000
+rules that you've built within what
+happened within CloudFront and going
+directly S3 likewise if you have a
+
+379
+00:44:12.000 --> 00:44:19.000
+custom origin if you have you know
+you're using an ELB on Amazon or you're
+using something at your in your own data
+
+380
+00:44:19.000 --> 00:44:28.000
+center you could use the list of CloudFront the IP range of the
+CloudFront edge locations to whitelist those
+
+381
+00:44:28.000 --> 00:44:35.000
+at those origins and only allow access
+from that list of IP addresses and again
+that prevents users from directly going
+
+382
+00:44:35.000 --> 00:44:44.000
+to your origin and circumventing the wac
+protections that you've implemented
+within your distribution the second part
+
+383
+00:44:44.000 --> 00:44:50.000
+of private content is using signed URLs
+and cookies and again you know you may
+not have a need for this but if you do
+
+384
+00:44:50.000 --> 00:44:56.000
+there's you know different things you
+could do with each of these so with
+signed URLs you add the signature in the
+
+385
+00:44:56.000 --> 00:45:04.000
+query string and essentially some both
+some signed URLs and cookies are used to
+protect either a specific piece of
+
+386
+00:45:04.000 --> 00:45:10.000
+content or group of content items within
+your distribution so it's signed URLs
+you had the signature in the query
+
+387
+00:45:10.000 --> 00:45:18.000
+string so the URL is going to change
+signed URLs are used mostly for
+restricting access to individual files
+
+388
+00:45:18.000 --> 00:45:28.000
+not you know large amounts of contact
+sign cookies again the URL doesn't
+change with sign cookies so but you you
+
+389
+00:45:28.000 --> 00:45:39.000
+typically use sign cookies to restrict
+access to multiple files or an area of
+your application so the next best
+
+390
+00:45:39.000 --> 00:45:46.000
+practice here I'll talk about is
+automating security response
+so we talked a little bit about this in
+
+391
+00:45:46.000 --> 00:45:52.000
+efforts example right so that's an
+example of how you can automate the
+updates of your WAF rules this is
+
+392
+00:45:52.000 --> 00:46:01.000
+another example here and this covers the
+the case where you have a
+an origin that you are only whitelisting
+
+393
+00:46:01.000 --> 00:46:06.000
+the CloudFront edge location
+IPs too and so this gives you
+some automation around that and again
+
+394
+00:46:06.000 --> 00:46:12.000
+this is another solution that's on our
+Github site so you guys can definitely
+access it and download it the URL is
+
+395
+00:46:12.000 --> 00:46:22.000
+down here and so what what this solution does is
+essentially it updates the security groups based on
+
+396
+00:46:22.000 --> 00:46:30.000
+the changes in the IP list of the CloudFront
+servers right so whenever that
+changes there's a Lambda function that
+
+397
+00:46:30.000 --> 00:46:37.000
+subscribe to this SNS topic the SNS
+topic that triggers that Lambda function
+Lambda updates your security groups with
+
+398
+00:46:37.000 --> 00:46:45.000
+the latest whitelist so you don't have
+to manually keep track of when those IP
+address changes change and you know have
+
+399
+00:46:45.000 --> 00:46:55.000
+to manually do this in the last best
+practice i'll leave you with here is a
+leveraged AWS certificate manager for
+
+400
+00:46:55.000 --> 00:47:05.000
+SSL and TLS certificates so ACM allows
+you to provision and deploy TLS and SSL
+certificates at no additional cost and
+
+401
+00:47:05.000 --> 00:47:11.000
+then you can associate those
+certificates with your CloudFront
+distribution or your will be aware engine
+
+402
+00:47:11.000 --> 00:47:19.000
+and to get up and running with
+AWS certificate manager it's
+pretty straightforward if you're already
+
+403
+00:47:19.000 --> 00:47:25.000
+using CloudFront most of this is
+already done you have a CloudFront
+distribution right but if you don't then
+
+404
+00:47:25.000 --> 00:47:32.000
+you know you would set up your origin
+whether it be an EC2 origin or an S3
+bucket next you know you set up your
+
+405
+00:47:32.000 --> 00:47:39.000
+CloudFront distribution setup you're
+caching rules set up your origins within
+your CloudFront distribution once
+
+406
+00:47:39.000 --> 00:47:47.000
+you're done with that then you can
+request the certificate through either
+the console or through the API or our
+
+407
+00:47:47.000 --> 00:47:53.000
+CLI and so once you have that
+certificate that the last step is
+religious associating that certificate
+
+408
+00:47:53.000 --> 00:48:00.000
+with your CloudFront distribution once
+that certificate is associated with your
+clock front distribution it gets pushed
+
+409
+00:48:00.000 --> 00:48:10.000
+out to all the edge locations and then
+we use that determinate SSL at the edge
+alright so the key takeaways here
+
+410
+00:48:10.000 --> 00:48:17.000
+leverage AWS WAF more specifically
+leverage AWS lapwood
+protections to give you a good starting
+
+411
+00:48:17.000 --> 00:48:25.000
+point secure your origin and content
+preventing direct access to your origin
+is always a best practice whether you
+
+412
+00:48:25.000 --> 00:48:33.000
+use signed URLs or signed cookies or not
+and then the last piece is automate
+security response by using some of our
+
+413
+00:48:33.000 --> 00:48:56.000
+other complementary services like great
+thank you very much to a Cherie Anton
+and afrin for taking the time to share
+
+414
+00:48:56.000 --> 00:49:07.000
+some thoughts on best practices with
+CloudFront and really thank you all for
+coming to to reinvent and please do
+complete your evaluation so we can learn
+how to make this better conference have
+a good day

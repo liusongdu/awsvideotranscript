@@ -1,0 +1,2848 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:07.000
+okay afternoon everyone and welcome to
+the elastic load balancing deep dive and
+best practices session my name is Dave
+
+2
+00:00:07.000 --> 00:00:13.000
+Brown I lead the elastic load balancing
+team as well as a few other teams within
+AWS I've been at amazon for a little
+
+3
+00:00:13.000 --> 00:00:21.000
+over nine years started out on the ec2
+team and then sort of stayed within that
+organization for the nine years and have
+
+4
+00:00:21.000 --> 00:00:26.000
+been running an elastic load balancing
+for about the last three years so we've
+had a lot happening on elastic load
+
+5
+00:00:26.000 --> 00:00:31.000
+balancing this year a few changes we
+launched a new load balancer so
+hopefully as we go through the session
+
+6
+00:00:31.000 --> 00:00:37.000
+today you'll learn a little bit more
+about elastic load balancing in general
+but also application load balancer which
+
+7
+00:00:37.000 --> 00:00:43.000
+is the new load balancer we launched so
+let's dive in so what is elastic load
+balancing so elastic load balancing
+
+8
+00:00:43.000 --> 00:00:49.000
+automatically distributes incoming
+application traffic across multiple
+applications microservices and
+
+9
+00:00:49.000 --> 00:00:56.000
+containers hosted on Amazon ec2
+instances so prior to August we did not
+support the micro services and and
+
+10
+00:00:56.000 --> 00:01:00.000
+contain a use case so we were
+instance-based we've added that and I'll
+talk a little bit more about that later
+
+11
+00:01:00.000 --> 00:01:08.000
+the next slide looks at a few of the
+sort of advantages of using lb so the
+first thing is the word we really like
+
+12
+00:01:08.000 --> 00:01:13.000
+in the cloud is we're elastic and what
+that it means is you create a new load
+balancer and that load balancer was
+
+13
+00:01:13.000 --> 00:01:18.000
+scaled to meet your incoming traffic if
+you want to live and see yourself you've
+got to worry about scaling that load
+
+14
+00:01:18.000 --> 00:01:24.000
+balancer making sure it's highly
+available you got to care and feed it
+with a lb you create the load balancer
+
+15
+00:01:24.000 --> 00:01:30.000
+register your back in instances and the
+load balancer will scale dynamically and
+secondly and super important is is we're
+
+16
+00:01:30.000 --> 00:01:36.000
+secure so we pay a lot of attention to
+the security of the load balancer but
+also features that allow our customers
+
+17
+00:01:36.000 --> 00:01:43.000
+to be highly secure features such as
+managed SSL and what are the very best
+ciphers and protocols to use on your lb
+
+18
+00:01:43.000 --> 00:01:49.000
+we also integrated and what that means
+is we integrate with up to fourteen
+different AWS services so whether it's
+
+19
+00:01:49.000 --> 00:01:58.000
+cloud front for the EO cloud watch sorry
+for the elb metrics or it's auto scaling
+for dynamically scaling your back-end
+
+20
+00:01:58.000 --> 00:02:05.000
+fleet we integrate route 53 4 dns we're
+very integrated you know confirmation
+number of services that are integrated
+
+21
+00:02:05.000 --> 00:02:12.000
+with elb and then finally we're cost
+effective so the cost of you'll be
+significantly cheaper than actually
+
+22
+00:02:12.000 --> 00:02:16.000
+running the load balancer yourself if
+you had a run a load balance on ec2 it
+would almost certainly cost you more
+
+23
+00:02:16.000 --> 00:02:23.000
+than actually using an ALB so it is
+quite a good deal so as we think about
+building an application I'm sure many of
+
+24
+00:02:23.000 --> 00:02:31.000
+you have had an architecture that looks
+like that not when i'm recommending it's
+not a best practice but it's it's where
+
+25
+00:02:31.000 --> 00:02:36.000
+a lot of us thought right we build an
+application on a single instance you
+maybe even put your database on that
+
+26
+00:02:36.000 --> 00:02:42.000
+instance you everything's only one
+machine and you're showing others this
+application works well not something
+
+27
+00:02:42.000 --> 00:02:48.000
+that's recommended obviously there are a
+couple of challenges there one that
+machine could fail if that machine dies
+
+28
+00:02:48.000 --> 00:02:54.000
+obviously the web server goes down or
+whatever you have secondly if your
+traffic spikes well you know that
+
+29
+00:02:54.000 --> 00:02:58.000
+machine is not going to handle the
+certain amount of traffic and the other
+thing that we kind of take for granted
+
+30
+00:02:58.000 --> 00:03:05.000
+and I was I was a software engineer back
+in the day at amazon as well and we
+don't realize just how good load
+
+31
+00:03:05.000 --> 00:03:11.000
+balances make us look as software
+engineers and we have things like
+garbage collection in Java where your vm
+
+32
+00:03:11.000 --> 00:03:17.000
+stalls you may have memory issues some
+of you guys that right see and what is
+just basically doing a certain bail out
+
+33
+00:03:17.000 --> 00:03:23.000
+of the application if anything happens
+the load balancer just papers over all
+of that any time something like that
+
+34
+00:03:23.000 --> 00:03:29.000
+happens the traffic just magically goes
+elsewhere so yes he has a solution that
+I would recommend or an architecture
+
+35
+00:03:29.000 --> 00:03:34.000
+that looks a little better right so yeah
+we have an elastic load balancer taking
+traffic and spreading that traffic over
+
+36
+00:03:34.000 --> 00:03:42.000
+three instances any of those instances
+fail load balancer will automatically
+detect and shift their traffic job to
+
+37
+00:03:42.000 --> 00:03:48.000
+the Romanian instances with auto scaling
+you can automatically scale that back in
+fleet and the load balancers in the
+
+38
+00:03:48.000 --> 00:03:53.000
+scale dynamically as well if the traffic
+increases so it takes care of a lot of
+those challenges we just spoke about
+
+39
+00:03:53.000 --> 00:04:01.000
+it's it's highly available I want to go
+into a couple of details we don't
+normally talk about internal
+
+40
+00:04:01.000 --> 00:04:07.000
+architectures of AWS services but this
+is one way I think it's important to
+understand so every single elastic load
+
+41
+00:04:07.000 --> 00:04:13.000
+balancer utilizes multiple availability
+signs even if you as an application
+developer isn't doing that for your
+
+42
+00:04:13.000 --> 00:04:18.000
+application obviously it's highly
+recommended but something that we do so
+here's the architecture so essentially
+
+43
+00:04:18.000 --> 00:04:24.000
+on the right-hand side there you can see
+we have the customers VPC and that would
+be you and your VDC
+
+44
+00:04:24.000 --> 00:04:31.000
+and on the left-hand side we have the
+elb VPC so we actually run in a VPC just
+like you do on ec2 so we're we're also a
+
+45
+00:04:31.000 --> 00:04:37.000
+demanding customer of the ec2 team we
+then have some subnets in each
+availability zone and as you can see
+
+46
+00:04:37.000 --> 00:04:43.000
+there we have an lb in the subnet on the
+top and he'll be in the subnet on the
+bottom as well forward in that traffic
+
+47
+00:04:43.000 --> 00:04:48.000
+into your subnet so we're pretty much
+running alongside you we have the
+ability to get there traffic securely
+
+48
+00:04:48.000 --> 00:04:56.000
+injected into your VPC one thing I want
+to cover this has become more important
+with the the recent launch of
+
+49
+00:04:56.000 --> 00:05:01.000
+application load balancer is we starting
+to explain to customers really what are
+the different types of load balancing
+
+50
+00:05:01.000 --> 00:05:07.000
+there are two different types of load
+balancing the first one which we talk
+about is network or your your TCP load
+
+51
+00:05:07.000 --> 00:05:13.000
+balancing or if you really understand
+the networking layers you talk about
+layer for what this does is this really
+
+52
+00:05:13.000 --> 00:05:18.000
+basically connection based load
+balancing so requests are flowing
+through the load balancer but we're not
+
+53
+00:05:18.000 --> 00:05:23.000
+looking at any of those requests we just
+handing those packets and forwarding
+them to the back ends and that supports
+
+54
+00:05:23.000 --> 00:05:29.000
+things like TCP and SSL client
+connections are bound to a server
+connection so every single time a new
+
+55
+00:05:29.000 --> 00:05:34.000
+request comes in it's actually bound to
+a back-end instance that will never move
+there's no header modification so we
+
+56
+00:05:34.000 --> 00:05:40.000
+pretty much can't do anything with that
+request we just we just pass those
+packets through if you want to know
+
+57
+00:05:40.000 --> 00:05:46.000
+about the source IP of a client that's
+connecting to you there's no
+x-forwarded-for header nothing like that
+
+58
+00:05:46.000 --> 00:05:51.000
+because we can't actually do anything
+with the request so there is a there's a
+feature called proxy protocol which
+
+59
+00:05:51.000 --> 00:05:56.000
+comes from h/h a proxy world which
+allows you to forward the destination
+the source IP through to the destination
+
+60
+00:05:56.000 --> 00:06:03.000
+so that's layer 4 on the other side
+we've got layer 7 and many of you might
+be more familiar with these or prefer
+
+61
+00:06:03.000 --> 00:06:10.000
+these features and that's what we call
+an application load balancer and or HTTP
+and HTTPS now this is where we every
+
+62
+00:06:10.000 --> 00:06:15.000
+request that's coming in we waiting for
+all the packets to arrive and
+reassembling the HTTP requests we're
+
+63
+00:06:15.000 --> 00:06:19.000
+looking at the headers we're doing a lot
+of work in the load balancer and the
+connections are actually terminated at
+
+64
+00:06:19.000 --> 00:06:24.000
+the load balancer and then we have
+connection pools to your back-end
+instances you'll see us open up multiple
+
+65
+00:06:24.000 --> 00:06:29.000
+connections to your backends and we'll
+use those connections to forward the
+requests and obviously headers may be
+
+66
+00:06:29.000 --> 00:06:35.000
+modified like we may insert an
+x-forwarded-for header with the source
+IP of the original requester so for many
+
+67
+00:06:35.000 --> 00:06:43.000
+years since 2000
+nine two thousand yep 2009 ELB is
+supported both on a single load balancer
+
+68
+00:06:43.000 --> 00:06:48.000
+so we've had what we call now the
+classic load balancer previously I
+didn't have an ammeter need a name was
+
+69
+00:06:48.000 --> 00:06:54.000
+just he'll be now it's the classic load
+balancer it's supported both layer of
+four and layer seven but the layer seven
+
+70
+00:06:54.000 --> 00:07:00.000
+support has been it's been okay there's
+some decent features in there but it's
+it's not the depth of layer seven
+
+71
+00:07:00.000 --> 00:07:05.000
+support that many of our customers have
+been looking for and really what you see
+in there is very much Amazon's approach
+
+72
+00:07:05.000 --> 00:07:11.000
+to load balancing amazon internally we
+actually treat load balancers very
+simply we just basically if you have as
+
+73
+00:07:11.000 --> 00:07:16.000
+long as you give me a verb an IP I can
+talk to back in instances a health check
+and the ability to send traffic we're
+
+74
+00:07:16.000 --> 00:07:21.000
+good to go anything else we're going to
+probably put into our application stack
+but many of our customers are really
+
+75
+00:07:21.000 --> 00:07:28.000
+looking for a richer layer 7 experience
+hopefully many of you so in August we
+announced the application load balancer
+
+76
+00:07:28.000 --> 00:07:35.000
+I chatter to a few customers who said
+they only heard about this ad reinvent
+this week so it's been announced since
+
+77
+00:07:35.000 --> 00:07:39.000
+August and been available and customers
+have been using it between seeing great
+adoption so give you some idea of the
+
+78
+00:07:39.000 --> 00:07:48.000
+features so we look at classic it
+supports TCP and HTTP whereas
+application because it's only
+
+79
+00:07:48.000 --> 00:07:54.000
+application its layer 7 it's only
+supporting HTTP and HTTPS from a
+platform point of view so now we're
+
+80
+00:07:54.000 --> 00:08:00.000
+looking at the ec2 network architectures
+the classic supports both easy to
+classic it's not confusing at all as
+
+81
+00:08:00.000 --> 00:08:08.000
+well as ec2v pc so while the application
+load balancer supports VPC only so if
+you have any applications that are still
+
+82
+00:08:08.000 --> 00:08:14.000
+running on the classic network thank you
+for being on AWS for such a long time
+and let us know if we can help you with
+
+83
+00:08:14.000 --> 00:08:21.000
+the migration from a health check point
+of view classic supported health checks
+but the application load balancer is
+
+84
+00:08:21.000 --> 00:08:26.000
+some nice improvements which you'll talk
+about a little bit later Claude watch
+metrics obviously they both support
+
+85
+00:08:26.000 --> 00:08:30.000
+those although we we took a long look at
+our cloud which metrics and I think
+we've improved them quite nicely and
+
+86
+00:08:30.000 --> 00:08:35.000
+then some things that the application
+layer balance supports that are new so
+the first one is in the world of content
+
+87
+00:08:35.000 --> 00:08:41.000
+based routing and that so we allow path
+based routing so this means i receive a
+request and that request i can actually
+
+88
+00:08:41.000 --> 00:08:47.000
+look at the packets and forward it to a
+different back-end based on the path of
+the request and then obviously container
+
+89
+00:08:47.000 --> 00:08:51.000
+and micro service support that's massive
+given our customers are moving to
+containers and
+
+90
+00:08:51.000 --> 00:08:59.000
+in native web socket and HTTP to support
+so we we're catching up with all the
+modern internet applications so let's
+
+91
+00:08:59.000 --> 00:09:06.000
+take a deep dive into that application
+load balancers so the first thing to say
+is it's it's we didn't just change
+
+92
+00:09:06.000 --> 00:09:12.000
+classic load balancer we've built an
+entirely new load balancing platform
+right pretty much a large part of it is
+
+93
+00:09:12.000 --> 00:09:17.000
+brand-new so because of that we wanted
+to be very transparent with our
+customers we didn't want to go and
+
+94
+00:09:17.000 --> 00:09:23.000
+change things behind the scenes you know
+the classic load balancer interprets
+HTTP in some subtly different ways of
+
+95
+00:09:23.000 --> 00:09:27.000
+times to the way that the application
+load balancer does so we want to say
+fully transparent with our customers
+
+96
+00:09:27.000 --> 00:09:33.000
+it's a new load balancer if you move to
+this test it see how it works for your
+application let us know if there are any
+
+97
+00:09:33.000 --> 00:09:39.000
+challenges what we've seen so far almost
+all of our customers that come back and
+said it's amazing working really really
+
+98
+00:09:39.000 --> 00:09:44.000
+well for us and I applications it's
+obviously fully managed scalable and
+highly available just like the classic
+
+99
+00:09:44.000 --> 00:09:50.000
+load balancer was and then it supports
+the content based routing feature super
+important feature as I said earlier so
+
+100
+00:09:50.000 --> 00:09:58.000
+the really big benefit of that is that a
+single application load balancer can
+actually host multiple applications
+
+101
+00:09:58.000 --> 00:10:04.000
+whereas previously we look at the
+classic load balancer again your single
+Lil B could host a single application
+
+102
+00:10:04.000 --> 00:10:10.000
+right and if you don't want to host
+multiple applications well the way to
+solve that and the solution was well
+
+103
+00:10:10.000 --> 00:10:18.000
+just use DNS so in this example we have
+application handling our orders and we
+have an application and in images for
+
+104
+00:10:18.000 --> 00:10:25.000
+our website and what I do is I just use
+DNS so when from my client or from my
+web browser when I want to go to orders
+
+105
+00:10:25.000 --> 00:10:30.000
+I do orders dot example calm and that'll
+router to the load balance at the top
+and when I want the other one I do
+
+106
+00:10:30.000 --> 00:10:36.000
+images and it routes via dns the load
+balance at the bottom that works fine
+you are paying for to load balances and
+
+107
+00:10:36.000 --> 00:10:43.000
+you having to manage to load balances
+and that you know it could be better so
+what application ability lets you do is
+
+108
+00:10:43.000 --> 00:10:50.000
+well let's just have one dns name let's
+just have example.com and now in the
+path I've got the word orders or images
+
+109
+00:10:50.000 --> 00:10:57.000
+so using paths based routing which I can
+set up as a routing rule the conditions
+going to say if anything in the path
+
+110
+00:10:57.000 --> 00:11:03.000
+matches orders and you can use wildcards
+here as well basic Club functionality
+forward that to the target group so that
+
+111
+00:11:03.000 --> 00:11:10.000
+blue box is called a target
+fold that to the target group for orders
+and if anything has the images forward
+
+112
+00:11:10.000 --> 00:11:17.000
+that to the images application at the
+bottom and today you can have up to ten
+rules in your application load balancer
+
+113
+00:11:17.000 --> 00:11:24.000
+so you can host up to 10 different
+applications behind a single load
+balancer great big benefit so it's a
+
+114
+00:11:24.000 --> 00:11:28.000
+mess is a significant cost saving if
+you're running multiple load balancers
+just because you have single
+
+115
+00:11:28.000 --> 00:11:35.000
+applications you can go down to a single
+load balancer use paths based routing
+today and have one application and one
+
+116
+00:11:35.000 --> 00:11:40.000
+other one load balancer so you could
+decrease your hourly cost obviously your
+bandwidth costs will be roughly the same
+
+117
+00:11:40.000 --> 00:11:47.000
+assuming you're sending the same amount
+of traffic one thing we see customer
+says that's fantastic I've currently got
+
+118
+00:11:47.000 --> 00:11:52.000
+hundreds of load balancers I'm going to
+go down to one load balancer so what you
+do want to think about is you think
+
+119
+00:11:52.000 --> 00:11:59.000
+about your architecture you could do
+that could be supported but we think
+about blast radius on isolation so if it
+
+120
+00:11:59.000 --> 00:12:03.000
+was me doing this for my team's running
+application their balance I'd probably
+look at an application load balance of
+
+121
+00:12:03.000 --> 00:12:09.000
+this service or maybe per service team
+you know we have the two pizza teams at
+Amazon something where you know the
+
+122
+00:12:09.000 --> 00:12:14.000
+service teams operating that load bones
+they have full control rather than one
+load balancer for the company just you
+
+123
+00:12:14.000 --> 00:12:21.000
+know trying to risk the single point of
+failure or configuration nightmare that
+that could turn into so we have multiple
+
+124
+00:12:21.000 --> 00:12:26.000
+applications behind a single load
+balancer cost saving improvements
+management improvements it's a big
+
+125
+00:12:26.000 --> 00:12:34.000
+change next we want to look at the
+ability to support micro service
+architectures and container based
+
+126
+00:12:34.000 --> 00:12:43.000
+architectures so obviously application
+not balanced I can do that otherwise it
+would have been an irrelevant slide but
+
+127
+00:12:43.000 --> 00:12:50.000
+the way we do it is multiple ports so
+with classic load balancer you had a
+register an instance with the API and
+
+128
+00:12:50.000 --> 00:12:55.000
+when you did that you can only give us
+one port at a time for that instance and
+then you were done for that instance if
+
+129
+00:12:55.000 --> 00:13:00.000
+you try to give us that instance again
+we would tell you that instance is
+already registered so it meant running
+
+130
+00:13:00.000 --> 00:13:05.000
+containers on a single instance is
+incredibly challenging because when you
+run a contain an architecture regardless
+
+131
+00:13:05.000 --> 00:13:11.000
+of you know what platform you're using
+it's going to try and select dynamic
+ports so you have no control over the
+
+132
+00:13:11.000 --> 00:13:15.000
+port that it listens on not all your
+containers can listen on 80 because
+there's only one port 80 available in
+
+133
+00:13:15.000 --> 00:13:20.000
+that box so they are going to choose a
+dynamic ephemeral
+hort essentially and your load balancer
+
+134
+00:13:20.000 --> 00:13:25.000
+needs to be able to use those so with
+application load balancer when you
+register an instance you can give us a
+
+135
+00:13:25.000 --> 00:13:32.000
+port and that together is unique so you
+can give us that instance again as long
+as the port's different you can keep
+
+136
+00:13:32.000 --> 00:13:38.000
+registering so you can register in
+instance many times as you like well the
+sea 65,000 also and we will write
+
+137
+00:13:38.000 --> 00:13:45.000
+requests on those ports so it gives you
+the ability to carve up a single
+instance if you use Amazon ecs which is
+
+138
+00:13:45.000 --> 00:13:52.000
+the ec2 container service ecs will
+actually manage all of this for you so
+you just tell the cses my task there's
+
+139
+00:13:52.000 --> 00:13:57.000
+my load balancer and it'll actually
+launch those containers and register the
+land for load balancer automatically you
+
+140
+00:13:57.000 --> 00:14:03.000
+don't to think about it so but don't
+don't think that it's only supported
+with ecs even if you're not running
+
+141
+00:14:03.000 --> 00:14:08.000
+containers you're just run in a few
+applications on a single instance and
+they're listening on different ports you
+
+142
+00:14:08.000 --> 00:14:13.000
+can still register that instance
+multiple times with the same load
+balancer on different ports so that's
+
+143
+00:14:13.000 --> 00:14:18.000
+the that's the big functionality there
+so to give you some idea of how this
+works I mean you know in this slide we
+
+144
+00:14:18.000 --> 00:14:25.000
+had ec2 instances as part of the target
+group again the target group is the
+logical grouping of machines behind the
+
+145
+00:14:25.000 --> 00:14:32.000
+load balancer the blue dotted blue line
+you know we can turn those into
+containers so I just turn them into
+
+146
+00:14:32.000 --> 00:14:37.000
+containers so now you have ecs
+containers running there and you can mix
+and match as long as your target groups
+
+147
+00:14:37.000 --> 00:14:44.000
+only contain like ec2 instances or
+containers but you know you kind of run
+the same thing keep your target our
+
+148
+00:14:44.000 --> 00:14:50.000
+groups imaginas but you can have target
+group some of them are easy to instances
+some of them containers as you as you
+
+149
+00:14:50.000 --> 00:14:56.000
+move the application so again keeping on
+the cost saving theme with containers
+one of the great things is is you get
+
+150
+00:14:56.000 --> 00:15:04.000
+better utilization of your ec2 hardware
+so you can carve up a single ec2
+instance now into much smaller chunks or
+
+151
+00:15:04.000 --> 00:15:10.000
+slots and drive up the utilization of
+that machine whereas previously with elb
+you may have had wasted capacity on
+
+152
+00:15:10.000 --> 00:15:17.000
+those back in instances because maybe a
+t2 micro was too big for your for your
+micro service right and you still had
+
+153
+00:15:17.000 --> 00:15:24.000
+wasted capacity now you can really get
+all the capacity out of that so that's
+containers so that's like a bit of the
+
+154
+00:15:24.000 --> 00:15:30.000
+API so is a very interesting for us
+because you know
+I did a lot of work on the ec2 control
+
+155
+00:15:30.000 --> 00:15:37.000
+plane maybe I shouldn't have told you
+that but we really prioritize backwards
+compatibility right so we like many of
+
+156
+00:15:37.000 --> 00:15:42.000
+you guys have done API work what is the
+number one rule in designing API it's
+like don't bake backwards compatibility
+
+157
+00:15:42.000 --> 00:15:49.000
+like find a way to make this thing work
+and when we launch this feature we broke
+backwards compatibility and we took us
+
+158
+00:15:49.000 --> 00:15:55.000
+about nine months to get to a place
+where we felt good about it okay with it
+and the reason for it is we realized the
+
+159
+00:15:55.000 --> 00:16:02.000
+original elb API was just too simple we
+we went at it with every single angle to
+try and put all this layer 7
+
+160
+00:16:02.000 --> 00:16:07.000
+functionality into it we couldn't make
+it happen so eventually we said you know
+what customers want this functionality
+
+161
+00:16:07.000 --> 00:16:12.000
+and we can actually give them a better
+API that solves a couple of the
+challenges we've had on the old API some
+
+162
+00:16:12.000 --> 00:16:18.000
+of the design decisions we made if you
+wanted to change and this future focus
+so you can support all the layer 7
+
+163
+00:16:18.000 --> 00:16:22.000
+features we want to do you know going
+forward if we just broke backwards
+compatibility and I'm happy to tell you
+
+164
+00:16:22.000 --> 00:16:28.000
+that all the customers i've spoken to
+have been happy with that decision so
+the one time in my career that I've
+
+165
+00:16:28.000 --> 00:16:33.000
+broken backwards compatibility and I've
+gotten away with it so I think it's been
+good obviously the SDK integrates this
+
+166
+00:16:33.000 --> 00:16:39.000
+cloud formation integration so it's very
+easy to do but you'll see it is a new
+API the console if you use the console
+
+167
+00:16:39.000 --> 00:16:43.000
+it's exactly the same experience you
+don't even know that it's using a
+different API behind the scenes we've
+
+168
+00:16:43.000 --> 00:16:49.000
+also it's a newer API now so it follows
+a lot of the best practices that AWS has
+learned over the years the original elb
+
+169
+00:16:49.000 --> 00:16:58.000
+api was 2009 which was early days we've
+also got quite a few new resource types
+so previously we had a load balancer it
+
+170
+00:16:58.000 --> 00:17:03.000
+was very simple at a load balancer you
+added instances to it to support all the
+new functionality we've added things
+
+171
+00:17:03.000 --> 00:17:11.000
+like target groups targets and rules so
+I'm going to walk you through what this
+sort of the sort of model of the API
+
+172
+00:17:11.000 --> 00:17:15.000
+looks like so you can understand a
+little bit better and think about how
+you would map your application to an
+
+173
+00:17:15.000 --> 00:17:21.000
+application load balances so obviously
+we still have a load balancer we didn't
+get rid of that and we still have
+
+174
+00:17:21.000 --> 00:17:28.000
+listeners which we had previously so
+what is a listener well a listener
+defines the port and the protocol on
+
+175
+00:17:28.000 --> 00:17:36.000
+which the load balancer listens sounds
+pretty obvious now that I said so if you
+want a website listening on port 80 what
+
+176
+00:17:36.000 --> 00:17:43.000
+you would do is you'd basically say I
+want HTTP or ideally HTTPS
+on port 80 and that listen we then start
+
+177
+00:17:43.000 --> 00:17:48.000
+listening and accepting incoming
+requests you can have at least you have
+to have at least one listener per load
+
+178
+00:17:48.000 --> 00:17:53.000
+balancer and you can have up to ten
+listeners right if you need more than
+that obviously just like easy to
+
+179
+00:17:53.000 --> 00:17:58.000
+instance limits you can always come and
+talk to us and we see if we raise it for
+you routing rules the ability to route
+
+180
+00:17:58.000 --> 00:18:04.000
+this context based routing path based
+routing are defined on your listeners
+right so we all got what listeners are
+
+181
+00:18:04.000 --> 00:18:11.000
+so let's go to the next now we're
+looking at target groups so what I've
+shown you there is the the dotted target
+
+182
+00:18:11.000 --> 00:18:18.000
+groups and you can see how about three
+target groups in this architecture
+together with health checks so logical
+
+183
+00:18:18.000 --> 00:18:24.000
+grouping of targets behind a load
+balancer so we called them targets we
+haven't called them ec2 instances right
+
+184
+00:18:24.000 --> 00:18:33.000
+now we support ec2 instances and
+containers but they targets right target
+groups can exist independently from the
+
+185
+00:18:33.000 --> 00:18:38.000
+load balancer so you don't have to you
+can have a target group defined and just
+add the resources to it and at some
+
+186
+00:18:38.000 --> 00:18:44.000
+point map it to a load balancer or map
+it to multiple load balancers and the
+other really nice thing is targets are
+
+187
+00:18:44.000 --> 00:18:48.000
+regional but they can be associated be
+associated with an auto scaling group so
+you can actually have an order skating
+
+188
+00:18:48.000 --> 00:18:54.000
+groups canning each one of those target
+groups individually so they separate
+applications their scales differently
+
+189
+00:18:54.000 --> 00:18:59.000
+but you want your auto scanning to scale
+them individually so that's target
+groups so let's build the picture up and
+
+190
+00:18:59.000 --> 00:19:05.000
+I health check service you defined on
+the target group so now we're looking at
+the targets so I added the ec2 instances
+
+191
+00:19:05.000 --> 00:19:12.000
+there so what is a target so if your
+targets a logical load balancing target
+and today it can be an ec2 instance a
+
+192
+00:19:12.000 --> 00:19:18.000
+micro service or a container and it can
+be registered with multiple ports we
+spoke about that and a single target can
+
+193
+00:19:18.000 --> 00:19:22.000
+be registered with multiple target
+groups so if you have an easy to
+instance and you actually wanted to
+
+194
+00:19:22.000 --> 00:19:27.000
+exist in multiple applications or
+toasting across multiple applications so
+I think stopping you from just taking it
+
+195
+00:19:27.000 --> 00:19:33.000
+instances in registering at multiple
+times you do need to be a little careful
+this is a lot of rope we're giving you
+
+196
+00:19:33.000 --> 00:19:38.000
+you can come up with some very
+interesting architectures I have seen
+some incredible architectures that
+
+197
+00:19:38.000 --> 00:19:44.000
+customers have come up using this so you
+want to just keep thinking about
+availability and maintainability but you
+
+198
+00:19:44.000 --> 00:19:48.000
+can do some interesting stuff so we've
+got there so how do we link these
+together all right so it's a no
+
+199
+00:19:48.000 --> 00:19:53.000
+traffic's flowing yet because I've got
+my load balance of my listeners my my
+targets but I haven't linked them
+
+200
+00:19:53.000 --> 00:19:57.000
+together so let's
+link them together so obviously we link
+them together with something that we
+
+201
+00:19:57.000 --> 00:20:02.000
+can't read and that's his rules all
+right so we looking at the rules there
+so in the middle you got the the default
+
+202
+00:20:02.000 --> 00:20:07.000
+rule you've got an image rule and I
+think you've got an orders rule so we do
+support a default rule a default rule
+
+203
+00:20:07.000 --> 00:20:12.000
+means if this request doesn't match
+anything in the path or none of my other
+rules just send us to that target group
+
+204
+00:20:12.000 --> 00:20:17.000
+so you can have a load balancer with
+just one default rule and one target
+group it'll work perfectly fine very
+
+205
+00:20:17.000 --> 00:20:22.000
+similar to what the classic load
+balancer does but you can fall back to
+default as well or have more specific
+
+206
+00:20:22.000 --> 00:20:29.000
+ones so we look at rules what a rules
+support today so they provide a link
+between the listeners and the target
+
+207
+00:20:29.000 --> 00:20:34.000
+groups and they consist of conditions in
+action so every rule is a condition and
+then what action do you want to follow
+
+208
+00:20:34.000 --> 00:20:41.000
+today we have one action which is the
+forward action which will forward a
+request to a target group and so when it
+
+209
+00:20:41.000 --> 00:20:46.000
+requests arrives we look at the
+condition we run through all the rules
+when we find one that matches we
+
+210
+00:20:46.000 --> 00:20:52.000
+forwarded to that target group if we
+don't find one as matches and you have a
+default we will use the default if
+
+211
+00:20:52.000 --> 00:20:58.000
+there's no default we will return a 5 is
+3 and today you can do path based rules
+so you have to give us a path pattern
+
+212
+00:20:58.000 --> 00:21:04.000
+and you can use a deposit obviously
+case-sensitive can be up to 128
+characters in length and those are the
+
+213
+00:21:04.000 --> 00:21:12.000
+various characters that can be included
+in your normal URL star path so there
+was a whirlwind tour of what the
+
+214
+00:21:12.000 --> 00:21:17.000
+architecture looks like but you can kind
+of see how it all hangs together it's
+all available in the console very
+
+215
+00:21:17.000 --> 00:21:26.000
+cleanly laid out and yeah api's are nice
+and clean and new as well so should be
+pretty straightforward so let's see if
+
+216
+00:21:26.000 --> 00:21:33.000
+we can pull a rabbit out of a hat here
+so today we have load balances that
+support up to 10 rules so we launched
+
+217
+00:21:33.000 --> 00:21:37.000
+with that we said who could possibly
+need more than 10 rules what turns out
+most people actually need more than 10
+
+218
+00:21:37.000 --> 00:21:43.000
+rules so we decided okay well let's
+remove that limits so in the very near
+future you come talk to me we can make
+
+219
+00:21:43.000 --> 00:21:49.000
+it sooner you can have it set up to 100
+rules but it's like a hundred days in
+you can have 20 ec2 instances on a new
+
+220
+00:21:49.000 --> 00:21:57.000
+account we can raise that up if you want
+so we're sort of removing the limit from
+rules so it'll be available publicly in
+
+221
+00:21:57.000 --> 00:22:05.000
+the next few weeks but we do have a
+better available now oh the other thing
+we added was deletion protection every
+
+222
+00:22:05.000 --> 00:22:09.000
+now and then I get a frantic call from a
+customer
+Dave I just deleted my main load
+
+223
+00:22:09.000 --> 00:22:16.000
+balancer can you help me and some of the
+times we can we go in and we see oh look
+those IPS are still available and we can
+
+224
+00:22:16.000 --> 00:22:21.000
+kind of reconstruct the thing we
+actually have an API internally that's
+just undelete the customers load
+
+225
+00:22:21.000 --> 00:22:29.000
+balancer now so we decided we decided
+rather than making my engineers do that
+all the time it doesn't happen too often
+
+226
+00:22:29.000 --> 00:22:35.000
+we should probably give it a customers
+so amazing feature you can actually say
+don't let me delete this load balancer
+
+227
+00:22:35.000 --> 00:22:39.000
+via the API and then if you try and
+delete it it says sorry you can't delete
+it then you have to go and remove the
+
+228
+00:22:39.000 --> 00:22:47.000
+deletion protection and then you can
+delete it right so good feature to use
+application load balancer provides
+
+229
+00:22:47.000 --> 00:22:51.000
+improved performance for Internet
+applications all right so we spoke about
+this a little bit earlier but there are
+
+230
+00:22:51.000 --> 00:22:56.000
+a few things in here if you're running
+an application on the internet and you
+don't even have a need for path based
+
+231
+00:22:56.000 --> 00:23:02.000
+routing it's a really good idea if it's
+HTTP to consider application load
+balancer so some of the things there's a
+
+232
+00:23:02.000 --> 00:23:10.000
+native support for web sockets basically
+web sockets been around for a year or
+two basically allow full duplex
+
+233
+00:23:10.000 --> 00:23:17.000
+communication so we have a lot of
+customers doing it for things like you
+know Twitter feeds and your sports feeds
+
+234
+00:23:17.000 --> 00:23:21.000
+where you've got an iPad you want to
+connect to the load balancer and you
+from a server you want to be pushing
+
+235
+00:23:21.000 --> 00:23:26.000
+content to the iPad or push into the
+device its web sockets are letting
+you're doing so previously customers
+
+236
+00:23:26.000 --> 00:23:33.000
+would use TCP load balancing on classic
+now you get full WebSocket support HTTP
+to obviously the newer version of HTTP
+
+237
+00:23:33.000 --> 00:23:40.000
+protocol significant improvements to
+page load load time so you can do sort
+of multi multiple pages load multiple
+
+238
+00:23:40.000 --> 00:23:46.000
+requests to the server at the same time
+so we support HTTP two out of the box as
+well and then improve performance for
+
+239
+00:23:46.000 --> 00:23:51.000
+real time in streaming applications as
+well so classic load balancer if you
+were doing very large downloads or
+
+240
+00:23:51.000 --> 00:23:54.000
+you're trying to do streaming through
+the load balancer there were some
+challenges there is used to do quite a
+
+241
+00:23:54.000 --> 00:23:59.000
+bit of buffering and that's not great
+when you're streaming application load
+balancer solves all of those problems
+
+242
+00:23:59.000 --> 00:24:09.000
+important tip so there's no additional
+configuration required to use web
+sockets or HTTP to I've actually thought
+
+243
+00:24:09.000 --> 00:24:13.000
+about adding a check box to the console
+that does nothing at all just to say i
+want web sockets and I want HTTP too
+
+244
+00:24:13.000 --> 00:24:19.000
+because the number of customers that I
+said how do i turn on web sockets and
+HTTP to it's on by default it's just on
+
+245
+00:24:19.000 --> 00:24:24.000
+the load balancer it actually happens
+all in the request path so websockets
+will be upgraded automatically to a
+
+246
+00:24:24.000 --> 00:24:32.000
+WebSocket connection you don't have to
+do anything so we have another Hatter
+beer plastic load balancers have offered
+
+247
+00:24:32.000 --> 00:24:39.000
+ipv6 support for some time actually
+that's since around jun 2011 there's
+actually a day every year called ipv6
+
+248
+00:24:39.000 --> 00:24:47.000
+day international ipv6 day and we
+launched ipv6 support on plastic load
+balancers back in 2011 we've we've also
+
+249
+00:24:47.000 --> 00:24:56.000
+supported them on both classic and VP
+see if you if you do want ipv6 on VPC we
+can we can give it to you that kind of
+
+250
+00:24:56.000 --> 00:25:02.000
+doesn't matter because in the coming
+weeks native ipv6 support is available
+on all application load balancers so
+
+251
+00:25:02.000 --> 00:25:10.000
+obviously envy pc is only and this is
+full i PB six the other thing that's
+going to be available is ipv6 on ec2 so
+
+252
+00:25:10.000 --> 00:25:19.000
+you'll get full ipv6 between ec2
+instances egress to the internet
+everything ok the world's been waiting
+
+253
+00:25:19.000 --> 00:25:28.000
+five dv6 for like 20 years now so ok and
+then improvements to the application
+availability and scalability of the load
+
+254
+00:25:28.000 --> 00:25:35.000
+balancer so these have been you know if
+i look at where we spend our time on elb
+since I've been on the team number one
+
+255
+00:25:35.000 --> 00:25:43.000
+priority oh this 33 we have three number
+one priorities security availability and
+scalability we just cannot drop the ball
+
+256
+00:25:43.000 --> 00:25:48.000
+at any of those I mean you know if you
+have a load balancer does something
+strange it's infuriating and we just
+
+257
+00:25:48.000 --> 00:25:53.000
+have to make sure that they are highly
+available and highly scalable all the
+time so if we come back to you know that
+
+258
+00:25:53.000 --> 00:25:58.000
+we all realize that this wasn't the
+architecture that we really wanted you
+know we'd only be building applications
+
+259
+00:25:58.000 --> 00:26:03.000
+like that we wanted to be super highly
+available let's look at a few things
+we've improved in application load
+
+260
+00:26:03.000 --> 00:26:09.000
+balancer so the first one I spoke about
+a little while ago is health checks and
+they allow for traffic to be shifted
+
+261
+00:26:09.000 --> 00:26:16.000
+from an impaired or failed instance so
+this is a health check behind the load
+balancer and the way this works is the
+
+262
+00:26:16.000 --> 00:26:20.000
+instances are running along they all
+take in traffic you suddenly have one
+instance that has some sort of problem
+
+263
+00:26:20.000 --> 00:26:27.000
+right the CPU starts to spike if you had
+an infinite loop or you memory issue
+whatever it might be the health check
+
+264
+00:26:27.000 --> 00:26:32.000
+will start to fail to that instance so
+we stopped sending traffic there and
+that all happens within a few seconds so
+
+265
+00:26:32.000 --> 00:26:36.000
+you know
+often less than a second so the soul
+check run it runs every few seconds as
+
+266
+00:26:36.000 --> 00:26:41.000
+soon as you detect a failure which you
+can define to you to find what your lb
+going to call we will ship traffic away
+
+267
+00:26:41.000 --> 00:26:49.000
+when the instance becomes healthy again
+will shut that traffic back again with
+auto scaling as well you can set auto
+
+268
+00:26:49.000 --> 00:26:53.000
+scaling up so that if any instance fails
+the health check it'll actually remove
+that instance out of service and replace
+
+269
+00:26:53.000 --> 00:27:01.000
+it as well so that even the mitigation
+of a failed instance can all be
+automated so we look at what we support
+
+270
+00:27:01.000 --> 00:27:07.000
+so with application load balancer
+obviously it's not tcp health checks
+it's just HTTP and HTTPS you can
+
+271
+00:27:07.000 --> 00:27:12.000
+customize the frequency the failure and
+the one thing you can do that you
+haven't been able to do previously is
+
+272
+00:27:12.000 --> 00:27:19.000
+the list of threat the actual return
+type so successful response codes I'm so
+previously on classic load balancers you
+
+273
+00:27:19.000 --> 00:27:25.000
+had to send us a 200 we didn't send us a
+200 we consider to be a failure and lots
+of applications return like 30 ones my
+
+274
+00:27:25.000 --> 00:27:31.000
+health checks and other things now you
+can say to us hey if I give you a
+response just just accept it right and
+
+275
+00:27:31.000 --> 00:27:36.000
+then the one I like the most is detailed
+reasons for health checks I actually
+showed by the API an database management
+
+276
+00:27:36.000 --> 00:27:43.000
+console and this was one of the largest
+number of stem support contacts for elb
+was why is my health check failing so
+
+277
+00:27:43.000 --> 00:27:48.000
+based on that feedback we just thought
+maybe it's a good idea just to tell you
+in the API in the console so if you help
+
+278
+00:27:48.000 --> 00:27:53.000
+to explain it all now say hey we've seen
+a timeout what we see in a connection
+error or you know we actually returning
+
+279
+00:27:53.000 --> 00:27:59.000
+some code that doesn't match so you'll
+actually see that in the console just
+saves us in awesome out of time and it
+
+280
+00:27:59.000 --> 00:28:06.000
+saves you an enormous amount of time and
+then the other change keep in mind is
+with classic load balancer if all your
+
+281
+00:28:06.000 --> 00:28:11.000
+health checks fail so if you fail all
+the health checks to your backends we
+will return five or threes so we say all
+
+282
+00:28:11.000 --> 00:28:17.000
+instances are unhealthy let's return
+five or threes with application oil
+balance that we've taken a different
+
+283
+00:28:17.000 --> 00:28:23.000
+approach we say if all those machines
+fail we're actually going to fail open
+because if anythings everything's down
+
+284
+00:28:23.000 --> 00:28:27.000
+we may as well trying to send the
+traffic somewhere it's very likely that
+the connection is going to fail we sent
+
+285
+00:28:27.000 --> 00:28:33.000
+a 5 a 3 anyway but if everything fails
+we're going to fail open and there's one
+of the one of the great things with this
+
+286
+00:28:33.000 --> 00:28:39.000
+approach is we do have from time to time
+customers that have configured their
+health checks that are too deep in the
+
+287
+00:28:39.000 --> 00:28:44.000
+system right so you may have a customer
+we've we've seen situations customers
+have every health Jake hit their master
+
+288
+00:28:44.000 --> 00:28:49.000
+database and if it does
+get a successful response to that master
+database and by the way there's only one
+
+289
+00:28:49.000 --> 00:28:54.000
+of those monster databases but there
+might be 10 application service and that
+master database has some sort of hiccup
+
+290
+00:28:54.000 --> 00:28:59.000
+all those servers go out of service and
+what would have been just a few seconds
+of impact on the master database now all
+
+291
+00:28:59.000 --> 00:29:04.000
+of a sudden you took all your servers
+out of service and your whole
+application is returning 5 or 3 s so
+
+292
+00:29:04.000 --> 00:29:08.000
+this will actually protect you against
+that situation but there there's another
+point A or best practices think about
+
+293
+00:29:08.000 --> 00:29:15.000
+the depth of your health checks ideally
+for me most health checks should really
+just check the health of the machine
+
+294
+00:29:15.000 --> 00:29:20.000
+behind the load balancer like try and
+avoid like hitting a website out on the
+internet which I've seen before as well
+
+295
+00:29:20.000 --> 00:29:26.000
+and you know you don't you just ideally
+keep it isolated and be careful of
+things that are regional as well so
+
+296
+00:29:26.000 --> 00:29:31.000
+you've got a regional resource that
+you're trying to include in your health
+check my guidance estimate you keep them
+
+297
+00:29:31.000 --> 00:29:36.000
+as shallow as possible and think deeply
+about them because it is a risk it's
+less of a risk on application imbalance
+
+298
+00:29:36.000 --> 00:29:43.000
+because we do fail open still not great
+and I'm sure if you've been around any
+AWS employee for even five minutes
+
+299
+00:29:43.000 --> 00:29:50.000
+they'll give you this advice always use
+multiple availability zones and we spoke
+a little about how lb does that you know
+
+300
+00:29:50.000 --> 00:29:55.000
+we always run in multiple availability
+zones and what I want to show you guys
+even if you are only in one zone we will
+
+301
+00:29:55.000 --> 00:30:01.000
+actually route there traffic from
+another zone through to you and our goal
+is really to never have an elastic load
+
+302
+00:30:01.000 --> 00:30:07.000
+balancer fail so you know if we have any
+problem in a zone we will always be able
+to serve the traffic out of the other
+
+303
+00:30:07.000 --> 00:30:12.000
+zone and that traffic will automatically
+shift from a failed zone using route 53
+so all that is actually automatically
+
+304
+00:30:12.000 --> 00:30:19.000
+done via dns and I mean I would often
+have customers you do you say well I run
+in one's own because of cost and cost is
+
+305
+00:30:19.000 --> 00:30:24.000
+a serious concern sometimes we don't to
+spend the cost for additional zones so
+we actually at Amazon we typically
+
+306
+00:30:24.000 --> 00:30:29.000
+always run in three zones two zones
+where they're available if these three
+zones will always choose three zones and
+
+307
+00:30:29.000 --> 00:30:37.000
+the reason being is being in one zone is
+an availability risk because you know we
+say that's a unit of failure isolation
+
+308
+00:30:37.000 --> 00:30:42.000
+if that fails and we could lose his own
+we guarantee you'll never lose two zones
+for the same reason at the same time
+
+309
+00:30:42.000 --> 00:30:49.000
+then want to really be in one's own well
+let's go to two zones so in this example
+i'm trying to say i need six machines to
+
+310
+00:30:49.000 --> 00:30:54.000
+always have enough capacity so if i go
+to two zones well now i'm going to make
+say if i lose his own i still want to
+
+311
+00:30:54.000 --> 00:31:01.000
+have six machines so six left fix i need
+12 machines now
+two zones to actually handle all of my
+
+312
+00:31:01.000 --> 00:31:05.000
+requests because I got to be scaled
+enough to lose his own well what happens
+if we go to three zones so if we go to
+
+313
+00:31:05.000 --> 00:31:12.000
+three zones well now I if I lose one's
+own I'm still going to have six machines
+and to do that I need to have three
+
+314
+00:31:12.000 --> 00:31:16.000
+machines in each zone if you guys do the
+math on that which I did before the talk
+to make sure is correct that's actually
+
+315
+00:31:16.000 --> 00:31:22.000
+only nine machines so I only need 9
+machines now not the 12 machine so
+actually running in three zones can
+
+316
+00:31:22.000 --> 00:31:30.000
+often be cheaper than running into zones
+to be scaled feel your load an
+application that balance that will
+
+317
+00:31:30.000 --> 00:31:34.000
+support that so one of the things we do
+see is there's sometimes multiple
+challenges well at least one I'm going
+
+318
+00:31:34.000 --> 00:31:42.000
+to talk about you are running in running
+in multiple zones and one of those is
+your clients are resolving dns to enter
+
+319
+00:31:42.000 --> 00:31:50.000
+the zone so sometimes you'll have dns
+providers that catch dnas so you'll have
+clients that just resolve dns once and
+
+320
+00:31:50.000 --> 00:31:56.000
+never do it again job is actually pretty
+bad at that right unless you set the X
+header Java will actually do that
+
+321
+00:31:56.000 --> 00:32:02.000
+resolves that it's light up but never
+does it again and they very sticky to a
+lot of one IP but you get these sort of
+
+322
+00:32:02.000 --> 00:32:08.000
+imbalances in traffic and that can often
+cause as you can see there you know one
+of your zones to be running a lock take
+
+323
+00:32:08.000 --> 00:32:15.000
+a lot more traffic than others and the
+way we solve that is we actually just
+use a physical crosser load balancing
+
+324
+00:32:15.000 --> 00:32:20.000
+which I actually send the traffic from
+the load balancer to multiple zones
+behind the scenes and the great thing
+
+325
+00:32:20.000 --> 00:32:24.000
+there is you just see all your zones
+just get the exactly the same amount of
+traffic it's actually even better than
+
+326
+00:32:24.000 --> 00:32:32.000
+that because my clicker is not working
+here so what does actually doing is this
+this should be in there traffic so
+
+327
+00:32:32.000 --> 00:32:38.000
+evenly that you get the same amount of
+traffic in each zone and the other thing
+is even if you have an imbalance in ec2
+
+328
+00:32:38.000 --> 00:32:44.000
+instances even if you have one instance
+in one zone and three and another the
+zone with three is going to get three
+
+329
+00:32:44.000 --> 00:32:48.000
+times the amount of traffic and there's
+only one since get enough for that one
+instance it actually does it at a per
+
+330
+00:32:48.000 --> 00:32:54.000
+target level so you get a much better
+case all your targeting at the same
+amount of traffic and then the really
+
+331
+00:32:54.000 --> 00:32:59.000
+amazing thing is there's no additional
+bandwidth charge for the crossbow in
+traffic so we actually removed the
+
+332
+00:32:59.000 --> 00:33:04.000
+normal bandwidth chargeable cross zone
+out of this so you can do this with the
+lb and not pay for that cross on traffic
+
+333
+00:33:04.000 --> 00:33:12.000
+bandwidth charge and cross around load
+balancing is actually enabled by default
+on all application loader
+
+334
+00:33:12.000 --> 00:33:18.000
+so on classic load balancers it wasn't
+enabled by default but I'm cross the
+application balance so we said it is you
+
+335
+00:33:18.000 --> 00:33:23.000
+actually currently cannot turn it off
+it's not disabled bill but they are
+valid architectures where you actually
+
+336
+00:33:23.000 --> 00:33:28.000
+do want to turn it off you want to be
+very very zonal so we are going to be
+adding the feature to allow you to
+
+337
+00:33:28.000 --> 00:33:34.000
+actually disable cross and load
+balancing and then auto scaling one of
+the big changes i mentioned earlier auto
+
+338
+00:33:34.000 --> 00:33:40.000
+scaling will actually not scale at the
+target group level so to give you some
+idea of how that works so we've got to
+
+339
+00:33:40.000 --> 00:33:46.000
+target groups here with ec2 instances in
+them taking a certain amount of traffic
+traffic to the target hoop at the bottom
+
+340
+00:33:46.000 --> 00:33:51.000
+increases you use the cloud which
+metrics with auto scaling to tailor to
+start adding machines and all the
+
+341
+00:33:51.000 --> 00:33:56.000
+scaling will actually scale it up so I
+mean obviously makes sense given that
+you've got different applications hosted
+
+342
+00:33:56.000 --> 00:34:02.000
+behind your load balancer they do in
+very different things your orders could
+get a lot less traffic than your images
+
+343
+00:34:02.000 --> 00:34:07.000
+you can see spikes on the different ones
+you want to scale them independently so
+if you use application load balancing
+
+344
+00:34:07.000 --> 00:34:17.000
+auto scaling can scale the applications
+independently or at different target
+groups then one of the one of the things
+
+345
+00:34:17.000 --> 00:34:23.000
+that actually took me a while to realize
+this as well as many of you have
+applications which have a daily peek all
+
+346
+00:34:23.000 --> 00:34:30.000
+right so you where we have at Amazon
+obviously retail we have a fairly
+substantial daily pic every day and we
+
+347
+00:34:30.000 --> 00:34:35.000
+see that many of our customers have the
+daily peak and they're in their traffic
+flow when you're using auto scaling and
+
+348
+00:34:35.000 --> 00:34:40.000
+you actually follow in that line of
+trying to scale your machines to that
+kind of remember you're at peak all the
+
+349
+00:34:40.000 --> 00:34:46.000
+time because when you actual when you're
+at your lowest point like mentally you
+think you know it's not a hit not a busy
+
+350
+00:34:46.000 --> 00:34:51.000
+time for the service right now we're at
+the low point but you've taken away all
+the capacity so we have sometimes seen
+
+351
+00:34:51.000 --> 00:34:56.000
+customers actually at the lowest point
+every day running 25 or 3 s and surge
+queues and problems with the load
+
+352
+00:34:56.000 --> 00:35:01.000
+balancer because they just haven't
+realized that I'm actually running kind
+of at peak all the time because it's
+
+353
+00:35:01.000 --> 00:35:06.000
+it's utilizing just just enough capacity
+all the time so just something to think
+about what the lb and auto scaling is
+
+354
+00:35:06.000 --> 00:35:12.000
+you can actually see problems at your
+lowest point to be taken away too much
+capacity and then our security features
+
+355
+00:35:12.000 --> 00:35:21.000
+so back in 2014 we was well timed given
+it was a couple of months before
+heartbleed some of you may remember that
+
+356
+00:35:21.000 --> 00:35:28.000
+event we we took a look at our ssl
+ciphers and protocols and he said you
+know customers it's become so
+
+357
+00:35:28.000 --> 00:35:34.000
+complicated like every month veneering
+about some new vulnerability and what
+should i do and it takes a lot of time
+
+358
+00:35:34.000 --> 00:35:39.000
+to become an SSL expert and if you ask a
+lot of the security experts they'll
+often tell you well this is the set of
+
+359
+00:35:39.000 --> 00:35:44.000
+ciphers and protocols you need to use
+and when you actually go have a look
+that I mean they're super secure and the
+
+360
+00:35:44.000 --> 00:35:50.000
+reason they secure is no web browsers
+yet implemented support for those
+diapers and protocols so we had that
+
+361
+00:35:50.000 --> 00:35:56.000
+with internally in Amazon we were given
+us some advice similar to that one so so
+we said well as elb we need a staff up
+
+362
+00:35:56.000 --> 00:36:00.000
+and we need to take control of this we
+need to make sure all of our customers
+are but the very best ciphers and
+
+363
+00:36:00.000 --> 00:36:06.000
+protocols and we can't expect them to be
+experts in this so we we added with ssl
+offloading we added SSL negotiation
+
+364
+00:36:06.000 --> 00:36:13.000
+cycles and the way we do this is I have
+a couple engineers on my team that are
+very involved in the SSL community calm
+
+365
+00:36:13.000 --> 00:36:21.000
+McCarthy gave a talk earlier about a
+version of pretty much an SSL openssl
+kind of library that we've written
+
+366
+00:36:21.000 --> 00:36:28.000
+ourselves that's been open sourced great
+talk I'm sure it'll be on YouTube if you
+missed it but we said we've taken a look
+
+367
+00:36:28.000 --> 00:36:34.000
+at all the ciphers and protocols
+understand deeply all the
+vulnerabilities the other thing we do is
+
+368
+00:36:34.000 --> 00:36:39.000
+we run all of amazon.com traffic that's
+one of the great things that Amazon me
+just go grab that entire traffic stream
+
+369
+00:36:39.000 --> 00:36:45.000
+and say okay let's run this through an
+ALB and let's see what happens wasn't
+the live traffic it was just a siphon
+
+370
+00:36:45.000 --> 00:36:51.000
+some more we run all of that life or
+siphon their traffic off and we then go
+and look and we add the siphon we see oh
+
+371
+00:36:51.000 --> 00:36:57.000
+wow if we add that cipher we can see we
+see a thirty percent drop in clients
+being able to connect to us we could
+
+372
+00:36:57.000 --> 00:37:02.000
+obviously see the user agents as well so
+we can see oh well look at all the you
+know windows XP machines just dropped
+
+373
+00:37:02.000 --> 00:37:10.000
+off we'd better put that one back and so
+we do that and that gives us the
+absolute best ciphers and protocols for
+
+374
+00:37:10.000 --> 00:37:16.000
+your application based on pretty much
+every user agent we can find out there
+be a couple other ways of doing that as
+
+375
+00:37:16.000 --> 00:37:22.000
+well as well as the ability to connect
+so the very best security best practices
+and the ability to connect from it wider
+
+376
+00:37:22.000 --> 00:37:30.000
+range as clients as possible so if
+you're using classic we always recommend
+use the latest SSL policy if you've
+
+377
+00:37:30.000 --> 00:37:35.000
+defined your own policies on classic
+that's fine take a look at how they
+differ and maybe have a look at you know
+
+378
+00:37:35.000 --> 00:37:39.000
+whether you should just migrate to the
+manage one on application load balancer
+all
+
+379
+00:37:39.000 --> 00:37:43.000
+policies are managed so you'll always
+get one of our managed policies we just
+think that's a better way to go just
+
+380
+00:37:43.000 --> 00:37:49.000
+given all the problems we've had in the
+last few years in the space the other
+thing we added last last year was a CM
+
+381
+00:37:49.000 --> 00:37:53.000
+integration and thanks to actually
+completely forgot about this one and
+somebody in the audience told me about
+
+382
+00:37:53.000 --> 00:37:58.000
+this beforehand thank you and I'm like
+let me go at a slide quickly so that was
+I was doing up here so this slide is hot
+
+383
+00:37:58.000 --> 00:38:04.000
+off the press but we have a cm
+integration so a cm is Amazon
+certificate manager and what gives you
+
+384
+00:38:04.000 --> 00:38:10.000
+free certificates so you basically go to
+Amazon Civic managing give me in it it's
+a cell certificate they'll give you one
+
+385
+00:38:10.000 --> 00:38:16.000
+and you just then associate that with
+your lb super easy to do in the best
+part you never have to think about it
+
+386
+00:38:16.000 --> 00:38:21.000
+again because when that certificate
+comes up for renewal amazon certificate
+manager actually manages the renewal
+
+387
+00:38:21.000 --> 00:38:30.000
+process now I don't know about you but
+I've never had an ssl certificate
+expired me unexpectedly and all of this
+
+388
+00:38:30.000 --> 00:38:35.000
+and it's free as well so it's an amazing
+service if you're not using that or you
+coming up for renewal absolutely think
+
+389
+00:38:35.000 --> 00:38:45.000
+about using ACM alright we have another
+hat that's pretty cool so application
+load balancer currently today's support
+
+390
+00:38:45.000 --> 00:38:51.000
+security groups so you can you can
+control traffic to your load balancer
+with security groups right so you can
+
+391
+00:38:51.000 --> 00:38:58.000
+specify sliders and say only one people
+from within my organization to connect
+some customers that said hey you know
+
+392
+00:38:58.000 --> 00:39:06.000
+that feature on Todd front called woth
+website application firewall and be
+pretty cool to have that on elb so we
+
+393
+00:39:06.000 --> 00:39:12.000
+thought so as well so we've added where
+to eat application load balancer and
+that'll be available in its soon in the
+
+394
+00:39:12.000 --> 00:39:17.000
+coming weeks so with that you'll
+basically be able to well actually have
+a slide for that so with a website
+
+395
+00:39:17.000 --> 00:39:24.000
+application firewall basically monitors
+and protects website application for
+malicious activities so any requests
+
+396
+00:39:24.000 --> 00:39:30.000
+coming through gets inspected by wife
+you can configure rules to either allow
+or block or count and you can do things
+
+397
+00:39:30.000 --> 00:39:37.000
+like sequel injection cross-site
+scripting bad actor ip's bad BOTS HTTP
+flood attacks and I know they're going
+
+398
+00:39:37.000 --> 00:39:42.000
+to be adding more and more and more
+rules so you can go into the web service
+and you can configure this once you've
+
+399
+00:39:42.000 --> 00:39:47.000
+got all your rules and they've got some
+great custom rules there were previously
+defined rules you just associated with
+
+400
+00:39:47.000 --> 00:39:52.000
+the elb and we'll take care of that so I
+think that's a pretty cool feature
+coming in the neck
+
+401
+00:39:52.000 --> 00:39:58.000
+movies and then we look at monitoring so
+we improved some of their load been on
+some monitoring as well so obviously
+
+402
+00:39:58.000 --> 00:40:02.000
+we've worked out how to have a highly
+available application how to ice
+multiple applications so we need about
+
+403
+00:40:02.000 --> 00:40:13.000
+the monitor this thing so how much
+metrics promise metrics have been there
+on application on elb for some time we
+
+404
+00:40:13.000 --> 00:40:18.000
+added them some time but on application
+load balancer we've we've made some
+improvements so they provide detail
+
+405
+00:40:18.000 --> 00:40:24.000
+insight into the load balance of traffic
+they all provided at the one minute
+granularity so if you if you are using
+
+406
+00:40:24.000 --> 00:40:32.000
+that feature in Cloud Print come watch
+sorry you can get that and metrics are
+provided with application load balancer
+
+407
+00:40:32.000 --> 00:40:37.000
+metrics are provided at both the global
+application level at the load balancer
+level as well as at the target group
+
+408
+00:40:37.000 --> 00:40:42.000
+level so again you want to be able to
+see metrics of the target group level
+because those are different applications
+
+409
+00:40:42.000 --> 00:40:47.000
+they're going to behave very differently
+and you can go figure tard watch alarms
+you can also integrate with auto scaling
+
+410
+00:40:47.000 --> 00:40:52.000
+so any one of these metrics you could
+integrate with auto scaling and see if
+that metric spikes scale up if it goes
+
+411
+00:40:52.000 --> 00:40:59.000
+down scale scale down so that's what a
+look at a couple of the metrics very
+briefly and give you an idea of you know
+
+412
+00:40:59.000 --> 00:41:05.000
+what are they how do they behave what
+are they for so firstly healthy host
+count it's the counter the healthy
+
+413
+00:41:05.000 --> 00:41:11.000
+instances behind your load balancer or
+behind the time group and it's important
+to consume that at the zonal dimension
+
+414
+00:41:11.000 --> 00:41:17.000
+if you see this failing normally when
+this fails it's your health check is
+failing the most common reason for a
+
+415
+00:41:17.000 --> 00:41:23.000
+health check failure is a timeout so
+those health checks take what you give
+you one second to respond to us we don't
+
+416
+00:41:23.000 --> 00:41:29.000
+respond in one second we consider you to
+be failed right to keep that in mind
+normally it's a timeout the other one is
+
+417
+00:41:29.000 --> 00:41:35.000
+latency so latency measures the time
+from the point that you'll pack it
+leaves the load balancer into your
+
+418
+00:41:35.000 --> 00:41:39.000
+application to when we first see the
+response that's how we measure latency
+so it doesn't include the load balancer
+
+419
+00:41:39.000 --> 00:41:47.000
+time and we provide min max an average
+of that we also have access logs you
+talk about shortly and then we have a
+
+420
+00:41:47.000 --> 00:41:54.000
+rejection count as well so important
+difference here application load
+balancer doesn't use surge queues the
+
+421
+00:41:54.000 --> 00:42:01.000
+search q is basically when a request
+comes in and your back-end applications
+are all super busy we don't have
+
+422
+00:42:01.000 --> 00:42:07.000
+anywhere to send it to we will store it
+in a load balancer for
+time on classic lab and so will store up
+
+423
+00:42:07.000 --> 00:42:13.000
+to 1,000 requests per IP address in your
+load balancer but one thing we've
+learned at Amazon over the years the
+
+424
+00:42:13.000 --> 00:42:19.000
+search cubes are normally a bad idea and
+the reason for them is you get a clients
+out there calling you their thread pulls
+
+425
+00:42:19.000 --> 00:42:25.000
+are stuck waiting on your load balancer
+they're not doing any more work they're
+waiting for a response and by the time
+
+426
+00:42:25.000 --> 00:42:31.000
+you're 10 second or 10 minutes or
+whatever the outage is over you're now
+going to go back and process a couple of
+
+427
+00:42:31.000 --> 00:42:36.000
+thousand requests that are ten minutes
+old and that client is long gone so
+actually with surge accusing actually
+
+428
+00:42:36.000 --> 00:42:40.000
+gets a situation where a failed load
+balancer can actually cause other
+services to fail as well you just
+
+429
+00:42:40.000 --> 00:42:46.000
+everything gets stuck on this load
+balancer so it's much better to actually
+fail early let the client re try and get
+
+430
+00:42:46.000 --> 00:42:50.000
+fresh requests so with application load
+balance so we don't have search q so we
+have a rejection council you can
+
+431
+00:42:50.000 --> 00:42:54.000
+actually see a number of requests that
+were rejected by the load balancer
+because you have anywhere to send them
+
+432
+00:42:54.000 --> 00:43:01.000
+so if you see this metric go and scale
+up your backends that's what you do add
+more capacity will add more threads on
+
+433
+00:43:01.000 --> 00:43:07.000
+your backends or add more connect your
+connection limits whatever you need to
+do an Apache and then on the target
+
+434
+00:43:07.000 --> 00:43:11.000
+group so we got to target group metrics
+so those are the metrics to provide and
+a few others as well at the load
+
+435
+00:43:11.000 --> 00:43:16.000
+balancer level and then we have these
+ones at the target group level so you
+get great visibility into 200 300 400
+
+436
+00:43:16.000 --> 00:43:23.000
+unhealthy healthy host count as well as
+the target response time actually coming
+latency coming back from the target and
+
+437
+00:43:23.000 --> 00:43:30.000
+then about two weeks ago we actually
+launched cloud watch percentiles and
+these are pet so we spoke about min max
+
+438
+00:43:30.000 --> 00:43:36.000
+and average and that's what you've had
+previously now you can actually go and
+say give me the p90 and we say p90
+
+439
+00:43:36.000 --> 00:43:42.000
+internally and Amazon give me the 90th
+percentile which means I want to know
+what's the kind of ninety percent of my
+
+440
+00:43:42.000 --> 00:43:49.000
+customers are seen that latency or
+better and the way that I run all of my
+teams at amazon just generally at amazon
+
+441
+00:43:49.000 --> 00:43:56.000
+actually is we all focus on the 99th
+percentile so when we launched a new
+service will say what is your p99 and we
+
+442
+00:43:56.000 --> 00:44:01.000
+watch that all the time so watch p99 and
+the thing is we're saying 99% of
+customers are seen that latency or
+
+443
+00:44:01.000 --> 00:44:10.000
+better right and once your p99 is like
+nice and flat then you say okay p 99.9
+time and then you say okay start
+
+444
+00:44:10.000 --> 00:44:16.000
+watching that and that's how we drive
+ourselves and set aggressive targets all
+the time to get that latency down so
+
+445
+00:44:16.000 --> 00:44:20.000
+we'd never ever look at average almost
+never look at an air
+metric we're always looking at
+
+446
+00:44:20.000 --> 00:44:25.000
+ninety-nine ninety-nine point nine
+percent off and that's your Eddie
+looking at that one Oh point one of a
+
+447
+00:44:25.000 --> 00:44:31.000
+percent of customers that are you having
+a bad day all right so we launched this
+last week i think it was and then you
+
+448
+00:44:31.000 --> 00:44:38.000
+can see that's what the graph would look
+like so the green line is your p99 yeah
+p99 the yellow one is a p90 and then the
+
+449
+00:44:38.000 --> 00:44:45.000
+other ones your p50 the p50 is a little
+different from average but you get that
+view so great visibility into the the
+
+450
+00:44:45.000 --> 00:44:50.000
+performance of your application and then
+so that's where you wanna get a general
+view with cloud watch and what are your
+
+451
+00:44:50.000 --> 00:44:57.000
+what are your metrics looking like if
+you want to get down to an individual
+requests coming through your load
+
+452
+00:44:57.000 --> 00:45:01.000
+balancer you want to go and say why did
+that request fail that's where we have
+access logs so you can enable access
+
+453
+00:45:01.000 --> 00:45:07.000
+logs and every single request that comes
+to your load balancer gets logged to an
+access log and delivered to s3 either
+
+454
+00:45:07.000 --> 00:45:14.000
+every five minutes or every 60 minutes
+you can go and set that up right you can
+decide what interval you want includes a
+
+455
+00:45:14.000 --> 00:45:19.000
+lot of stuff request time client IP
+Layton sees request path server
+responses ciphers and protocol so we
+
+456
+00:45:19.000 --> 00:45:24.000
+actually tell you what cipher and
+protocol that client negotiated with so
+we think about our ciphers if you want
+
+457
+00:45:24.000 --> 00:45:28.000
+to go turn off the cipher but you want
+to know who you're going to impact you
+can actually turn on excess legs and go
+
+458
+00:45:28.000 --> 00:45:33.000
+and have a look decide whether you
+should really disable this a cell b3 do
+you have any customers out there that
+
+459
+00:45:33.000 --> 00:45:43.000
+would not be able to use that this is
+brand-new again last week request
+tracing that sounds pretty cool what
+
+460
+00:45:43.000 --> 00:45:50.000
+this does is it inserts a unique
+identifier for every single request
+going through the ALB if we so you send
+
+461
+00:45:50.000 --> 00:45:56.000
+a new request at ALB will actually add a
+unique identifier to the X amazon trace
+ID header and if that request goes
+
+462
+00:45:56.000 --> 00:46:02.000
+through another lb will actually append
+that you identify as it gets appended
+and this obviously if you guys saw the
+
+463
+00:46:02.000 --> 00:46:09.000
+release of amazon x-ray today this is
+feeding information to amazon x-ray so
+if you go and log this information in
+
+464
+00:46:09.000 --> 00:46:14.000
+your application or folder for the x-ray
+AP is now you're going to get request
+tracing all the way through from when it
+
+465
+00:46:14.000 --> 00:46:20.000
+very first hits an lb coming from the
+internet all the way through your
+application and you can get down into
+
+466
+00:46:20.000 --> 00:46:28.000
+very very very detailed analytics with
+with this functionality so we're pretty
+excited about that so we've spoken about
+
+467
+00:46:28.000 --> 00:46:36.000
+quite a bit of stuff and I guess one of
+the big questions we have uncovered yet
+is when should I use application load
+
+468
+00:46:36.000 --> 00:46:42.000
+balancer so I mean it sounds pretty cool
+so when should we use it the wind should
+win when shouldn't we use it so we come
+
+469
+00:46:42.000 --> 00:46:52.000
+back to this picture keep in mind that
+application load balancer only supports
+HTTP and HTTPS so obviously if you have
+
+470
+00:46:52.000 --> 00:46:58.000
+a TCP load balancer when ssl load
+balancer you'd want to stay on the
+classic load balancer and continue to
+
+471
+00:46:58.000 --> 00:47:08.000
+use that for all other load balancer use
+cases we rarely recommend trying
+application load balancer as I said for
+
+472
+00:47:08.000 --> 00:47:14.000
+vast majority of customers we've seen
+improved performance with it you can set
+it up in a very simple way we've spoken
+
+473
+00:47:14.000 --> 00:47:19.000
+about a lot of complexity today just a
+single default the console makes it
+really easy by the way it takes you
+
+474
+00:47:19.000 --> 00:47:26.000
+three and like three clicks to set it up
+register your instances and get started
+very quickly so with that it's been
+great talking to you I do hope it's been
+useful I hope you've shared some good
+facts and thanks for coming

@@ -1,0 +1,2035 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:09.000
+so let's start welcome everybody this is
+thomas i'm jonathan we're both from the
+OpsWorks team and we here to to give
+
+2
+00:00:09.000 --> 00:00:16.000
+you a little bit more of an in-depth
+introduction into some of the peculiar
+systems of OpsWorks and then we want
+
+3
+00:00:16.000 --> 00:00:24.000
+to give you some demos so what we want
+to cover today is in particular how we
+integrate chef and look at the chef's 12
+
+4
+00:00:24.000 --> 00:00:32.000
+integration that we have today for
+Windows and that will be available
+shortly for the next two we want to look
+
+5
+00:00:32.000 --> 00:00:41.000
+at the windows integration and then
+cover together with some demos the ecs
+integration that we recently launched
+
+6
+00:00:41.000 --> 00:00:50.000
+plus the on-premise and easy to import
+support before we dig in how many people
+are already using opsworks here in the
+
+7
+00:00:50.000 --> 00:00:57.000
+room good good so I don't have to
+explain the the intro part too much all
+of those slides will be available online
+
+8
+00:00:57.000 --> 00:01:08.000
+so you know need to like take any photos
+and write something down yeah so let's
+dig into like a very quick introduction
+
+9
+00:01:08.000 --> 00:01:15.000
+into how opsworks actually works and
+what the kind of architecture is and how
+we embed chef so in general and all
+
+10
+00:01:15.000 --> 00:01:23.000
+sorts for those who already uses that
+should be pretty familiar we structure
+things into stacks and layers right so
+
+11
+00:01:23.000 --> 00:01:32.000
+as stack is basically a group of servers
+that solve a certain problem for you
+let's say you sir all servers that serve
+
+12
+00:01:32.000 --> 00:01:40.000
+application a or project B and so on and
+within that group of servers we
+segregate or group machines into layers
+
+13
+00:01:40.000 --> 00:01:47.000
+you can think of them of tears or rolls
+right like all your application servers
+are Leia all your database servers all
+
+14
+00:01:47.000 --> 00:01:53.000
+the caching servers basically you're
+kind of defining a blueprint and say
+every server and this layer should have
+
+15
+00:01:53.000 --> 00:01:59.000
+those characteristics should have this
+software running should be configured
+like this and then opsworks makes it
+
+16
+00:01:59.000 --> 00:02:09.000
+happen right in order to achieve this
+off certs kind of has two important
+pieces one is the back end that takes
+
+17
+00:02:09.000 --> 00:02:18.000
+care of the integration with Ada base
+right it launches instances for you
+attaches volumes configures lbs it does
+
+18
+00:02:18.000 --> 00:02:23.000
+the auto scaling part auto healing and
+all the integration with Adobe s I'm
+kind of the provisioning engine and then
+
+19
+00:02:23.000 --> 00:02:30.000
+the other part is the agent that runs on
+your instance that then executes kind of
+your configuration commands does the
+
+20
+00:02:30.000 --> 00:02:38.000
+configuration management the unhoused
+provisioning for which we use chef right
+so if you launch an instance on the one
+
+21
+00:02:38.000 --> 00:02:43.000
+hand the back and takes care of actually
+telling you see to to launch this
+instance and launches the correct
+
+22
+00:02:43.000 --> 00:02:49.000
+instance the correct availability zone
+with the correct settings and then once
+the agent is installed it sends a JSON
+
+23
+00:02:49.000 --> 00:02:56.000
+comment down that says you should be
+running those chef recipes here is the
+cookbook source for those the agent
+
+24
+00:02:56.000 --> 00:03:03.000
+which embeds chef is running them and
+then at the end it uploads kind of the
+log and the status of that for so that
+
+25
+00:03:03.000 --> 00:03:11.000
+you can access that through our UI and
+API and and so on in order to do all of
+this we embed chef client which runs in
+
+26
+00:03:11.000 --> 00:03:20.000
+zero mode and we don't have a chef
+server so if you compare our kind of
+architecture to the typical chef server
+
+27
+00:03:20.000 --> 00:03:27.000
+setup it's slightly different right so
+we use chef client but we are running
+server let's write the opsworks back-end
+
+28
+00:03:27.000 --> 00:03:35.000
+is kind of functioning as a as a highly
+available chef server but it's act but
+it's it's not the real chef server right
+
+29
+00:03:35.000 --> 00:03:40.000
+and we're going to talk later on about
+some of the differences where if you're
+using chef server you have the full
+
+30
+00:03:40.000 --> 00:03:46.000
+chefs or API and then you have a client
+that regularly pulls from the server
+where we're in opsworks we have a push
+
+31
+00:03:46.000 --> 00:03:54.000
+model right so if if you look in that
+sense of the chef support today we're
+running multiple versions of Chef you
+
+32
+00:03:54.000 --> 00:04:00.000
+can select some of them we have some
+built-in kind of convenience cookbooks
+to get you started quickly like for
+
+33
+00:04:00.000 --> 00:04:06.000
+rails and PHP and and no GS and so on
+but the general idea is that you extend
+them on them you built you bring your
+
+34
+00:04:06.000 --> 00:04:13.000
+own you customize those heavily like
+like we were 24 people who want to
+really control basically every file on
+
+35
+00:04:13.000 --> 00:04:18.000
+the machine who want to really say my
+Apache should have those settings I want
+to have this module installed we have
+
+36
+00:04:18.000 --> 00:04:26.000
+some some sample layers that get you
+started but the idea is you own this in
+piece of infrastructure
+
+37
+00:04:26.000 --> 00:04:33.000
+probably the biggest difference is that
+we have a life cycle system that I will
+dig into in a second instead of this
+
+38
+00:04:33.000 --> 00:04:40.000
+regular pull model that you may be used
+from chef server and that allows you to
+do deployments pretty nicely with ops
+
+39
+00:04:40.000 --> 00:04:47.000
+works and also like kind of immediately
+discover changes in your infrastructure
+and those life cycle events they always
+
+40
+00:04:47.000 --> 00:04:55.000
+come with the full what we call the
+stack state basically a JSON that tells
+you this is the state of the known world
+
+41
+00:04:55.000 --> 00:05:01.000
+for for this particular system so it
+includes information about all the other
+servers it includes information about
+
+42
+00:05:01.000 --> 00:05:07.000
+ongoing deployments goods information
+about the elb that are attached to this
+system or RDS instances and so on and
+
+43
+00:05:07.000 --> 00:05:14.000
+that allows you to when you get such an
+event to a very kind of this state and
+figure out how should my service be
+
+44
+00:05:14.000 --> 00:05:22.000
+configured in order to respond to this
+state or the state change so let's look
+at those life cycle systems or life
+
+45
+00:05:22.000 --> 00:05:33.000
+cycle events so we have five of them and
+they really allow you to build kind of
+very fine-grained kind of system or
+
+46
+00:05:33.000 --> 00:05:40.000
+scripts that respond to those changes
+right and in the essence if you look at
+OpsWorks apart from the a device
+
+47
+00:05:40.000 --> 00:05:45.000
+integration what it really is it's kind
+of we make sure that we run the right
+script at the right time on the right
+
+48
+00:05:45.000 --> 00:05:49.000
+machine depending on what happened to
+your system right and those are kind of
+the fangirl events you can you can
+
+49
+00:05:49.000 --> 00:05:59.000
+attach to so the first one will be setup
+which basically means when you boot
+your instance this is the event that
+
+50
+00:05:59.000 --> 00:06:05.000
+fires for that machine and you do the
+initial provisioning the initial setup
+like you install your the software that
+
+51
+00:06:05.000 --> 00:06:10.000
+you need and all its dependencies kind
+of the initial run you can think of it
+as a little bit of a kind of user data
+
+52
+00:06:10.000 --> 00:06:16.000
+on steroids right like it allows you to
+configure my instance for the very first
+time make sure that all the software i
+
+53
+00:06:16.000 --> 00:06:22.000
+need is there and it the conversion is
+correct right like if you have a java
+application server for example this is
+
+54
+00:06:22.000 --> 00:06:30.000
+what you install the JVM you would
+install Tomcat and so on it also
+includes the deploy event which allows
+
+55
+00:06:30.000 --> 00:06:36.000
+you to do the initial deployment of your
+of your system right like the initial
+get the the Java odds and the war files
+
+56
+00:06:36.000 --> 00:06:43.000
+on the machine and then restart tomcat
+and make sure that the
+she is able to serve traffic the next
+
+57
+00:06:43.000 --> 00:06:49.000
+event is the configure event and that's
+a think the most interesting one because
+it really allows you to build those
+
+58
+00:06:49.000 --> 00:06:58.000
+highly dynamically configurable systems
+opsworks fires this event whenever there
+is an instance entering the online set
+
+59
+00:06:58.000 --> 00:07:04.000
+basically there is a new instance
+available for this stack or there is one
+leaving this state right so this allows
+
+60
+00:07:04.000 --> 00:07:08.000
+you to to make sure that your system is
+always configured correctly the example
+would be you're booting a new
+
+61
+00:07:08.000 --> 00:07:14.000
+application server apart from actually
+installing this application server and
+exit like installing Tomcat and Java and
+
+62
+00:07:14.000 --> 00:07:19.000
+so on on this machine you want this
+application server to be recognized by
+your load balancer so it serves traffic
+
+63
+00:07:19.000 --> 00:07:24.000
+to it right and you want the database
+server may be to add an ACL entry that
+allows this new application server to
+
+64
+00:07:24.000 --> 00:07:32.000
+connect to it or another example is
+maybe you have you running like a
+MongoDB replica pair or Cassandra or a
+
+65
+00:07:32.000 --> 00:07:37.000
+Kafka system something like where you
+have nodes that need to replicate from
+each other and the need to know about
+
+66
+00:07:37.000 --> 00:07:43.000
+each other right so that's a perfect
+time to use this event and say okay
+there is apparently another new node in
+
+67
+00:07:43.000 --> 00:07:50.000
+my system do I need to reconfigure
+myself or there is a node now gone do I
+need to recover myself right so for
+
+68
+00:07:50.000 --> 00:07:55.000
+example if you have a database of that
+coming up the application service would
+be this way automatically recognizing it
+
+69
+00:07:55.000 --> 00:08:01.000
+and starting to connect to it and if
+your database server crashes for example
+you shut it down or what for whatever
+
+70
+00:08:01.000 --> 00:08:08.000
+reason it's no longer available the
+application servers can now find out oh
+there is no database server available so
+
+71
+00:08:08.000 --> 00:08:15.000
+I show like a static error page as
+something like that the deployment event
+is fired whenever you explicitly trigger
+
+72
+00:08:15.000 --> 00:08:23.000
+a deployment through the API CLI or UI
+so the example is you now have a new
+version of your java application you
+
+73
+00:08:23.000 --> 00:08:28.000
+want to release it to your app servers
+so you trigger this event the
+applications of is typically then
+
+74
+00:08:28.000 --> 00:08:36.000
+download the code from somewhere like
+git svn s3 HTTP whatever and then do
+whatever you told us to do in the
+
+75
+00:08:36.000 --> 00:08:43.000
+scripts which can mean download the code
+put it in the Tomcat directory we start
+tomcat you can you can also do of course
+
+76
+00:08:43.000 --> 00:08:51.000
+anything custom in there so their
+customers using rsync or SSH to like
+copy stuff around the internal it's like
+
+77
+00:08:51.000 --> 00:08:59.000
+a generic cook like basically that just
+event happen now your scripts can
+respond to it right then there is the
+
+78
+00:08:59.000 --> 00:09:05.000
+undeploy event which people use a little
+bit like like maybe it's not so common
+as the other one so the general idea is
+
+79
+00:09:05.000 --> 00:09:11.000
+when you ever you delete an application
+and you want to remove it from running
+machine thread like the most common use
+
+80
+00:09:11.000 --> 00:09:18.000
+case I've seen is let's say you
+have a large number of PHP virtual hosts
+for example right you have a static
+
+81
+00:09:18.000 --> 00:09:23.000
+fleet of PHP application servers and
+then you have potentially hundreds of
+customers that that run their own
+
+82
+00:09:23.000 --> 00:09:28.000
+virtual host on that and then when you
+add or remove customers and you want to
+remove them from the running house like
+
+83
+00:09:28.000 --> 00:09:35.000
+that will be a good use case for this
+and and again basically the lifecycle
+event fires you register your own
+
+84
+00:09:35.000 --> 00:09:43.000
+scripts to that and then they do
+whatever you think is appropriate to do
+for this event the last one is is a very
+
+85
+00:09:43.000 --> 00:09:49.000
+useful one it's called shut down the
+idea is this one fires on the machine
+before we actually terminate it on ec2
+
+86
+00:09:49.000 --> 00:09:55.000
+right so if you go to op search and say
+please shut down this instance for me
+instead of immediately terminating it on
+
+87
+00:09:55.000 --> 00:10:04.000
+ec2 this event is fired first so you can
+now do some cleanup or do some like
+clean shut down before you actually we
+
+88
+00:10:04.000 --> 00:10:08.000
+actually terminate it and you can
+configure the shutter on like how much
+time we should allow for the script to
+
+89
+00:10:08.000 --> 00:10:14.000
+run so common use case will be
+gracefully terminate or shut down apache
+so that still finishes serving the
+
+90
+00:10:14.000 --> 00:10:19.000
+requests or the connections it's still
+holding before you actually kill the
+instance or if you have a database server
+
+91
+00:10:19.000 --> 00:10:25.000
+running flush the caches to disk or to
+the EBS volume or something like that or
+if you're running like a replicated
+
+92
+00:10:25.000 --> 00:10:30.000
+no-SQL database right like deregister
+cleanly from the other nodes and tell
+you hey I'm no longer available instead
+
+93
+00:10:30.000 --> 00:10:38.000
+of just disappearing so those lifecycle
+events and that sends allow you to build
+like a very flexible system and in
+
+94
+00:10:38.000 --> 00:10:45.000
+addition to the built in layers as I
+said you can you can have customized and
+custom recipes right so here's an
+
+95
+00:10:45.000 --> 00:10:52.000
+example of a Redis layer I build thread
+so there are the the lifecycle events
+and as you can see there are the ops
+
+96
+00:10:52.000 --> 00:10:57.000
+orcs life's like events that run and
+then you can register your own recipes
+to it so pretty much anything that is
+
+97
+00:10:57.000 --> 00:11:05.000
+scriptable anything that you can wrap in
+a chef recipe you can automate and make
+make run with OpsWorks now that we kind
+
+98
+00:11:05.000 --> 00:11:11.000
+of covered the high level
+how is OpsWorks actually working let's
+dig into some of the more recent stuff
+
+99
+00:11:11.000 --> 00:11:21.000
+that we did with chef 12 so one big
+change that we did that I think is
+pretty useful is we change how we embed
+
+100
+00:11:21.000 --> 00:11:28.000
+chef and how how it the relationship
+between the OpsWorks recipes is and the
+the your recipes the custom recipes so
+
+101
+00:11:28.000 --> 00:11:35.000
+in the chef 11.10 world basically there
+is one chef run that is a combination of
+our recipes in your recipes which
+
+102
+00:11:35.000 --> 00:11:42.000
+means there is a one combined
+environment and that has some issues
+like if we have a recipe with a certain
+
+103
+00:11:42.000 --> 00:11:50.000
+name you can't use it or you overriding
+hours and that can be what you wanted to
+or you didn't same with like gems and
+
+104
+00:11:50.000 --> 00:11:59.000
+and the Ruby environment and so on
+right so there is a potential for
+conflict plus like not all our built-in
+
+105
+00:11:59.000 --> 00:12:06.000
+cookbooks were properly namespace so
+there is definitely like some issues
+with that so in chef 12 there are two
+
+106
+00:12:06.000 --> 00:12:11.000
+separate chef Ron's totally complete
+environments like totally complete Ruby
+environment totally complete gem
+
+107
+00:12:11.000 --> 00:12:18.000
+environment so your recipes are running
+in an isolated chef run that means you
+can do whatever you like in there you
+
+108
+00:12:18.000 --> 00:12:24.000
+can install additional gems you can
+install additional libraries there is no
+chance for conflict with what we running
+
+109
+00:12:24.000 --> 00:12:30.000
+and I think that makes a lot much easier
+for you to bring in for example
+community cookbooks or existing
+
+110
+00:12:30.000 --> 00:12:35.000
+cookbooks and not worry about any
+conflict in the name or the attribute
+names or something like that with with
+
+111
+00:12:35.000 --> 00:12:43.000
+what OpsWorks using so that means
+basically you have an empty run list
+where before you had at least this
+
+112
+00:12:43.000 --> 00:12:50.000
+minimal run list of opsworks we have no
+no cookbooks polluting the namespace
+also the node OpsWorks thing so
+
+113
+00:12:50.000 --> 00:12:58.000
+before we used basically an attribute
+tree to expose this stack state to you
+so now the idea is you use chef search
+
+114
+00:12:58.000 --> 00:13:04.000
+so that is fully compatible in that
+sense with the idea of finding out nodes
+so let's say you're looking for certain
+
+115
+00:13:04.000 --> 00:13:11.000
+server by name you just use search like
+you would use with chef server so in
+this case I'm looking for web one I can
+
+116
+00:13:11.000 --> 00:13:19.000
+look for all service let's start with
+the name web and what I would get back
+is I would get back a node object that
+
+117
+00:13:19.000 --> 00:13:23.000
+has the the
+attributes that you would expect like IP
+address AZ information I am I ID
+
+118
+00:13:23.000 --> 00:13:30.000
+instance type all of those kind of
+things one thing to call out is that
+because we don't have a chef server only
+
+119
+00:13:30.000 --> 00:13:36.000
+information that the officers back and
+knows about is being pushed down to the
+instances and that means if you have
+
+120
+00:13:36.000 --> 00:13:41.000
+like attributes that you generate on the
+fly during run time on a node that is
+not discoverable by the other notes
+
+121
+00:13:41.000 --> 00:13:48.000
+right like it's it's a pure whatever the
+back and has it sends it down like what
+the information we have the custom Jason
+
+122
+00:13:48.000 --> 00:13:52.000
+you have whatever you have in the
+cookbooks but if you generate on the fly
+something on the node that is
+
+123
+00:13:52.000 --> 00:13:58.000
+unfortunately not available yet
+something else that we're doing is you
+might have already noticed this we kind
+
+124
+00:13:58.000 --> 00:14:08.000
+of matching the chef roles to oxfords
+layers right so the concept of chef
+rules applies nicely so you can you can
+
+125
+00:14:08.000 --> 00:14:16.000
+reuse that very nicely in addition to
+kind of the typical chef server nodes
+that you'll discover we we also expose
+
+126
+00:14:16.000 --> 00:14:21.000
+all the other information that officers
+has through search so you can look for
+the applications you can look for the
+
+127
+00:14:21.000 --> 00:14:28.000
+layers you can look for the RDS
+instances the elb is the volumes the ecs
+clusters and also the users that are
+
+128
+00:14:28.000 --> 00:14:37.000
+available to the stack all of that is of
+course documented online and this allows
+you to kind of use search to really find
+
+129
+00:14:37.000 --> 00:14:47.000
+all of that information where before you
+would have traversed the attribute tree
+then another thing that we support if
+
+130
+00:14:47.000 --> 00:14:55.000
+you look at how topical chef instead of
+look like is our database right so data
+bags because we don't have a chef server
+
+131
+00:14:55.000 --> 00:15:00.000
+you don't upload in that sense to to the
+server instead there are a couple of
+ways so you can handle it the most
+
+132
+00:15:00.000 --> 00:15:07.000
+simple one is you define them in the
+custom JSON so OpsWorks allows you
+to define arbitrary JSON on the stack
+
+133
+00:15:07.000 --> 00:15:14.000
+level on the deployment level and we
+actually recently added support for
+doing this on the layer level two so
+
+134
+00:15:14.000 --> 00:15:19.000
+that means you can basically whatever
+you put in there will be handled down to
+the chef environment will be available
+
+135
+00:15:19.000 --> 00:15:26.000
+as attributes and if you use the
+OpsWorks database name space for that that
+will be available through the database
+
+136
+00:15:26.000 --> 00:15:33.000
+API to your chef run so if I for
+example have this definition that you
+can see you're on top
+
+137
+00:15:33.000 --> 00:15:41.000
+were defined like MySql access information and then in my
+recipe I can use the chef's API to
+
+138
+00:15:41.000 --> 00:15:50.000
+get this database item for my appt my
+sequel and then access the username and
+password so like the client side is
+
+139
+00:15:50.000 --> 00:15:57.000
+exactly like chef client will behave
+in the server case it's just like how
+you feed this information into the
+
+140
+00:15:57.000 --> 00:16:08.000
+system is slightly different the other
+thing that that we always also get NASA
+bodies or are encrypted data bags again
+
+141
+00:16:08.000 --> 00:16:14.000
+because there isn't a server like you
+don't have directly access to encrypted
+database but you kind of achieve the
+
+142
+00:16:14.000 --> 00:16:20.000
+same thing with slightly different means
+so they're they're typically three
+things you can do one is the using
+
+143
+00:16:20.000 --> 00:16:27.000
+application environment variables that I
+will show in a second the other one is
+you can encrypt a JSON document upload
+
+144
+00:16:27.000 --> 00:16:34.000
+to S3 and then give the instances
+access why an IAM profile for example to
+to that and download the decrypted that
+
+145
+00:16:34.000 --> 00:16:42.000
+is probably what you want to do if you
+have a kind of very large document that
+you want to get to the instances the
+
+146
+00:16:42.000 --> 00:16:46.000
+thing that is actually the most
+recommended one as long as the secrets
+that you want to transporter actually
+
+147
+00:16:46.000 --> 00:16:51.000
+like kind of credential information to
+access other AWS services like
+DynamoDB ask us or whatever is to just
+
+148
+00:16:51.000 --> 00:16:57.000
+use IAM instance profiles because then
+you don't have to even transport any
+secret you don't need to rotate the
+
+149
+00:16:57.000 --> 00:17:03.000
+credentials so anything like that
+so let's have a brief look at the
+application environment variables so
+
+150
+00:17:03.000 --> 00:17:09.000
+basically every application allows you
+to define a couple of those you can you
+can basically pick any key and value
+
+151
+00:17:09.000 --> 00:17:17.000
+that you like and put optionally you can
+define values as protected which means
+they will not be returned in the API or
+
+152
+00:17:17.000 --> 00:17:24.000
+UI there they're right only
+through the commot to the API but you
+can retrieve them of course in the
+
+153
+00:17:24.000 --> 00:17:31.000
+chevron where the application is
+deployed so that means in this case I
+defining a payment provide a user and a
+
+154
+00:17:31.000 --> 00:17:38.000
+password and then within my
+application those who are available
+through environment variables so in this
+
+155
+00:17:38.000 --> 00:17:45.000
+case I can read them and then initiate
+like initiate an imaginary
+payment gateway class with with this
+
+156
+00:17:45.000 --> 00:17:51.000
+information and this shows you how
+can easily through the API CLI or UI
+kind of defined secrets and
+
+157
+00:17:51.000 --> 00:17:57.000
+credentials and pass them on to your
+application which is kind of the same
+thing you would usually do with
+
+158
+00:17:57.000 --> 00:18:04.000
+encrypted data bags so this is a
+little bit of what is different in chef
+12 and kind of how the chef environment
+
+159
+00:18:04.000 --> 00:18:10.000
+improved and then before handing over to
+Thomas we will talk about the ecs
+integration and and on Prem I want to
+
+160
+00:18:10.000 --> 00:18:17.000
+cover something we also recently did
+which is windows right so this is
+something we've been like us but
+
+161
+00:18:17.000 --> 00:18:29.000
+you guys a lot to provide so windows I
+think we launched it in late May so
+basically you can launch various kind of
+
+162
+00:18:29.000 --> 00:18:35.000
+various forms of Windows 2012 r2 kind of
+the standard am I the sequel server
+express and then the the other sequel
+
+163
+00:18:35.000 --> 00:18:43.000
+server flavors and it provides the chef
+12 runtime environment that I just
+talked about it only has custom layers
+
+164
+00:18:43.000 --> 00:18:51.000
+there isn't a Burke shelf on runtime an
+integration available which we
+actually kind of don't recommend even if
+
+165
+00:18:51.000 --> 00:18:57.000
+you chef 11.10 because that means you
+have a runtime dependency to the
+supermarket api's and usually you want
+
+166
+00:18:57.000 --> 00:19:01.000
+to reduce the number of runtime
+dependencies you have sobered shelf is
+great for the development workflow but
+
+167
+00:19:01.000 --> 00:19:07.000
+what we recommend is when you actually
+deploy to production is packaged the all
+the cookbooks and vendor them and then
+
+168
+00:19:07.000 --> 00:19:15.000
+only deploy kind of the vendor artifact
+to the production fleet because that
+means that you're not depending on the
+
+169
+00:19:15.000 --> 00:19:22.000
+supermarket API being up for your
+deployments and chef Ron's and so on
+something so in general like in that
+
+170
+00:19:22.000 --> 00:19:28.000
+sense the the chef environment on
+Windows is the same as you would expect
+for Linux something that we did for
+
+171
+00:19:28.000 --> 00:19:37.000
+Windows that is special is around the
+rdp session management so this is a very
+neat small feature so the idea is that
+
+172
+00:19:37.000 --> 00:19:45.000
+you can use of course like Windows
+Active Directory to authenticate users
+via rdp but there are certain use cases
+
+173
+00:19:45.000 --> 00:19:53.000
+where you want temporary grant somebody
+RDP access and you don't want them to be
+part of your AD right so OpsWorks we're
+
+174
+00:19:53.000 --> 00:20:00.000
+trying to kind of provide the same
+feature like we do for Linux with the
+ssh user management so you can run some
+
+175
+00:20:00.000 --> 00:20:05.000
+of your IAM user
+the ability to remotely log into your
+windows boxes and if you give them this
+
+176
+00:20:05.000 --> 00:20:14.000
+permission they can request like a
+temporary rdp access credential and you
+can define how long is it valid for like
+
+177
+00:20:14.000 --> 00:20:19.000
+one hour two hours 24 hours something
+that and then it generates a random
+password random credential that is
+
+178
+00:20:19.000 --> 00:20:26.000
+available to you once you can use this
+credential and then login to the
+instance using that once the session
+
+179
+00:20:26.000 --> 00:20:33.000
+expired all the processes will be killed
+the user will be removed from the host
+and the machine will no longer
+
+180
+00:20:33.000 --> 00:20:39.000
+allow a log and from from this user so
+this is something that we've seen a lot
+of enterprise customers pick up in order
+
+181
+00:20:39.000 --> 00:20:45.000
+to like temporary grant like freelancers
+or support engineers access to a machine
+where you don't want them to be part of
+
+182
+00:20:45.000 --> 00:20:52.000
+your AD setup because they're actually
+not part of your organization maybe
+and with that I would hand over to
+
+183
+00:20:52.000 --> 00:20:59.000
+Thomas who will talk about ecs some
+things are very easy and hopefully also
+in CS integration is easy for you so
+
+184
+00:20:59.000 --> 00:21:12.000
+last year invent the ecs ec2 container
+service was released who of you is
+actually familiar with ecs already so
+
+185
+00:21:12.000 --> 00:21:19.000
+we'll go a little bit over on ecs so
+what is yes it's a highly scalable fast
+container management service so it gives
+
+186
+00:21:19.000 --> 00:21:27.000
+you basically docker on a double yes you
+can manage and launch your container
+native applications with simple API
+
+187
+00:21:27.000 --> 00:21:36.000
+calls and you can mentor money towards
+the state of your whole ecs cluster
+easily with ccs one thing that's like
+
+188
+00:21:36.000 --> 00:21:45.000
+missing in ecs is the managing of C
+underlying ecs container instances so
+easy s gives you all the features that
+
+189
+00:21:45.000 --> 00:21:55.000
+you need to run docker on ec2 but how do
+you manage your ecs container instances
+that's why we integrated it into ops
+
+190
+00:21:55.000 --> 00:22:02.000
+works so we have the studio ecs
+contingencies provisioning and
+management so we can create your ecs
+
+191
+00:22:02.000 --> 00:22:08.000
+contention through ops works with
+dimensionless opsworks you can for
+example install operating system updates
+
+192
+00:22:08.000 --> 00:22:16.000
+or system package updates we have the
+complete user management
+for your easiest container instances we
+
+193
+00:22:16.000 --> 00:22:24.000
+have two performance monitoring so you
+can just watch how the instances behaves
+when running the docker containers you
+
+194
+00:22:24.000 --> 00:22:33.000
+can also use auto scaling on top of it
+so if you see that your clusters needs
+more power you can just upscale or if
+
+195
+00:22:33.000 --> 00:22:42.000
+it's not needed anymore can downscale
+berzox works we use the EBS volume Anna
+Schmidt for you and also the public a
+
+196
+00:22:42.000 --> 00:22:48.000
+penis let's take a pee management and as
+well as the security good management so
+everything you actually need to to
+
+197
+00:22:48.000 --> 00:23:03.000
+manage the underlying easiest continent
+since done by opsworks and I will show
+you now how that works so if you the
+
+198
+00:23:03.000 --> 00:23:12.000
+beginner for should I increase the size
+a little bit of the of the browser it's
+okay so whatever do now is I will create
+
+199
+00:23:12.000 --> 00:23:22.000
+a new layer in opsworks so we have a new
+layer type called easy as cluster layer
+it will tell me now that there's already
+
+200
+00:23:22.000 --> 00:23:36.000
+a cluster level sorry if you look at ecs
+I will just open the planets just remove
+it and oh this service is active
+
+201
+00:23:36.000 --> 00:23:45.000
+nevermind then we just use it there so
+as I said so I just create a easy as a
+layer cluster layer with the existing
+
+202
+00:23:45.000 --> 00:23:58.000
+ecs cluster it uses a new instance
+profile opsworks that gives you also
+easy as excess if it's not created yet
+
+203
+00:23:58.000 --> 00:24:06.000
+will automatically clever you to create
+it in the console so I've now created
+that easeus cluster layer and whatever
+
+204
+00:24:06.000 --> 00:24:18.000
+do now is first thing is I want later to
+deploy example WordPress application so
+I give that cluster security groups 4.8
+
+205
+00:24:18.000 --> 00:24:24.000
+exs for example I can use the built in
+PHP app security group or you can just
+use your custom suit
+
+206
+00:24:24.000 --> 00:24:32.000
+groups of that depending on what layer
+you want to what you want to open so
+I've now added that security group so i
+
+207
+00:24:32.000 --> 00:24:50.000
+can now at instances let's say i want to
+instance with tabs see three large so
+now adding them and starting them what
+
+208
+00:24:50.000 --> 00:24:57.000
+they will do now is the first they will
+do the normal observes provisioning that
+means we started instance we install our
+
+209
+00:24:57.000 --> 00:25:05.000
+agent that you can manage the instances
+but as well we will install the ecs
+agent and we will automatically register
+
+210
+00:25:05.000 --> 00:25:18.000
+the instances to the ecs cluster so if
+you go no tecs we have to pay our
+prepare little something so the first
+
+211
+00:25:18.000 --> 00:25:29.000
+thing I did is I created a task
+definition that gives me like wordpress
+on my sequel and so it's a very basic
+
+212
+00:25:29.000 --> 00:25:43.000
+tasks definition with two containers and
+if I gone out to my services I have
+created the service WordPress and it
+
+213
+00:25:43.000 --> 00:25:50.000
+doesn't have any tasks yet running
+because we don't have any container
+instances if you go too easy ensems we
+
+214
+00:25:50.000 --> 00:25:58.000
+also don't see any instance yet because
+they are still running the setup but
+once the instances actually started by
+
+215
+00:25:58.000 --> 00:26:06.000
+ups works they will show up here and I
+will show you later other looks like
+then because this takes some sub minutes
+
+216
+00:26:06.000 --> 00:26:15.000
+I will the meantime give you a short day
+more about the rdp feature Jonathan just
+presented for windows so if your windows
+
+217
+00:26:15.000 --> 00:26:31.000
+installs I just click on the rdp icon
+can grant access for example our then I
+click on general password and now it's
+
+218
+00:26:31.000 --> 00:26:40.000
+cursing the password and later will give
+me gives me a session
+so this is like the stats already got
+
+219
+00:26:40.000 --> 00:26:56.000
+the zip password here and I can click
+you on download an rdp file so if I
+click on open it will open RP client and
+
+220
+00:26:56.000 --> 00:27:03.000
+I need to copy the password I think the
+sessions not created yet so normally I
+shouldn't ask me for the password but
+
+221
+00:27:03.000 --> 00:27:16.000
+maybe or it gives me access yes no so we
+need some time to actually create the
+session so we have to wait until this is
+
+222
+00:27:16.000 --> 00:27:31.000
+done here so when we going back to have
+a look at our ICS cluster some fortunate
+still booting
+
+223
+00:27:31.000 --> 00:27:40.000
+so as I said so it's downloading the
+agent installs the agent to then run a
+set of command and the set up command
+
+224
+00:27:40.000 --> 00:27:51.000
+close then as a bunch before doing the
+ecs H installation as well as
+registering it to Z to the ecs cluster
+
+225
+00:27:51.000 --> 00:28:03.000
+so it's now running the setup I think
+this will take about a minute when you
+start the ecs container instance you can
+
+226
+00:28:03.000 --> 00:28:11.000
+of course run your own recipe so in a
+penny off if you depending on if you
+just want to your stalker or maybe you
+
+227
+00:28:11.000 --> 00:28:19.000
+also want to do other tasks on the
+machines as well so it's up to you if
+you have want to have dedicated
+
+228
+00:28:19.000 --> 00:28:29.000
+instances only 44 docker or for multiple
+purposes what you can also do is like
+integrated with your other ox ox tech so
+
+229
+00:28:29.000 --> 00:28:39.000
+if you have a stack with some other
+layers you can just integrate and with
+the ecs cluster layer so it's you're not
+
+230
+00:28:39.000 --> 00:28:46.000
+forced to use docker for everything you
+can just combine both words if you want
+to so let's have a look if the RDP
+
+231
+00:28:46.000 --> 00:28:59.000
+sessions already created for me
+unfortunately not I wonder what will
+happen first maybe we can have a look at
+
+232
+00:28:59.000 --> 00:29:10.000
+the ecs container console and have a
+look at the instances already there
+unfortunately also not
+
+233
+00:29:10.000 --> 00:29:18.000
+if it takes a little bit longer I can
+maybe start with the premises part and
+come back to this part of the
+
+234
+00:29:18.000 --> 00:29:24.000
+presentation at up here they are so the
+easiest continent since that were
+started by opsworks are now registered
+
+235
+00:29:24.000 --> 00:29:37.000
+to the easiest cluster and as we already
+have the disservice active there will be
+soon the task runners running started by
+
+236
+00:29:37.000 --> 00:29:47.000
+the service that will then run the
+docker containers for the my sequel
+container and the WordPress container so
+
+237
+00:29:47.000 --> 00:29:55.000
+now we seen it's just switched from
+running set up to online so the instance
+are now fully working ops work so can
+
+238
+00:29:55.000 --> 00:30:05.000
+now run any chef recipe on it or we
+configure them also the the rest of the
+stack is also now notified about these
+
+239
+00:30:05.000 --> 00:30:18.000
+two new instances and you can then
+interact with them let's go back here so
+we should hope we'll see attacks up so
+
+240
+00:30:18.000 --> 00:30:33.000
+if you go to the task over you want so
+it should be fine
+results we see that the pending task now
+
+241
+00:30:33.000 --> 00:30:41.000
+so and you know hopefully few seconds
+the docker containers will be people
+running and we can check if they
+
+242
+00:30:41.000 --> 00:30:53.000
+actually work in what we expect them to
+do so if I now go to the 22 machine so
+one of them is running the my sequel so
+
+243
+00:30:53.000 --> 00:31:01.000
+about one of them should run the docker
+container with the WordPress
+installation so hopefully the taos is
+
+244
+00:31:01.000 --> 00:31:10.000
+running soon still pending maybe I'll
+just stop with the on-premise part of
+the presentation we just go back to this
+
+245
+00:31:10.000 --> 00:31:19.000
+part later or we go to the windows part
+and see that up the sessions plated so
+we can try that out so I click again on
+
+246
+00:31:19.000 --> 00:31:33.000
+download a VP file will open it with the
+already copied the password and we are
+logged in so it's easy and jonas
+
+247
+00:31:33.000 --> 00:31:41.000
+mentioned once you have created the
+session for one hour once these hours
+over it will automatically lock out the
+
+248
+00:31:41.000 --> 00:31:53.000
+user stop see processes and we can make
+sure that this user only had access for
+the time span that we configured okay so
+
+249
+00:31:53.000 --> 00:32:03.000
+going back to GCS it's running so now
+one of these pages should show me the
+wordpress page yeah exactly so this is
+
+250
+00:32:03.000 --> 00:32:10.000
+he wordpress container we started and i
+can now set up my my wordpress
+installation so that was the eecs
+
+251
+00:32:10.000 --> 00:32:22.000
+integration demonstration i will now go
+to next part which is on-premises
+support in OpsWorks
+
+252
+00:32:22.000 --> 00:32:32.000
+so why should you use it if you have if
+you need it so absorbs previously gave
+you the possibility to manage your
+
+253
+00:32:32.000 --> 00:32:39.000
+service on IC too but I think there's
+still a lot of people that have their
+own data centers their own servers and
+
+254
+00:32:39.000 --> 00:32:49.000
+some data center and they may be want to
+also get the management capabilities of
+ops works for their environments and
+
+255
+00:32:49.000 --> 00:32:59.000
+with the on-premise integration you can
+now use ops works for any server that is
+basically running Linux or our supported
+
+256
+00:32:59.000 --> 00:33:09.000
+linux OS so for example well are you
+going to what you can do you can use the
+complete on-premise environment but you
+
+257
+00:33:09.000 --> 00:33:18.000
+can also enable hybrid environments so
+for example you can run your your tests
+or development environment on EC2
+
+258
+00:33:18.000 --> 00:33:24.000
+spin up as much test or developed by the
+development sex you need and then later
+are deployed on your own premises fleet
+
+259
+00:33:24.000 --> 00:33:34.000
+or maybe have your base load on your
+on-premises servers and then scale out
+too easy to when there's demand for it
+
+260
+00:33:34.000 --> 00:33:41.000
+what you can then do is like the basic
+object feature so you can deploy in
+operator applications on any server
+
+261
+00:33:41.000 --> 00:33:51.000
+that's currently running Linux you can
+use an ops works to update the operating
+system all these software running on
+
+262
+00:33:51.000 --> 00:34:02.000
+these machines you can run chef recipes
+to configure your your servers and you
+can control also who's running scripts
+
+263
+00:34:02.000 --> 00:34:14.000
+and you can also see the output of the
+scripts and find our tool who was doing
+what and what you can also do is what we
+
+264
+00:34:14.000 --> 00:34:22.000
+have just shown with Windows you can
+grant users access with ssh and also
+control who has sudo x permissions and
+
+265
+00:34:22.000 --> 00:34:30.000
+you can also get plowed push metrics for
+your on-premises servers so you will see
+them in cloudwatch as well as an
+
+266
+00:34:30.000 --> 00:34:38.000
+hour monitoring user interface in the
+console and you can
+also if you have mixed layers you can
+
+267
+00:34:38.000 --> 00:34:47.000
+also mocha let it do not so a scale
+outer scale with the club watch metrics
+so for example if you see the load on
+
+268
+00:34:47.000 --> 00:34:56.000
+your premise levels going up you can
+automatically start easy two instances
+to handle the load if you're using its
+
+269
+00:34:56.000 --> 00:35:07.000
+on-premise we will charge your two cents
+per hour per server but you also get the
+éclairs metrics for free so what we
+
+270
+00:35:07.000 --> 00:35:17.000
+also released this year is very similar
+but supporting already running easy two
+instances so you might have started
+
+271
+00:35:17.000 --> 00:35:23.000
+without using ops work so we have
+already some production machines but you
+want to integrate them in your apps work
+
+272
+00:35:23.000 --> 00:35:34.000
+stacks this is no possible so you don't
+have to like start from scratch you can
+just import them they will get
+
+273
+00:35:34.000 --> 00:35:42.000
+registered to the OpsWorks stack you
+define in the the command they you can
+then assign them to one or multiple
+
+274
+00:35:42.000 --> 00:35:51.000
+OpsWorks layers and you can benefit them
+from all the OpsWorks management features
+so from premises of course as some
+
+275
+00:35:51.000 --> 00:35:57.000
+features not not supported like of
+course you can't use your ELB EBS let's
+take a piece with your own premise the
+
+276
+00:35:57.000 --> 00:36:05.000
+servers but if you use the support for
+existing amazon ec2 instances you can
+use all the features that are available
+
+277
+00:36:05.000 --> 00:36:15.000
+for normal OpsWorks instances and
+there's a no additional charge for it so
+how does he registration works what you
+
+278
+00:36:15.000 --> 00:36:26.000
+started there's a new AWS opsworks
+register command for this CLI this is
+then starting the HP bootstrapping on
+
+279
+00:36:26.000 --> 00:36:33.000
+the on-premise server this is then
+registering the instance or your
+on-premises server to OpsWorks you will
+
+280
+00:36:33.000 --> 00:36:39.000
+see it in the original string state once
+the action is running it will
+automatically get a set of command and
+
+281
+00:36:39.000 --> 00:36:47.000
+once a set of command is completely done
+you will see the instance in registered
+state and then you can start assigning
+
+282
+00:36:47.000 --> 00:36:54.000
+it to one or multiple
+absolute layers and then it will be in
+assigning also running a setup and once
+
+283
+00:36:54.000 --> 00:37:00.000
+you set up this done will be online and
+it will behave as I said there's a
+normal of substances I will also give
+
+284
+00:37:00.000 --> 00:37:17.000
+you a email about that right now so we
+have our stack with eecs layer I will
+create a new layer and this example I
+
+285
+00:37:17.000 --> 00:37:28.000
+will I want to row to deploy in a waiter
+plication very simple one so created a
+rate Slayer the layers now created now I
+
+286
+00:37:28.000 --> 00:37:36.000
+click on add instance so for normal use
+case you would now create the blueprints
+for the ec2 instance but now we go here
+
+287
+00:37:36.000 --> 00:37:47.000
+to the tap on the on the right side and
+we can click your register an instance
+maybe a little bigger and I cannot
+
+288
+00:37:47.000 --> 00:37:55.000
+choose between existing situations and
+on-premises instances in this case I
+want to have on premises then I click on
+
+289
+00:37:55.000 --> 00:38:03.000
+install area still I and that case are
+already of course install to CLI but if
+you haven't registered instance yet you
+
+290
+00:38:03.000 --> 00:38:12.000
+get all the information here on the link
+i can choose between running it directly
+on the on-premises server or on some
+
+291
+00:38:12.000 --> 00:38:22.000
+machine that has ssh access to the
+on-premises server and that's what we
+know now we'll get a command that I can
+
+292
+00:38:22.000 --> 00:38:33.000
+run to actually start the registration
+on a machine i have a virtualbox running
+here so it's just a plain you bun 20 s
+
+293
+00:38:33.000 --> 00:38:43.000
+nothing is installed just the plain
+installation and i will just copy over
+these this command and I will start it
+
+294
+00:38:43.000 --> 00:38:51.000
+here so the only very minor things i
+need to change for example ife
+credentials already set up and its
+
+295
+00:38:51.000 --> 00:39:00.000
+profile register i also don't need to
+user name because it's the same one on
+the vm as on my local computer the only
+
+296
+00:39:00.000 --> 00:39:11.000
+thing i need to specify
+are the private key to login and I gives
+the IP address of the virtual machine
+
+297
+00:39:11.000 --> 00:39:27.000
+running and virtual box here the bigger
+oops so so basically you see it's like
+the register command I just specified
+
+298
+00:39:27.000 --> 00:39:35.000
+here the profile of want to use to get
+the credentials then there's the
+infrastructure class on premises for
+
+299
+00:39:35.000 --> 00:39:42.000
+registration of ec2 instance you would
+just specify the infrastructure class
+easy to let us let you fly the the
+
+300
+00:39:42.000 --> 00:39:52.000
+region I use in this Dec ID and the the
+private key to actually log in and the
+IP address as I haven't used the root
+
+301
+00:39:52.000 --> 00:40:03.000
+user but just the normal user I will not
+be asked for the sudo password and now
+the a translation work so what is up to
+
+302
+00:40:03.000 --> 00:40:16.000
+X doing here so we inject a small shell
+code that then downloading Z the agent
+and starting the edge installation which
+
+303
+00:40:16.000 --> 00:40:25.000
+is by which is done on ec2 instance
+startups works why are the easy to you
+metadata service with the user data but
+
+304
+00:40:25.000 --> 00:40:31.000
+here we have to inject it manually
+y-axis h or as i said you can start
+since the installer directly on the
+
+305
+00:40:31.000 --> 00:40:42.000
+on-premises server another thing that we
+are now doing is here is as this is not
+in AWS entity we need some some user on
+
+306
+00:40:42.000 --> 00:40:55.000
+the machine that is actually registering
+the your server to to our back-end and
+therefore we create an iron user with
+
+307
+00:40:55.000 --> 00:41:06.000
+minimal permissions which was also done
+by the ADA BSC lie so if you if you go
+to the IM console we see that there's no
+
+308
+00:41:06.000 --> 00:41:13.000
+user which is called after the stack
+name so it's always prefixed with
+observations on his tech name and then
+
+309
+00:41:13.000 --> 00:41:20.000
+the appeared rest of the
+the server but you can also specify the
+user name yourself and we see if you
+
+310
+00:41:20.000 --> 00:41:31.000
+look at the policy that this user has
+access to call objects rigid sentence
+for the resource which is the iron of
+
+311
+00:41:31.000 --> 00:41:43.000
+the stack and it allows it for to look
+like it's 48 hours in sync no this is
+actually for one hour because of the UTC
+
+312
+00:41:43.000 --> 00:41:56.000
+time zone here so we see now that the
+VMS are we showing up to the embassy
+host name of this machine I have running
+
+313
+00:41:56.000 --> 00:42:05.000
+here so it's just reusing the host name
+but you can also specify your honors
+theme it's now running the setup which
+
+314
+00:42:05.000 --> 00:42:12.000
+is like the basic abstract setup will
+for example create the users that you've
+specified in your stack and once the
+
+315
+00:42:12.000 --> 00:42:28.000
+setup is done we can assign it to to
+that layer so we see here that that is
+installers actually already done so this
+
+316
+00:42:28.000 --> 00:42:39.000
+part is over and the ops works system
+has triggered a set up command which was
+now executed the vm is no registered and
+
+317
+00:42:39.000 --> 00:42:51.000
+we can just click here and done and at
+that instance to our rates etc so we can
+hear say we have the other side
+
+318
+00:42:51.000 --> 00:42:57.000
+instances we just click on the one that
+I just register but we can also like
+setup like which is the 20 machines and
+
+319
+00:42:57.000 --> 00:43:10.000
+then assign them here at once now we
+find the instance to that so that layer
+will run another set up on this instance
+
+320
+00:43:10.000 --> 00:43:18.000
+which will now set up a rates
+application server so it will install
+apache it will automatically deploy the
+
+321
+00:43:18.000 --> 00:43:26.000
+application so I've predefined an
+application here so very small rates
+application
+
+322
+00:43:26.000 --> 00:43:36.000
+which is available here on github so
+once the setup has automatically
+installed the rates application server
+
+323
+00:43:36.000 --> 00:43:47.000
+pesci and so on all the dependencies
+that are needed it will deploy sees this
+application directly from from github so
+
+324
+00:43:47.000 --> 00:43:56.000
+we see notes it's running set up and a
+few seconds it should also be in online
+state and then we can have a look at the
+
+325
+00:43:56.000 --> 00:44:10.000
+small application that is it's running
+maybe if you go to the I'm console we
+see that that we also have created a
+
+326
+00:44:10.000 --> 00:44:18.000
+group for you so every time you rigid
+sentence we put them all into one group
+/ / stack that you can easily
+
+327
+00:44:18.000 --> 00:44:24.000
+differentiate where the users are coming
+from especially if you have multiple
+multiple stacks and this is user we
+
+328
+00:44:24.000 --> 00:44:35.000
+created for registering instances you
+don't need like a full admin access we
+can have a user with restricted access
+
+329
+00:44:35.000 --> 00:44:43.000
+so this is user that I have configured
+for running a sea CLI command that I've
+shown you so if you look at the policy
+
+330
+00:44:43.000 --> 00:44:52.000
+there are a couple of things that this
+user needs so we start with the IM
+permissions we see that we needed to
+
+331
+00:44:52.000 --> 00:45:05.000
+create a group created user create a
+policy and the edit adding the user to Z
+it to the group and we have also some
+
+332
+00:45:05.000 --> 00:45:12.000
+permissions that we need for props works
+for example this command here gives you
+all the information if you want to
+
+333
+00:45:12.000 --> 00:45:18.000
+implement it yourself because this is
+for convenience so Z you can just use
+this Eli command but you can if you want
+
+334
+00:45:18.000 --> 00:45:25.000
+to integrate in your system you can
+actually describe the stack provision
+parameters and then use them for
+
+335
+00:45:25.000 --> 00:45:31.000
+actually doing the bootstrapping
+yourself so they have our customer
+demand already foot just integrated and
+
+336
+00:45:31.000 --> 00:45:37.000
+so until they are their own system but
+if you want to start at just use this
+Eli it's it's quite easy just just
+
+337
+00:45:37.000 --> 00:45:46.000
+running that command
+so now the instance switch to online and
+so we can have a look if it's not
+
+338
+00:45:46.000 --> 00:45:53.000
+working so click now on the IP address
+of that virtual machine yeah and it's
+actually running that writes application
+
+339
+00:45:53.000 --> 00:46:07.000
+of just deployed yes that's what I
+wanted to show you if you have any
+questions please let us know and thank
+you very much

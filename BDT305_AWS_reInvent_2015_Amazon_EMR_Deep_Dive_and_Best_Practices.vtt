@@ -1,0 +1,2757 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:09.000
+everyone thanks very much for coming my
+name is Rahul potluck I run the EMR
+business for AWS so it's really a
+
+2
+00:00:09.000 --> 00:00:16.000
+pleasure to be here to talk to you about
+the service I'm also here with Scott
+Donaldson and Clayton Kovar from FINRA
+
+3
+00:00:16.000 --> 00:00:23.000
+one of our customers they'll be speaking
+about how they're using EMR at scale as
+a petabyte scale data warehouse in their
+
+4
+00:00:23.000 --> 00:00:32.000
+environment and just before we get going
+a quick show of hands how many people
+here are existing EMR customers use EMR
+
+5
+00:00:32.000 --> 00:00:44.000
+today okay about two thirds how many
+people use Hadoop in some fashion okay
+just about everyone great and so we'll
+
+6
+00:00:44.000 --> 00:00:50.000
+get started what we're going to cover is
+i'm going to give you an update on the
+latest EMR release this is something
+
+7
+00:00:50.000 --> 00:00:57.000
+that we shipped last week will then talk
+about some of the key capabilities of
+EMR some of this will be familiar to
+
+8
+00:00:57.000 --> 00:01:04.000
+some of you but we'll try and get into
+some actionable tips that you can use in
+your environments we will also talk a
+
+9
+00:01:04.000 --> 00:01:11.000
+little bit about how to lower your EMR
+costs so one of the things about AWS is
+that we want you to spend as little as
+
+10
+00:01:11.000 --> 00:01:17.000
+possible to get the work done that you
+need to and so we'll talk about how to
+get more value out of the service but
+
+11
+00:01:17.000 --> 00:01:23.000
+really the bulk of the talk is going to
+be Scott the senior director of
+technology at FINRA talking about how
+
+12
+00:01:23.000 --> 00:01:30.000
+they've been able to use EMR in their
+environments to run large volume queries
+on large data sets at scale in a secure
+
+13
+00:01:30.000 --> 00:01:40.000
+environment and then we will have time
+for questions at the end so diving into
+EMR I think that most of the room is
+
+14
+00:01:40.000 --> 00:01:46.000
+familiar with it but essentially we are
+managed clusters for applications in the
+Hadoop stack and really this is anything
+
+15
+00:01:46.000 --> 00:01:56.000
+that's in the Apache ecosystem you can
+use with EMR so whether it's spark or
+presto or hive HBase everything will run
+
+16
+00:01:56.000 --> 00:02:03.000
+we also extend the Hadoop stack with EMR
+FS which is a file system that
+essentially looks like HDFS to the
+
+17
+00:02:03.000 --> 00:02:11.000
+applications and this allows your apps
+to extend into s3 which is one of the
+dominant storage tiers and what we'll
+
+18
+00:02:11.000 --> 00:02:17.000
+talk about a fair bit today but also in
+today
+DB Kinesis and redshift and so you can
+
+19
+00:02:17.000 --> 00:02:25.000
+run jobs that run across these data
+stores and run them transparently in
+your applications then we also integrate
+
+20
+00:02:25.000 --> 00:02:33.000
+with the AWS security infrastructure so
+V pcs I am controls encryption at the
+object level that we'll talk about on
+
+21
+00:02:33.000 --> 00:02:42.000
+the AWS key management service and from
+a security perspective all of the things
+that you're familiar with an AWS is
+
+22
+00:02:42.000 --> 00:02:49.000
+supported here we also completed hip
+eligibility for EMR that was done in
+July and so if you're running
+
+23
+00:02:49.000 --> 00:02:57.000
+applications that require HIPAA
+compliance that's also supported and
+were covered under the AWS baa and we
+
+24
+00:02:57.000 --> 00:03:04.000
+can follow up on that if you have
+specific questions and and then EMR also
+integrates with spot who's everyone
+
+25
+00:03:04.000 --> 00:03:11.000
+familiar with spot market could not as
+many people so we'll talk a little bit
+about what that is and how you can
+
+26
+00:03:11.000 --> 00:03:21.000
+leverage it in EMR as well so last week
+we released EMR version 4.1 this was
+actually a turned out to be a pretty big
+
+27
+00:03:21.000 --> 00:03:28.000
+release for us so we added support for
+transparent HDFS encryption using the
+Hadoop kms that allows you to plug in
+
+28
+00:03:28.000 --> 00:03:37.000
+your own key materials provider and so
+this encrypts if the FS data it encrypts
+the shuffle in MapReduce and transit
+
+29
+00:03:37.000 --> 00:03:43.000
+between nodes and it also encrypts scrap
+space on the local disk so you can
+actually run a fully secured local
+
+30
+00:03:43.000 --> 00:03:54.000
+environment we added spark 1.5 dot oh
+and I know 1.51 just came out and we'll
+add that pretty quickly in the next next
+
+31
+00:03:54.000 --> 00:03:59.000
+few weeks and we also added Zeppelin
+Zeppelin if you're not familiar with it
+is essentially a notebook like
+
+32
+00:03:59.000 --> 00:04:05.000
+environment where you can run
+interactive queries in spark do
+visualizations and collaborate with
+
+33
+00:04:05.000 --> 00:04:13.000
+other users on the system we added
+presto presto is a sequel on Hadoop
+technology that came out of Facebook
+
+34
+00:04:13.000 --> 00:04:21.000
+it's apache license and it can operate
+sequel queries directly against s3 so
+lets you run very large scale there and
+
+35
+00:04:21.000 --> 00:04:28.000
+we also add support for air-pal and this
+is a project from airbnb which is a
+friend
+
+36
+00:04:28.000 --> 00:04:36.000
+front end 22 presto and then the hive
+one is in there Lucy's in there we added
+Hugh which is a user interface for
+
+37
+00:04:36.000 --> 00:04:44.000
+Hadoop and that we improved some api's
+for launching and configuring EMR
+clusters and so generally focus on ease
+
+38
+00:04:44.000 --> 00:04:51.000
+of use from a development integration
+environment and we'll continue to see
+currency with applications in the Hadoop
+
+39
+00:04:51.000 --> 00:04:57.000
+ecosystem and then you always have the
+ability to add anything that's not part
+of the core distribution using custom
+
+40
+00:04:57.000 --> 00:05:03.000
+install actions and so if there's custom
+code that you have or packages or
+applications those can all be brought
+
+41
+00:05:03.000 --> 00:05:12.000
+onto the cluster as well in addition to
+the distribution we also added support
+for intelligent resize so I for example
+
+42
+00:05:12.000 --> 00:05:18.000
+you wanted to launch a thousand node
+cluster instead of having to wait for a
+thousand notes to become available EMR
+
+43
+00:05:18.000 --> 00:05:24.000
+will actually just incrementally take
+whatever capacity is there and start the
+work on your cluster and then
+
+44
+00:05:24.000 --> 00:05:30.000
+opportunistically add it as it becomes
+available so your time to getting jobs
+executed as much shorter in this
+
+45
+00:05:30.000 --> 00:05:37.000
+environment especially if there's any
+temporary capacity blitz and then on the
+resize down what we added was the
+
+46
+00:05:37.000 --> 00:05:43.000
+ability to wait for work to be drained
+from notes if you want to cut your
+cluster in half we will wait for works
+
+47
+00:05:43.000 --> 00:05:49.000
+two jobs to finish with an optional time
+out on half the nodes before
+decommissioning them so you can scale
+
+48
+00:05:49.000 --> 00:05:56.000
+down without introducing job latency by
+having to retry and then we also as part
+of this added the ability to scale down
+
+49
+00:05:56.000 --> 00:06:03.000
+your core node so in EMR core nodes
+aware you have HDFS storage and you can
+now grow and shrink your HDFS storage
+
+50
+00:06:03.000 --> 00:06:10.000
+and we just will replicate on to a
+smaller round of space will check to see
+that you have enough HDFS on your target
+
+51
+00:06:10.000 --> 00:06:16.000
+size to house the data that you have
+allocated and in that scenario we'll be
+able to resize down so a lot more
+
+52
+00:06:16.000 --> 00:06:26.000
+flexibility in dealing with elasticity
+and EMR so one of the core parts of EMR
+that makes it interesting and typically
+
+53
+00:06:26.000 --> 00:06:34.000
+different from on-premise or dupe
+environments is EMR FS and so what EMFs
+does is it allows you to extend your
+
+54
+00:06:34.000 --> 00:06:42.000
+Hadoop and apache jobs into the AWS
+ecosystem the primary one here is s3
+and the biggest benefit of s3 with EMR
+
+55
+00:06:42.000 --> 00:06:49.000
+is that you can decouple your storage
+and compute so if you think about
+classic Hadoop data lakes that might run
+
+56
+00:06:49.000 --> 00:06:55.000
+on ec2 or on-premise typically your data
+will get cold pretty quickly and you
+find yourself adding nodes to your
+
+57
+00:06:55.000 --> 00:07:00.000
+cluster just to house your data and
+those nodes aren't really helping you
+with compute jobs because you're not
+
+58
+00:07:00.000 --> 00:07:07.000
+using that capacity and so by separating
+storage and compute and using s3
+directly you can essentially have your
+
+59
+00:07:07.000 --> 00:07:14.000
+storage grow infinitely independently of
+your compute at s3 storage rates so
+three cents a gigabyte a month about
+
+60
+00:07:14.000 --> 00:07:20.000
+three hundred sixty dollars a terabyte a
+year which is much lower cost typically
+than you can achieve with 3-way
+
+61
+00:07:20.000 --> 00:07:26.000
+replicated data sitting in HDFS and as3
+as you know is designed for 11 nines of
+durability so you don't need to re
+
+62
+00:07:26.000 --> 00:07:35.000
+replicate once your data is there it can
+be used directly and with EMR FS you
+don't have to ingest data into HDFS
+
+63
+00:07:35.000 --> 00:07:41.000
+before you can use it it can stream
+directly into your jobs and so you can
+stream data in stream it out and go that
+
+64
+00:07:41.000 --> 00:07:48.000
+way and so this allows you to resize
+your clusters turn them off turn them on
+without having any impact on your core
+
+65
+00:07:48.000 --> 00:07:54.000
+data sets the other big benefit is that
+it allows you to point multiple clusters
+at the same source of truth which is an
+
+66
+00:07:54.000 --> 00:08:01.000
+s3 so if you have different departments
+that want to operate different jobs they
+can act in isolation their clusters can
+
+67
+00:08:01.000 --> 00:08:06.000
+be charged with our business units and
+their departments and they don't affect
+the core production operations of your
+
+68
+00:08:06.000 --> 00:08:12.000
+environment this also allows you to
+split interactive query workloads from
+ETL type workloads and again gives you
+
+69
+00:08:12.000 --> 00:08:19.000
+more flexibility in how you operate
+another big thing and Scott will talk
+about this as well is it allows you the
+
+70
+00:08:19.000 --> 00:08:24.000
+flexibility to evolve your analytic
+infrastructure so if you're you know
+you're all familiar with the Hadoop
+
+71
+00:08:24.000 --> 00:08:30.000
+ecosystem there's a new version of
+something every week or two and and some
+of these technologies are interesting
+
+72
+00:08:30.000 --> 00:08:35.000
+and you want to experiment with them in
+an EMR environment you can just spin up
+a new cluster with that new technology
+
+73
+00:08:35.000 --> 00:08:41.000
+operate in parallel on your data with
+your core production environment and
+then once you make a decision about
+
+74
+00:08:41.000 --> 00:08:47.000
+which technology you want to adopt you
+can easily cut over from one to the
+other so it buys you a lot of future
+
+75
+00:08:47.000 --> 00:08:53.000
+proofing and option value because you
+can keep pace as the analytic tool set
+evolves your infrastructure can evolve
+
+76
+00:08:53.000 --> 00:09:01.000
+with it
+without any expensive replat forming re
+transformation of data and with the
+
+77
+00:09:01.000 --> 00:09:08.000
+amorphouse we've also done some things
+to make s3 more performant and easier to
+use and so there's readout for right
+
+78
+00:09:08.000 --> 00:09:16.000
+consistency so you don't have to worry
+about eventual consistency in s3 there's
+also we've sped up list operations so if
+
+79
+00:09:16.000 --> 00:09:22.000
+you think about s3 buckets with
+potentially millions of small files
+listing them as you're doing jobs can
+
+80
+00:09:22.000 --> 00:09:28.000
+take some time and with the MRF s i'll
+talk about what we've done we've
+essentially built a map in DynamoDB that
+
+81
+00:09:28.000 --> 00:09:34.000
+allows for very fast list operations and
+so that can speed up job throughput
+overall and this is transparent to your
+
+82
+00:09:34.000 --> 00:09:42.000
+applications again you're just writing
+jobs as you normally would and going
+from there and then as you know s3 has
+
+83
+00:09:42.000 --> 00:09:50.000
+three tiers of encryption the server
+side which is checkbox there is you can
+also do client-side encryption and you
+
+84
+00:09:50.000 --> 00:09:57.000
+can do client-side with keys that you
+provide either from a lot from an on AWS
+key management system or you can
+
+85
+00:09:57.000 --> 00:10:04.000
+integrate with AWS kms and that's all
+transparently supported through mr FS so
+you can run jobs that will read and
+
+86
+00:10:04.000 --> 00:10:10.000
+write encrypted data using your key
+provider of choice without having to do
+a lot of expensive configuration or deal
+
+87
+00:10:10.000 --> 00:10:17.000
+with complexity there and when we talk
+about transparent to applications if you
+think of you know a hive job on HDFS
+
+88
+00:10:17.000 --> 00:10:25.000
+you've got a path to a local data set if
+you're going to s3 it's just a simple
+matter of pointing to the different
+
+89
+00:10:25.000 --> 00:10:30.000
+location you're not actually changing
+anything in how you operate so you get
+the flexibility of s3 and decoupled
+
+90
+00:10:30.000 --> 00:10:39.000
+storage and compute without having to
+change or replumb your applications and
+if you're running technologies like
+
+91
+00:10:39.000 --> 00:10:47.000
+spark for example on EMR they take
+advantage of encrypted data on s3 you
+can run secure jobs in spark through
+
+92
+00:10:47.000 --> 00:10:54.000
+this layer using sparks equal and have
+access to the overall ecosystem you can
+even write spark queries that traverse
+
+93
+00:10:54.000 --> 00:11:01.000
+s3 dynamodb and kanisha streams join
+them together pull those into our DD so
+a lot of flexibility in terms of
+
+94
+00:11:01.000 --> 00:11:09.000
+extending into the AWS ecosystem beyond
+what sits in HDFS
+and with the fast listing layer might be
+
+95
+00:11:09.000 --> 00:11:15.000
+a little hard to read but typically if
+you've got something like a consider
+case of a million objects listing them
+
+96
+00:11:15.000 --> 00:11:23.000
+might take 150 seconds with s free
+directly 30 seconds going through EMR FS
+so you can dramatically speed up access
+
+97
+00:11:23.000 --> 00:11:31.000
+to jobs using the the tooling that we've
+provided and then with EMR FS and
+support for client-side encryption
+
+98
+00:11:31.000 --> 00:11:39.000
+essentially in this model you can
+encrypt data at the object level going
+into s3 using a key provider of your
+
+99
+00:11:39.000 --> 00:11:46.000
+choice could be your own crypto could be
+safe net boxes sitting outside of AWS as
+I think was talked about in the prior
+
+100
+00:11:46.000 --> 00:11:53.000
+session or it could be the AWS key
+management service which lets you define
+keys set up i am policies for those keys
+
+101
+00:11:53.000 --> 00:11:59.000
+connect with other services and audit
+the use of those keys those can encrypt
+your objects the objects are encrypted
+
+102
+00:11:59.000 --> 00:12:04.000
+using envelope encryption and the
+metadata is a pointer to the key
+essentially an EMR FS can then use this
+
+103
+00:12:04.000 --> 00:12:11.000
+transparently to encrypt and decrypt
+objects transparently for your
+processing and so this is capability
+
+104
+00:12:11.000 --> 00:12:22.000
+that's built in and lets you run very
+secure workloads using EMR now Mr also
+HDFS is always available so when you
+
+105
+00:12:22.000 --> 00:12:30.000
+provision clusters you designate a
+certain number of core nodes your HDFS
+exists in that environment and and you
+
+106
+00:12:30.000 --> 00:12:35.000
+can use them for iterative workloads
+typically if you think about it s 3 is a
+network access there's an overhead to
+
+107
+00:12:35.000 --> 00:12:42.000
+that connection if you're losing very
+small files of a lot of iterative
+workloads you're not amortized that
+
+108
+00:12:42.000 --> 00:12:47.000
+fixed cost of the connection over a
+large volume of data transfer so you
+might see some latency relative to
+
+109
+00:12:47.000 --> 00:12:54.000
+running locally in HDFS and so HDFS is
+it still available for you for those
+kinds of jobs and you may want to
+
+110
+00:12:54.000 --> 00:12:59.000
+consider technologies like spark and
+pulling that data into memory for it
+iterative processing of our dd's that's
+
+111
+00:12:59.000 --> 00:13:07.000
+something that we see more and more and
+we provide a s3 disk CP utility so this
+is a distributed copy from s3 that lets
+
+112
+00:13:07.000 --> 00:13:16.000
+you ingest data into HDFS in parallel
+from s3 at very high throughput rates so
+if you need HDFS it's it's there for you
+
+113
+00:13:16.000 --> 00:13:23.000
+and you know when you're
+thinking about storage formats there's a
+wide range of choices available to you
+
+114
+00:13:23.000 --> 00:13:31.000
+again all of this can be supported you
+choose how you format your data onto on
+s3 for consumption our typical advice to
+
+115
+00:13:31.000 --> 00:13:38.000
+customers is when you're using s3 as
+your data storage here just bring in
+your door edita and whatever format it's
+
+116
+00:13:38.000 --> 00:13:43.000
+being generated in and then process it
+into whatever format you need for the
+systems that you're going to use the
+
+117
+00:13:43.000 --> 00:13:49.000
+query it and so this way you have an
+archive of your raw data you have a data
+that's ready in a format for processing
+
+118
+00:13:49.000 --> 00:13:56.000
+you know these could be row oriented
+column column-oriented formats typically
+your use cases in the nature of your
+
+119
+00:13:56.000 --> 00:14:02.000
+data will determine what you choose
+there so for analytic type workloads
+column formats can be great because
+
+120
+00:14:02.000 --> 00:14:07.000
+typically you're operating analytic
+queries on a subset of the columns in a
+table and so you're able to get better
+
+121
+00:14:07.000 --> 00:14:12.000
+performance because you're only
+accessing portions of the data rows
+stores can be great if you're trying to
+
+122
+00:14:12.000 --> 00:14:17.000
+look up all of the information about a
+particular key and so those options are
+all available to you in the s3
+
+123
+00:14:17.000 --> 00:14:23.000
+environment and if you've got schema
+that's evolving many of the
+self-describing formats like Avro or
+
+124
+00:14:23.000 --> 00:14:29.000
+thrift or protobuf can also help you
+keep track of schema as it changes
+giving you flexibility in that regard
+
+125
+00:14:29.000 --> 00:14:36.000
+and when you're using s3 as your primary
+data store what we recommend is use the
+hive meta store and have it running in
+
+126
+00:14:36.000 --> 00:14:42.000
+something like rdf so that way it's
+running and persistent and highly
+available off cluster and this allows
+
+127
+00:14:42.000 --> 00:14:48.000
+you to then spin up spin down multiple
+clusters pointed the same hive meta
+store and then have access to all the
+
+128
+00:14:48.000 --> 00:14:56.000
+tables and data sitting on s3 and other
+factors to think about are the tool sets
+that you're using and so different
+
+129
+00:14:56.000 --> 00:15:04.000
+technologies will work better or worse
+with different data formats and as with
+all things databases you've really got
+
+130
+00:15:04.000 --> 00:15:11.000
+to just try it out and see what works
+best so for example in the case of
+presto in the earlier session and as
+
+131
+00:15:11.000 --> 00:15:18.000
+that found that with the encrypted data
+parque files worked better than 0 RC and
+it just depends on the technology that
+
+132
+00:15:18.000 --> 00:15:26.000
+you use and you always have the option
+to experiment with multiple variants and
+then set set your sights and the ones
+
+133
+00:15:26.000 --> 00:15:33.000
+that work best for your workloads one
+other tip when dealing with us three is
+that small files can be problem
+
+134
+00:15:33.000 --> 00:15:40.000
+we talked about the fixed overhead of
+getting that data and so you really want
+to avoid small files where possible and
+
+135
+00:15:40.000 --> 00:15:46.000
+typically have files that map to your
+block size because ultimately those
+files will feed into a mapper that
+
+136
+00:15:46.000 --> 00:15:52.000
+mapper is going to be a JVM spinning
+that up also has a fixed cost and you
+want to try and amortize that over
+
+137
+00:15:52.000 --> 00:15:58.000
+larger volumes of data to maximize the
+overall throughput of the cluster and
+with small files you have a couple of
+
+138
+00:15:58.000 --> 00:16:04.000
+options you can either shrink the HDFS
+block size and that can be done when
+you're spinning up the cluster or adding
+
+139
+00:16:04.000 --> 00:16:12.000
+nodes to it or the what we think is the
+better option is used as three disc CP
+to combine the files in two sizes that
+
+140
+00:16:12.000 --> 00:16:19.000
+are large enough to operate efficiently
+I think the default block size we
+provide an EMR is 128 megabytes and you
+
+141
+00:16:19.000 --> 00:16:26.000
+want to use that wherever you can
+another tip when dealing with s 3 and s
+3 back data stores is compression
+
+142
+00:16:26.000 --> 00:16:32.000
+generally speaking compression is the
+way to go because the savings of the
+network transfer more than offsets the
+
+143
+00:16:32.000 --> 00:16:41.000
+cost of encryption and decryption so I
+have compression and decompression and
+you know the choices in that scenario
+
+144
+00:16:41.000 --> 00:16:47.000
+are thinking about when you're thinking
+about what compression types to use
+ultimately to trade off between time and
+
+145
+00:16:47.000 --> 00:16:53.000
+space so if your space sensitive then
+you want to use something that
+compresses more efficiently if your time
+
+146
+00:16:53.000 --> 00:16:59.000
+sensitive you can use something where
+speed is paramount the table is there
+for reference one other thing to think
+
+147
+00:16:59.000 --> 00:17:06.000
+about is the split ability of your
+compression so typically if you have
+very large files you want to think about
+
+148
+00:17:06.000 --> 00:17:12.000
+splittable compression models so that
+you can provide splits to the mappers
+and not have to essentially bottleneck
+
+149
+00:17:12.000 --> 00:17:18.000
+while processing one large file because
+that data skew will lead to essentially
+your cluster not operating with as much
+
+150
+00:17:18.000 --> 00:17:26.000
+parallel throughput as possible you're
+effectively hot spotting and then from a
+cost perspective we really do want you
+
+151
+00:17:26.000 --> 00:17:33.000
+to spend as little as possible on our
+services and s3 is your persistent data
+store automatically saves we've seen
+
+152
+00:17:33.000 --> 00:17:40.000
+customers save seventy to ninety percent
+relative to keeping data live in HDFS
+simply because you don't have to
+
+153
+00:17:40.000 --> 00:17:45.000
+replicate it you can shrink down your
+compute if you're running batch
+workloads that compute doesn't have to
+
+154
+00:17:45.000 --> 00:17:51.000
+be all
+is on so for example climate corporation
+which does weather modeling for
+
+155
+00:17:51.000 --> 00:17:58.000
+simulation for selling weather insurance
+so they run simulations using soil
+samples weather samples to try and
+
+156
+00:17:58.000 --> 00:18:03.000
+predict what they should price their
+contracts at and they run these
+simulations every day so they actually
+
+157
+00:18:03.000 --> 00:18:10.000
+spin up several thousand node cluster
+nightly to rerun the scenarios process
+data from s3 simulate right data back
+
+158
+00:18:10.000 --> 00:18:17.000
+out to s3 and that cluster only runs for
+a few hours and so that flexibility with
+s3 is your data store just saves you
+
+159
+00:18:17.000 --> 00:18:26.000
+money across the board and with spot so
+we talked about spot briefly so the spot
+market on ec2 is a market for unused ec2
+
+160
+00:18:26.000 --> 00:18:34.000
+capacity and you can get up to a 90
+percent discount relative to on-demand
+rates with spot and essentially it's a
+
+161
+00:18:34.000 --> 00:18:42.000
+market so you pick a bid price the
+market price fluctuates based on supply
+and demand and with EMR you can build in
+
+162
+00:18:42.000 --> 00:18:47.000
+essentially a bidding strategy you can
+pick a max bid price you can pick the
+number of nodes you want to operate at
+
+163
+00:18:47.000 --> 00:18:53.000
+that price and so if you have your
+cluster size for 10 nodes because that's
+your SLA and it gets your job done by 2
+
+164
+00:18:53.000 --> 00:19:00.000
+a.m. but you want to opportunistically
+add up to 10 more at ninety percent off
+when that's available EMR will add those
+
+165
+00:19:00.000 --> 00:19:06.000
+to your cluster your job gets done in
+half the time your lower up and you have
+a lower average cost per job and so this
+
+166
+00:19:06.000 --> 00:19:12.000
+is just capability that's built in and
+if you're not using spot for batch
+processing workloads you're definitely
+
+167
+00:19:12.000 --> 00:19:18.000
+probably paying more than you need to so
+we definitely recommend taking advantage
+of that and then if you have
+
+168
+00:19:18.000 --> 00:19:25.000
+steady-state workloads for always on
+ad-hoc clusters or interactive models
+the knee mr works perfectly with ec2
+
+169
+00:19:25.000 --> 00:19:31.000
+reserved instances and we even have
+customers that will use their instances
+for app servers during the day and then
+
+170
+00:19:31.000 --> 00:19:36.000
+at night when they're not serving as
+much traffic they'll bring those
+instances into their EMR clusters and we
+
+171
+00:19:36.000 --> 00:19:44.000
+can opportunistically take advantage of
+that capacity so wherever possible you
+can match costs to your workloads and
+
+172
+00:19:44.000 --> 00:19:48.000
+now with that I'm going to turn over to
+Scott and we'll walk you through how
+finna has been using EMR at scale and
+
+173
+00:19:48.000 --> 00:20:01.000
+then we'll come back for questions so
+thank you
+Thank You Rahul before I get started I
+
+174
+00:20:01.000 --> 00:20:08.000
+just do want to give a great deal of
+thanks to Rahul in the EMR team we
+started on our migration of moving to
+
+175
+00:20:08.000 --> 00:20:15.000
+the cloud started experimenting about
+two years ago and really about a year
+year and a half ago came into a full
+
+176
+00:20:15.000 --> 00:20:21.000
+force of moving our market data and the
+EMR team both in terms of the sport
+product feature requests and the
+
+177
+00:20:21.000 --> 00:20:30.000
+engineering staff have been just
+top-notch in terms of making this
+journey a possible so so before we get
+
+178
+00:20:30.000 --> 00:20:37.000
+started let me just give a quick
+background of who is Finneran what is it
+that we we do so Fenner is a were a non
+
+179
+00:20:37.000 --> 00:20:46.000
+we're a private regulator of the
+financial markets we bring in data from
+all of the equities exchanges or ninety
+
+180
+00:20:46.000 --> 00:20:51.000
+nine percent of the equities exchanges
+and over two-thirds of the options
+exchanges as well as regulate the fixed
+
+181
+00:20:51.000 --> 00:20:57.000
+income markets when you look at that
+from a dollar volume perspective that
+represents over 600 billion dollars of
+
+182
+00:20:57.000 --> 00:21:05.000
+trading activity a day and up to 75
+billion events per day that we bring in
+that we're ingesting and these rows are
+
+183
+00:21:05.000 --> 00:21:12.000
+typically quite large their order
+reports and very detailed some of these
+records have anywhere from 200 to 300
+
+184
+00:21:12.000 --> 00:21:18.000
+attributes and these can be quite wide
+in terms of the details that we have on
+that and currently within s3 we're
+
+185
+00:21:18.000 --> 00:21:25.000
+storing over 5 petabytes of that data
+currently online and we continue every
+day to add more and more to that what we
+
+186
+00:21:25.000 --> 00:21:32.000
+do with that data is we reconstruct it
+after the fact and what we look at our
+any ways of looking for basically market
+
+187
+00:21:32.000 --> 00:21:38.000
+integrity and looking for malfeasance in
+the market so these things can range
+from items such as layering and spoofing
+
+188
+00:21:38.000 --> 00:21:46.000
+any sort of market manipulation in that
+regard also two items like insider
+trading and fraud a recent example of
+
+189
+00:21:46.000 --> 00:21:52.000
+what would the work that we do at Vanara
+there was a big press release a little
+over a month ago from the SEC on an
+
+190
+00:21:52.000 --> 00:21:58.000
+insider trading case that was a over a
+hundred million dollars that involved 32
+traders that were ended up being charged
+
+191
+00:21:58.000 --> 00:22:05.000
+between the US Canada and in Eastern
+Europe and what that was was an insider
+trading ring where some Ukrainian
+
+192
+00:22:05.000 --> 00:22:11.000
+hackers were hacking into news wire
+services getting into basically
+unannounced public
+
+193
+00:22:11.000 --> 00:22:16.000
+earnings announcements feeding that
+information back of the traders they
+would open up accounts take an advantage
+
+194
+00:22:16.000 --> 00:22:23.000
+position on that sell it and they ended
+up with over a hundred million dollars
+in illegal profits what FINRA does is we
+
+195
+00:22:23.000 --> 00:22:29.000
+our jurisdiction is not that that falls
+into the area of the SEC the FBI and
+other foreign agencies like the FSA but
+
+196
+00:22:29.000 --> 00:22:39.000
+we're sort of one of the front lines of
+defense on the US markets in that regard
+so NR moved to the cloud EMR is
+
+197
+00:22:39.000 --> 00:22:45.000
+ubiquitous within our architecture and
+before we kind of jump into where we
+wrap we should understand where we came
+
+198
+00:22:45.000 --> 00:22:52.000
+from one of the aspects of where we are
+running within our own data center is
+probably a familiar sort of format that
+
+199
+00:22:52.000 --> 00:23:00.000
+many anybody working in big data has we
+used a variety of very disparate
+relational databases of Oracle and San
+
+200
+00:23:00.000 --> 00:23:07.000
+we also had a variety of different data
+warehouse appliances and we had many of
+these boxes one of the issue of bringing
+
+201
+00:23:07.000 --> 00:23:14.000
+in this much data and on any particular
+day the market volatility can change you
+we can end up with spikes where the
+
+202
+00:23:14.000 --> 00:23:19.000
+volume can Lily double in the span of a
+day or two and being able to scale to
+that capacity and provision that much
+
+203
+00:23:19.000 --> 00:23:27.000
+capital is is very cost prohibitive and
+so what we need to be able to do is we
+were always optimizing on a couple of
+
+204
+00:23:27.000 --> 00:23:32.000
+different variables of both of space and
+storage and compute and often dealing
+with a lot of trade-offs and that
+
+205
+00:23:32.000 --> 00:23:39.000
+sometimes we are we optimizing for our
+ETL or for our series of batch analytics
+or sometimes we would be disadvantaging
+
+206
+00:23:39.000 --> 00:23:45.000
+in terms of interactive queries because
+you're optimizing around these other
+variables as opposed to laying out the
+
+207
+00:23:45.000 --> 00:23:51.000
+data and optimizing as to what is the
+particular use case that you're trying
+to do when we moved over as we're moving
+
+208
+00:23:51.000 --> 00:23:57.000
+up to the cloud we wanted to remove and
+break that constraint and move through
+EMR and s3 we're able to achieve that so
+
+209
+00:23:57.000 --> 00:24:01.000
+what we have is that we use EMR
+literally throughout our entire
+architecture everywhere from where we
+
+210
+00:24:01.000 --> 00:24:09.000
+bring in the data to where we are doing
+etl and data ingest and ingress and data
+normalization we run a variety of batch
+
+211
+00:24:09.000 --> 00:24:15.000
+analytic programs every day we're
+constantly looking at daily weekly
+monthly quarterly annually look back
+
+212
+00:24:15.000 --> 00:24:21.000
+periods around us looking for these
+items like layering and spoofing and
+insider trading and then ultimately what
+
+213
+00:24:21.000 --> 00:24:27.000
+we do with that is generate a serious
+events that a regulatory analysts looked
+at and now they need to actually
+
+214
+00:24:27.000 --> 00:24:32.000
+investigate this so there's a workflow
+around this they have to go they have to
+investigate this and they use things
+
+215
+00:24:32.000 --> 00:24:37.000
+where we provide various different query
+clusters sometimes they're doing
+targeted queries other times they're
+
+216
+00:24:37.000 --> 00:24:43.000
+doing very large-scale investigations
+and they need a wide or a very large
+slice of the market in that case we use
+
+217
+00:24:43.000 --> 00:24:49.000
+EMR and hive and we put that into a
+redshift and create little private data
+Mart's for the users so now they can
+
+218
+00:24:49.000 --> 00:24:56.000
+query on that particular slice and these
+slices are taking lily from several
+trillions that we have in s3 several
+
+219
+00:24:56.000 --> 00:25:03.000
+trillion several trillion records within
+our database with in s3 putting that and
+we create slices that might range from a
+
+220
+00:25:03.000 --> 00:25:09.000
+couple hundred thousand rows to actually
+several billion rows we've created data
+Mart's for individual users that have
+
+221
+00:25:09.000 --> 00:25:15.000
+ranged in the 250 billion and they're
+still doing that for an analysis where
+they're doing that over a range of time
+
+222
+00:25:15.000 --> 00:25:26.000
+so at for us at FINRA as as a Rahul is
+alluding to it's always about like the
+data right that's ultimately what we're
+
+223
+00:25:26.000 --> 00:25:33.000
+trying to be able to do an s3 is that
+durable source of record and what we do
+with that is and then EMR FS provides
+
+224
+00:25:33.000 --> 00:25:40.000
+that consistent view for us the key for
+us is what we do is that we've separated
+what we're doing in terms of archiving
+
+225
+00:25:40.000 --> 00:25:46.000
+the data versus what we do in terms of
+query for use and will create two or
+three copies of that data and have it
+
+226
+00:25:46.000 --> 00:25:52.000
+partitioned in different ways on top of
+an archival format and to help manage on
+orchestrate all of this Finn arrows
+
+227
+00:25:52.000 --> 00:26:00.000
+created what we call our fin or data
+manager and actually yesterday peer of
+mine Tigran announced yesterday during
+
+228
+00:26:00.000 --> 00:26:06.000
+the s3 we offender has open source staff
+in our data manager it's called heard
+you can actually find that out on github
+
+229
+00:26:06.000 --> 00:26:12.000
+to be able to pull that and what that
+does is provides a unified catalog of
+all of our data objects and data sets
+
+230
+00:26:12.000 --> 00:26:18.000
+across s3 and wherever they're being
+provisioned it provides lineage and
+tracking and usage and it also allows us
+
+231
+00:26:18.000 --> 00:26:23.000
+to do cluster management so we've
+abstracted all these different services
+at an infrastructure layer so that we
+
+232
+00:26:23.000 --> 00:26:28.000
+don't actually have to sew individual
+development teams don't need to be able
+to be worried about that and they can
+
+233
+00:26:28.000 --> 00:26:35.000
+focus on the matter at hand of what
+their particular item that they're
+trying to develop along with that you
+
+234
+00:26:35.000 --> 00:26:40.000
+have to look at like what is the right
+I'll format and what's the right
+compression for us because we're dealing
+
+235
+00:26:40.000 --> 00:26:46.000
+with such volumes of data within the
+archive what we selected was visa
+because of the high compression that's
+
+236
+00:26:46.000 --> 00:26:51.000
+really out there we keep it in s3 for a
+short period of time and then move that
+over in the glacier and I think at this
+
+237
+00:26:51.000 --> 00:26:57.000
+time we're sitting with not just we have
+over five petabytes of data just sitting
+inside of glacier and several other and
+
+238
+00:26:57.000 --> 00:27:04.000
+several more petabytes over an s3 as we
+archive this data our requirements as a
+regulator of these financial markets is
+
+239
+00:27:04.000 --> 00:27:09.000
+that we have to keep this data for over
+seven years and we have to keep full
+fidelity on these records you can't
+
+240
+00:27:09.000 --> 00:27:13.000
+bring a legal case against somebody and
+be missing one record out of a million
+when you're trying to prove a case
+
+241
+00:27:13.000 --> 00:27:19.000
+that's the first thing the lawyers going
+to point at and get the case dismissed
+so that chain of custody and that
+
+242
+00:27:19.000 --> 00:27:26.000
+evidence control is critical and
+paramount with everything that we do
+once we have that data an archive format
+
+243
+00:27:26.000 --> 00:27:32.000
+we under we take a look at what are the
+usages that we're doing of that data and
+then put it into the right format and
+
+244
+00:27:32.000 --> 00:27:38.000
+partition it and lay it out for the
+particular purpose that we're trying to
+serve now some of the nuances that we
+
+245
+00:27:38.000 --> 00:27:45.000
+have within our data is that we don't
+get all the data for a particular event
+date on the date we received it so we
+
+246
+00:27:45.000 --> 00:27:50.000
+had some unique challenges as we are
+laying out and trying to partition
+looking at that and optimizing our query
+
+247
+00:27:50.000 --> 00:27:58.000
+so what we have in the in the equities
+market for instance we have over 20,000
+ticker symbols being traded between
+
+248
+00:27:58.000 --> 00:28:04.000
+Nasdaq nicey and over-the-counter we
+have over 10,000 firms that are trading
+on these activities that range from the
+
+249
+00:28:04.000 --> 00:28:10.000
+goldman sachs bank of americas and
+merrill lynch's to a mom and pop shop
+that literally you know a two-person
+
+250
+00:28:10.000 --> 00:28:15.000
+firm that operates out of their house
+there are participants in these markets
+so if you're looking at that from a
+
+251
+00:28:15.000 --> 00:28:22.000
+partitioning we always require a date
+and an and or an issue or a firm
+typically with most of our query use
+
+252
+00:28:22.000 --> 00:28:27.000
+cases that would represent over 200
+million partitions and our data is
+highly skewed because Bank of America
+
+253
+00:28:27.000 --> 00:28:34.000
+treating an amazon stock is much higher
+than some small mom-and-pop shop trading
+in an over-the-counter security so what
+
+254
+00:28:34.000 --> 00:28:40.000
+we ended up doing is that that violates
+the one tenant which is having small
+files out on s3 so what we ended up
+
+255
+00:28:40.000 --> 00:28:46.000
+coming up with is a hashing algorithm
+both where we grouped the issue symbols
+into over a hundred different buckets
+
+256
+00:28:46.000 --> 00:28:52.000
+and looking at the number of firms and
+given the size of that we ended
+kind of like with our sweet spot of
+
+257
+00:28:52.000 --> 00:29:01.000
+trying to have our data file sizes
+within these buckets to be in the 128 to
+256 megabytes range and that provided us
+
+258
+00:29:01.000 --> 00:29:06.000
+sort of the throughput that we are
+looking for that optimize within there
+are various different queries so as you
+
+259
+00:29:06.000 --> 00:29:11.000
+were doing any sort of queries around
+these if you're doing a symbol query you
+would hit at most 10 partitions plus a
+
+260
+00:29:11.000 --> 00:29:17.000
+late partition so we get this point oh
+three percent of the data that can
+trickle in slowly over the course of a
+
+261
+00:29:17.000 --> 00:29:22.000
+year to two years and every day we have
+to continue to add that into it to make
+sure that it's relevant within that
+
+262
+00:29:22.000 --> 00:29:28.000
+query if you're doing a firm query you
+had hit a hundred and one partitions as
+opposed to the millions of millions of
+
+263
+00:29:28.000 --> 00:29:32.000
+partitions that you have and if you're
+doing a simple query you'd hit one part
+you would actually hit just two
+
+264
+00:29:32.000 --> 00:29:39.000
+partitions the single one with all of
+the late data so one of the things that
+we had experimented in high was actually
+
+265
+00:29:39.000 --> 00:29:44.000
+trying to use bucketing but that didn't
+actually work with sort of the
+multi-dimensional analysis that we were
+
+266
+00:29:44.000 --> 00:29:50.000
+trying to be able to do with this nor
+did it work with sort of Union all what
+we are doing is that oftentimes we are
+
+267
+00:29:50.000 --> 00:29:56.000
+emerging orders information trading and
+quoting so a variety of different event
+types and we needed to be able to Union
+
+268
+00:29:56.000 --> 00:30:04.000
+these across different time so an
+example of creating that hive table is
+that we would create it we would in our
+
+269
+00:30:04.000 --> 00:30:11.000
+case we had chosen to use orc and this
+time with snappy compression so snappy
+gives you very fast compress and
+
+270
+00:30:11.000 --> 00:30:16.000
+decompress and we were using work with
+all these partitions and we would create
+these and we would have basically the
+
+271
+00:30:16.000 --> 00:30:22.000
+table name the event date and then
+actually the hash partition which define
+that particular table basically that
+
+272
+00:30:22.000 --> 00:30:29.000
+file then represented that partitioning
+scheme now what we were competing
+against as I was stating earlier was the
+
+273
+00:30:29.000 --> 00:30:34.000
+data appliances and so you hear a lot of
+questions around like hive and the
+performance of what you're able to
+
+274
+00:30:34.000 --> 00:30:40.000
+provide so the incumbent in our regard
+that we were battling against were the
+types of queries we were running on our
+
+275
+00:30:40.000 --> 00:30:46.000
+data warehouse appliances our initial
+release that we put out in February this
+year we were in the ballpark we spent a
+
+276
+00:30:46.000 --> 00:30:52.000
+lot of time partitioning and laying out
+and testing and tuning both the query
+and the cluster around this and we got
+
+277
+00:30:52.000 --> 00:30:58.000
+it within the ballpark and we were able
+to go out the door with that now
+partitioning is great but right
+
+278
+00:30:58.000 --> 00:31:04.000
+literally three days before we are going
+live with this we are back processing
+and adding more and more data
+
+279
+00:31:04.000 --> 00:31:09.000
+literally we have tens of millions of
+partitions in our high meta store where
+we're loading three or four years worth
+
+280
+00:31:09.000 --> 00:31:15.000
+of this data and a typical query that we
+were running we have embedded the hash
+partitioning into the sequel query
+
+281
+00:31:15.000 --> 00:31:23.000
+itself so you didn't have to enumerate
+problem with that is that the hive meta
+store can actually interpret the P Mod
+
+282
+00:31:23.000 --> 00:31:28.000
+functions in terms of that so what it
+was doing is that the hide meta store
+couldn't do that predicate push down
+
+283
+00:31:28.000 --> 00:31:34.000
+that Lily returned millions of
+partitions back to the hive server and
+all of a sudden a query that was taking
+
+284
+00:31:34.000 --> 00:31:39.000
+30 45 seconds now was taking 10 minutes
+two hours because of the number of
+partitions that actually had the prune
+
+285
+00:31:39.000 --> 00:31:46.000
+in the high server to process so what we
+ended up having to do is literally two
+days before launch around this is
+
+286
+00:31:46.000 --> 00:31:53.000
+refactor our code and come back in and
+actually layout and specifically
+enumerate the hash partitions and within
+
+287
+00:31:53.000 --> 00:31:58.000
+that we couldn't use an in clause
+because that was just sort of the
+limitation within hive so as you're
+
+288
+00:31:58.000 --> 00:32:04.000
+building this data you always have to be
+aware of what are the limitations of the
+particular tools that you're using and
+
+289
+00:32:04.000 --> 00:32:10.000
+what are the different query use cases
+around the app now putting the data up
+there is great and being able to query
+
+290
+00:32:10.000 --> 00:32:17.000
+it but its financial records and they
+have to be secure Nate Salmons was
+actually from Nasdaq was in the prior
+
+291
+00:32:17.000 --> 00:32:23.000
+session and he spoke actually quite at a
+depth of this and we use many of the
+same techniques that Nasdaq is doing
+
+292
+00:32:23.000 --> 00:32:30.000
+where they are actually providing this
+data one is that we require all of our
+data at rest to be encrypted all of our
+
+293
+00:32:30.000 --> 00:32:38.000
+data and flight is encrypted and all our
+data on inside of a server has to be
+encrypted so s three we had internally
+
+294
+00:32:38.000 --> 00:32:45.000
+walked our early on within our process
+moving to the cloud we involved are in
+first information security folks and
+
+295
+00:32:45.000 --> 00:32:51.000
+they came up with the assessment we had
+to sell that not only to our IT
+management but our business management
+
+296
+00:32:51.000 --> 00:32:58.000
+to all the exchanges that we regulate so
+Nasdaq nicey the CBOE as well as the SEC
+into our Board of Governors which
+
+297
+00:32:58.000 --> 00:33:04.000
+represents all of the firms that over
+see what FINRA does and what we had
+found is that we actually believe that
+
+298
+00:33:04.000 --> 00:33:09.000
+running ourselves up on the cloud was
+actually more secure than actually
+running it within our own data centers
+
+299
+00:33:09.000 --> 00:33:17.000
+that we were operating given the amount
+of data that we bring up and shuffle and
+move around one of the aspects that in
+
+300
+00:33:17.000 --> 00:33:23.000
+sorry i forgot the touch on within our
+architectures that every day that we're
+very very transient we bring up anywhere
+
+301
+00:33:23.000 --> 00:33:31.000
+from nine thousand to 12,000 nodes per
+day where we're doing these analytics in
+the batch and the ETL and those nodes go
+
+302
+00:33:31.000 --> 00:33:37.000
+away at the end of the day so we're
+constantly bringing up and shutting down
+on a daily basis the ones we do have a
+
+303
+00:33:37.000 --> 00:33:43.000
+server up we're using Lux encryption
+with a random memory key and so if we
+were to have to lose it a particular
+
+304
+00:33:43.000 --> 00:33:49.000
+node or lose a server you've lost that
+data but it doesn't really matter for us
+because the golden source of truth is
+
+305
+00:33:49.000 --> 00:33:54.000
+always sitting down in s3 and it's
+sitting in those external tables we just
+reinitialize the cluster and bring it
+
+306
+00:33:54.000 --> 00:34:01.000
+back up and do it again and then we also
+use security groups and I am and now
+with the advent of the Hadoop
+
+307
+00:34:01.000 --> 00:34:07.000
+transparent encryption that's now in the
+EMR for one we're going to be evaluating
+that looking at taking advantage of a
+
+308
+00:34:07.000 --> 00:34:14.000
+lot of those different features at vm
+our team that provides for us now we go
+back to why did we end up selecting EMR
+
+309
+00:34:14.000 --> 00:34:21.000
+in the first place we had been running
+internal Hadoop ourselves and we're
+looking at doing running Hadoop up in
+
+310
+00:34:21.000 --> 00:34:27.000
+the cloud some of our tables as i was
+talking of our different events one or
+just one of our tables is over 600
+
+311
+00:34:27.000 --> 00:34:35.000
+terabytes to represent that data so to
+just put that one table in the HDFS on a
+set of eq two clusters would have taken
+
+312
+00:34:35.000 --> 00:34:41.000
+at least 30 d 28 x cells that represents
+over a million and a half and costs
+annually to be able to operate that
+
+313
+00:34:41.000 --> 00:34:47.000
+cluster whereas storing that data on s3
+and bringing up Andy telling it or
+querying it when we needed it to it was
+
+314
+00:34:47.000 --> 00:34:53.000
+120 thousand dollars is what we're
+paying effectively on that in terms of
+the storage and the clusters when we
+
+315
+00:34:53.000 --> 00:34:59.000
+extend that to our other data sets that
+we have we're you know we're tripling
+over the number of nodes of these high
+
+316
+00:34:59.000 --> 00:35:04.000
+capacity nodes that you need so it goes
+back to the point of having that
+separation of the storage versus the
+
+317
+00:35:04.000 --> 00:35:10.000
+compute we don't need that much compute
+power for the types of queries that were
+typically are running that we don't need
+
+318
+00:35:10.000 --> 00:35:15.000
+that much because the queries page over
+time there's most of the volume that
+they're looking at is over the first few
+
+319
+00:35:15.000 --> 00:35:21.000
+months but we have to be able to query
+into the data that goes back up to seven
+years the other item that goes along
+
+320
+00:35:21.000 --> 00:35:27.000
+with that you'll always hear the
+argument of within Hadoop is that you
+have to have data locality now if you
+
+321
+00:35:27.000 --> 00:35:33.000
+perfectly sort of lay out your data and
+get it all little day
+locality which is a ton of work you
+
+322
+00:35:33.000 --> 00:35:38.000
+might be able to achieve up to like two
+times performance over what you're doing
+in general where you're just laying out
+
+323
+00:35:38.000 --> 00:35:43.000
+the partitions and working through
+external tables what we saw is about a
+15 to and eighteen percent degradation
+
+324
+00:35:43.000 --> 00:35:48.000
+and performance in general unless you
+were willing just put in all of that
+extra effort to get perfect data
+
+325
+00:35:48.000 --> 00:35:56.000
+locality within your HDFS note so you
+know the trade-off of that given the
+cost was well worth it of using EMR and
+
+326
+00:35:56.000 --> 00:36:04.000
+s3 one of the other items that we
+considered to help deal with that or
+where we do have our most it is the most
+
+327
+00:36:04.000 --> 00:36:10.000
+recent data is typically the most query
+data we debated actually storing that
+data into locally HDFS using s3 disk
+
+328
+00:36:10.000 --> 00:36:17.000
+copy and putting that in there but that
+provided an operational issue that as
+you have that cluster the partition
+
+329
+00:36:17.000 --> 00:36:21.000
+maintenance you couldn't actually have a
+separate hide meta store around that it
+actually had to be on cluster and so
+
+330
+00:36:21.000 --> 00:36:26.000
+hydrating the cluster with millions of
+millions of partitions the
+initialization of that cluster could
+
+331
+00:36:26.000 --> 00:36:31.000
+actually take hours to onboard that
+whereas if you already connect to an
+existing hive meta store that can
+
+332
+00:36:31.000 --> 00:36:36.000
+actually materialize in a matter of
+minutes one of the other beauties of
+just moving on to the cloud one of the
+
+333
+00:36:36.000 --> 00:36:43.000
+advantages that we're looking to take
+advantage of was the ability to move and
+change instance types as opposed to when
+
+334
+00:36:43.000 --> 00:36:48.000
+you're running inside of your own data
+center the fact that you are basically
+committed to at least three years maybe
+
+335
+00:36:48.000 --> 00:36:55.000
+five years of sitting on that particular
+hardware platform we went live initially
+with based on the types of queries and
+
+336
+00:36:55.000 --> 00:37:01.000
+analyzing what we were doing we went
+live with one of our career clusters
+with about 140 nodes using m3 class
+
+337
+00:37:01.000 --> 00:37:06.000
+machines and that was based on the
+different types of queries now one of
+the constraints that we had within our
+
+338
+00:37:06.000 --> 00:37:11.000
+own internal environment of dealing with
+these appliances that they couldn't deal
+with concurrency we had to build a whole
+
+339
+00:37:11.000 --> 00:37:15.000
+governance around that they were limited
+in the amount of data and the record
+sets that we would through the
+
+340
+00:37:15.000 --> 00:37:21.000
+application returned to them so that we
+basically time shared the appliances
+across hundreds and across hundreds even
+
+341
+00:37:21.000 --> 00:37:27.000
+thousands of users asking their
+different questions once we turn once we
+separated this concern and basically
+
+342
+00:37:27.000 --> 00:37:33.000
+unleashed a level of untapped demand
+Lily it wasn't a move down the curve
+able to shift in the curve right it
+
+343
+00:37:33.000 --> 00:37:38.000
+shifted outward in terms of what types
+of questions they're asking what size of
+data that they're asking for and so we
+
+344
+00:37:38.000 --> 00:37:44.000
+ended up learning from that and we were
+receiving various different hive and
+query errors around that
+
+345
+00:37:44.000 --> 00:37:50.000
+and so we started refactoring the code
+and looking at the various different
+instance types the new C 3 4 s had came
+
+346
+00:37:50.000 --> 00:37:56.000
+out and we were testing and
+experimenting around that and we
+actually found that by going with
+
+347
+00:37:56.000 --> 00:38:03.000
+smaller larger nodes fewer nodes in your
+cluster of larger nodes given the memory
+in the CPU ended up having better
+
+348
+00:38:03.000 --> 00:38:09.000
+throughput and we could actually deliver
+greater concurrency than what we had and
+the net result of that is that we
+
+349
+00:38:09.000 --> 00:38:15.000
+actually now weren't just competing with
+the incumbent we're actually beating it
+we ended up improving our overall query
+
+350
+00:38:15.000 --> 00:38:21.000
+performance across all of our various
+different test cases by over thirty six
+percent we ended up with a greater level
+
+351
+00:38:21.000 --> 00:38:27.000
+of concurrency now we are supporting
+anywhere from 40 to sometimes 40 to 50
+concurrent queries were in our old
+
+352
+00:38:27.000 --> 00:38:34.000
+appliances we would support 8 to 10 and
+all of this at a much lower cost both of
+what we are running before hand on our
+
+353
+00:38:34.000 --> 00:38:41.000
+initial version of EMR and a much
+greater cost efficiency than what we are
+doing off of our internal environment so
+
+354
+00:38:41.000 --> 00:38:45.000
+one of the other aspects is you're
+always looking at costs as an aspect
+that's always the selling point as
+
+355
+00:38:45.000 --> 00:38:51.000
+you're trying to move up data to the
+cloud is right sizing your cluster and
+our case a touched on it just a little
+
+356
+00:38:51.000 --> 00:38:57.000
+bit ago is that you look at your ETL
+your batch analytics and these things
+are very very transient and here we
+
+357
+00:38:57.000 --> 00:39:03.000
+heavily use the spot market typically
+within our SLA s we've had very few spot
+failures and so when you're architecting
+
+358
+00:39:03.000 --> 00:39:09.000
+your batch analytics your details you
+have to understand that like the job may
+not complete if you get all bid and then
+
+359
+00:39:09.000 --> 00:39:14.000
+the cluster gets taken away from you and
+in reality we've seen very few failures
+within that where that actually occurs
+
+360
+00:39:14.000 --> 00:39:22.000
+and what you can do as I looked a like
+bit above the market price or even above
+the on-demand price because you only
+
+361
+00:39:22.000 --> 00:39:29.000
+actually pay at the price what the
+market is doing as a strategy around
+that within the analytics perspective
+
+362
+00:39:29.000 --> 00:39:35.000
+what we had to look at is what we're a
+couple of factors what is the amount of
+queries that we needed to serve at the
+
+363
+00:39:35.000 --> 00:39:41.000
+low period as opposed to the peak period
+so it changes your mentality of how
+you're trying to architect your solution
+
+364
+00:39:41.000 --> 00:39:47.000
+before we are always architecting and
+capacity sizing for peak now we are
+looking at what is the minimum that we
+
+365
+00:39:47.000 --> 00:39:53.000
+needed service level that we needed to
+provide and how do we grow up and scale
+up to the particular use cases that the
+
+366
+00:39:53.000 --> 00:39:58.000
+business is demanding and if we needed
+50 nodes and we need to go to 200 nodes
+we
+
+367
+00:39:58.000 --> 00:40:03.000
+easily add that to the capacity so it
+was really a balance of what was that
+minimum set and also what is that
+
+368
+00:40:03.000 --> 00:40:09.000
+minimum that you need to put into HDFS
+no matter what you're doing you still
+have to have some level of HDFS within
+
+369
+00:40:09.000 --> 00:40:15.000
+hmmm use within your core nodes that's
+for various different statistics and
+logging and all the aspects that kind of
+
+370
+00:40:15.000 --> 00:40:23.000
+run with that so what we found is so the
+way you can kind of minimize your costs
+around that is then going out and
+
+371
+00:40:23.000 --> 00:40:28.000
+reserving your mastering your core nodes
+that minimum size and then growing your
+core and your caps notes up on top of
+
+372
+00:40:28.000 --> 00:40:35.000
+that to scale up and then at when the
+peak demand goes away then we scale that
+back down right now we're doing that
+
+373
+00:40:35.000 --> 00:40:41.000
+primarily on a timing basis and we
+constantly monitor and look at that and
+we're looking to take advantage of some
+
+374
+00:40:41.000 --> 00:40:47.000
+more the intelligent resizing
+capabilities with the new EMR release as
+we go forward one of the finite amount
+
+375
+00:40:47.000 --> 00:40:52.000
+is that as we scaled up you needed to
+keep roughly about a 5 to 1 ratio
+otherwise your core nodes end up
+
+376
+00:40:52.000 --> 00:41:01.000
+becoming a bit of a bottleneck with all
+the logging aspects that you need to be
+able to do that just HDFS requires so
+
+377
+00:41:01.000 --> 00:41:08.000
+one of the other things that Rahul both
+touched on as well as Nate and you see
+this as a common practice in terms of
+
+378
+00:41:08.000 --> 00:41:13.000
+architectures is basically having a
+single meta store and that meta store
+should be off cluster the advantages of
+
+379
+00:41:13.000 --> 00:41:22.000
+this or are several-fold one is that you
+get a high level of fault tolerant in
+terms of having a multi-zone AZ with it
+
+380
+00:41:22.000 --> 00:41:27.000
+with your meta store and that's always
+on and that your initialization of your
+servers is much faster now they're just
+
+381
+00:41:27.000 --> 00:41:35.000
+basically initiating a connection to
+your RDS instance around this and now
+onboarding that before if you're trying
+
+382
+00:41:35.000 --> 00:41:40.000
+to set up the meta store as part of your
+cluster you're literally where we are
+doing millions and millions of
+
+383
+00:41:40.000 --> 00:41:44.000
+partitions it can take about seven
+minutes per day to onboard the
+partitions and if you're doing it over a
+
+384
+00:41:44.000 --> 00:41:51.000
+course of a month or a year that cluster
+may take hours for it to initialize one
+of the nuances that you have to be aware
+
+385
+00:41:51.000 --> 00:41:56.000
+of is looking at the tool sets that
+you're doing as much as we would love to
+have in terms of open source and
+
+386
+00:41:56.000 --> 00:42:01.000
+interoperability between file sets
+whether it be or core part k and the
+various different tools out there of
+
+387
+00:42:01.000 --> 00:42:06.000
+hive and presto there's nuances and
+there's differences in the data types
+and what sort of semantics that they
+
+388
+00:42:06.000 --> 00:42:12.000
+support high 13 is different than high
+one which is different than presto what
+we are
+
+389
+00:42:12.000 --> 00:42:17.000
+ultimately trying to be able to have is
+that one copy of the data and eventually
+you know these products are starting to
+
+390
+00:42:17.000 --> 00:42:23.000
+converge around some of those nuances
+around the data types and we and as that
+comes in but in the meantime what we do
+
+391
+00:42:23.000 --> 00:42:29.000
+is that we keep a different version we
+keep a single meta store on a single RDS
+instance but we keep multiple versions
+
+392
+00:42:29.000 --> 00:42:36.000
+of that and we keep that updated on a
+daily basis and a part of our fin or
+data manager what we do is as new data
+
+393
+00:42:36.000 --> 00:42:42.000
+comes in or new versions of that come in
+that those partitions will automatically
+get added and updated and so you as a
+
+394
+00:42:42.000 --> 00:42:48.000
+consumer don't have to deal with all of
+that maintenance right if you are a team
+that's focused on analytics or batch
+
+395
+00:42:48.000 --> 00:42:54.000
+analytics you now no longer have to deal
+with all of that infrastructure in the
+pit and the partition maintenance that
+
+396
+00:42:54.000 --> 00:42:58.000
+you normally would even if you're
+running like your own database or
+swapping partitions in and out of your
+
+397
+00:42:58.000 --> 00:43:07.000
+appliances or your other relational data
+store so one of the last points that I
+guess I'd like to be able to kind of
+
+398
+00:43:07.000 --> 00:43:12.000
+like touch on in terms of best practices
+is that you have to be constantly
+monitoring learning and optimizing and
+
+399
+00:43:12.000 --> 00:43:18.000
+adapting around this you know one of the
+when we initially went out the door we
+weren't doing anything we primarily had
+
+400
+00:43:18.000 --> 00:43:25.000
+a single cue set up within our EMR and
+we were basically clogging the highways
+we would have a lot of smaller queries
+
+401
+00:43:25.000 --> 00:43:31.000
+that might be asking for five thousand
+rows 10,000 rows a hundred thousand rows
+a million rows somebody would come in
+
+402
+00:43:31.000 --> 00:43:37.000
+and ask for data set that would actually
+be like several billion so everybody's
+smaller queries would get clogged up
+
+403
+00:43:37.000 --> 00:43:42.000
+behind that so what we did is that we
+implemented that and we basically route
+the query in terms of the various
+
+404
+00:43:42.000 --> 00:43:47.000
+different queues inside of the EMR
+cluster to separate that concern
+secondly is that you always have to be
+
+405
+00:43:47.000 --> 00:43:53.000
+refactoring your code you got to be
+looking at where your bottlenecks and
+redesigning and refactoring and taking
+
+406
+00:43:53.000 --> 00:43:58.000
+advantage of the new tools and the new
+versions and what comes out and what can
+you do in terms of like caching or other
+
+407
+00:43:58.000 --> 00:44:06.000
+mechanisms around that one always will
+be looking to optimize on your costs in
+terms of transient clusters and one of
+
+408
+00:44:06.000 --> 00:44:11.000
+the things that if you're looking at
+your ETA your batch analytics so within
+Amazon you're paying on the hour of
+
+409
+00:44:11.000 --> 00:44:16.000
+those servers take a look at your sizing
+the worst thing that you'd want to be
+able to do is have a job that runs like
+
+410
+00:44:16.000 --> 00:44:23.000
+you know 62 minutes when if you added 10
+more nodes to it it would complete in 55
+so then you're paying that extra hour on
+
+411
+00:44:23.000 --> 00:44:27.000
+those expert
+so if you're looking to optimize on cost
+you have to play around with that you
+
+412
+00:44:27.000 --> 00:44:33.000
+got to look at what your sizing is and
+be able to to try to manage inside of
+that one other item that was a unique
+
+413
+00:44:33.000 --> 00:44:41.000
+that we had ran into of running at least
+in terms of some of our hive queries
+over s3 was basically expected of
+
+414
+00:44:41.000 --> 00:44:47.000
+execution so some of our queries are
+very very long running over the EMR and
+through s3 and what speculative
+
+415
+00:44:47.000 --> 00:44:54.000
+execution does is that it want as high
+of the Seas if the process had taken too
+long it will launch a new thread to try
+
+416
+00:44:54.000 --> 00:44:59.000
+to be able to do that the first and the
+first process would ultimately finish
+while the second one was still looking
+
+417
+00:44:59.000 --> 00:45:03.000
+at it and it would overwrite some of the
+results and we picked up on the
+completion of the first thread not
+
+418
+00:45:03.000 --> 00:45:09.000
+knowing that the other one was was
+unaware so it's just basically was just
+a little item and we end up catching
+
+419
+00:45:09.000 --> 00:45:14.000
+that relatively early on and some other
+things you can do is using like
+broadcast joins in terms of being able
+
+420
+00:45:14.000 --> 00:45:21.000
+to take small you know small dimension
+or various different fact tables and
+kind of cashing those in there and you
+
+421
+00:45:21.000 --> 00:45:26.000
+can use things like the EMR step API
+when you're basically setting up various
+different job queues but using items
+
+422
+00:45:26.000 --> 00:45:33.000
+like Uzi where you have more complex
+jobs the net result of all of this is
+that we ended up actually removing
+
+423
+00:45:33.000 --> 00:45:39.000
+obstacles one of the tenants that we had
+within sort of FINRA technology is get
+technology out of the way it's to
+
+424
+00:45:39.000 --> 00:45:45.000
+empower and provide self service to the
+individual business consumers to let
+them ask whatever questions of the data
+
+425
+00:45:45.000 --> 00:45:51.000
+that they wanted to I kind of call it
+the Ganesh effect who's a remover of
+obstacles and that's basically getting
+
+426
+00:45:51.000 --> 00:45:56.000
+technology out of the way and let them
+do what they want to do the other aspect
+is that we've lowered that cost of
+
+427
+00:45:56.000 --> 00:46:02.000
+curiosity so now what we are able to do
+is provide multiple clusters and
+separation of concerns we have various
+
+428
+00:46:02.000 --> 00:46:07.000
+different business departments and they
+are looking at the data in different
+ways we have off as a chief economist
+
+429
+00:46:07.000 --> 00:46:12.000
+and they're looking for trends and
+profiles we have market regulation that
+are looking for regularities and events
+
+430
+00:46:12.000 --> 00:46:18.000
+and sequences within the data and so we
+can separate those concerns we can
+optimize around that and they can get to
+
+431
+00:46:18.000 --> 00:46:24.000
+the types of queries that they're
+looking to be able to do the other
+aspect around this is that when you're
+
+432
+00:46:24.000 --> 00:46:30.000
+in a fixed capacity environment in your
+own data center is that you're always
+dealing with I kind of call ways called
+
+433
+00:46:30.000 --> 00:46:35.000
+it the mainframe effect you're always
+shuffling data in and out we were
+dealing with a fixed capacity of
+
+434
+00:46:35.000 --> 00:46:41.000
+whatever box and even as you move from
+one box of another bigger box you're
+always still living inside of a box what
+
+435
+00:46:41.000 --> 00:46:47.000
+EMR and s3 has allowed us to do is to
+get outside of that we often times you
+end up with data fixes or data
+
+436
+00:46:47.000 --> 00:46:51.000
+Corrections you have to reprocess you
+have to rerun there's a whole series of
+analytics and decisions that have
+
+437
+00:46:51.000 --> 00:46:56.000
+already been made on that but you still
+got to meet your production SL layers of
+all your other daily jobs that need to
+
+438
+00:46:56.000 --> 00:47:03.000
+execute before it was just actually a
+few weeks ago we ended up having like a
+big data correction from one of the
+
+439
+00:47:03.000 --> 00:47:08.000
+exchanges that needed to correct over
+like six months worth of data which mean
+all of that analytics all the ETL that
+
+440
+00:47:08.000 --> 00:47:13.000
+were done on top of that needed to be
+corrected and so what that happened if
+we were doing that in the old
+
+441
+00:47:13.000 --> 00:47:18.000
+environment that might have been a two
+or three months a little mini project to
+shuffle this data in and out we did that
+
+442
+00:47:18.000 --> 00:47:24.000
+in the span of three or four days in EMR
+spinning up separate clusters around
+this and actually executing that we're
+
+443
+00:47:24.000 --> 00:47:30.000
+delivering the updated results to the
+business so they can move on and the
+other the final aspect of this is that
+
+444
+00:47:30.000 --> 00:47:34.000
+you're looking at this and you separate
+these concerns and look at these
+different services you end up ultimately
+
+445
+00:47:34.000 --> 00:47:40.000
+increasing your team's delivery velocity
+so we've picked up the pace in terms of
+what we were able to deliver in terms of
+
+446
+00:47:40.000 --> 00:47:46.000
+business value in terms of the various
+different services and features we can
+be able to deliver so just to kind of
+
+447
+00:47:46.000 --> 00:47:53.000
+recap a few of the different items as
+obviously take advantage of EMR and s3
+and resize and definitely take advantage
+
+448
+00:47:53.000 --> 00:47:58.000
+of the spot market you can save a lot of
+dollars around that which makes your
+finance and you're purchasing people
+
+449
+00:47:58.000 --> 00:48:04.000
+very happy you need to have need to look
+at always kind of having that shared
+persistent meta store that's out there
+
+450
+00:48:04.000 --> 00:48:11.000
+one of the other items I guess the last
+two are kind of near and dear to us is
+that all within this ecosystem all of
+
+451
+00:48:11.000 --> 00:48:16.000
+these things are changing and they you
+need to be able to adapt and to move
+around this having your data separated
+
+452
+00:48:16.000 --> 00:48:22.000
+from your compute and being able to
+adapt and move to different items
+currently today we use a we're using hi
+
+453
+00:48:22.000 --> 00:48:27.000
+we have smaller patches of presto and we
+can and we're growing and evolving our
+use of presto we have some smaller
+
+454
+00:48:27.000 --> 00:48:33.000
+patches of where we're using like spark
+and that continues to grow it allows you
+to these engines and these tools are
+
+455
+00:48:33.000 --> 00:48:38.000
+going to continue to evolve as long as
+you can run them in a Hadoop environment
+and r up and put them out there with
+
+456
+00:48:38.000 --> 00:48:44.000
+your data separated you're not tied to
+that particular format and goes back to
+how you do that and ultimately you need
+
+457
+00:48:44.000 --> 00:48:50.000
+to make sure that you're budgeting time
+to experiment in terms of looking at
+these engines right sizing the cluster
+
+458
+00:48:50.000 --> 00:48:53.000
+and
+demising around that you need to make
+sure you have that built into your
+
+459
+00:48:53.000 --> 00:49:00.000
+delivery schedules as you're working as
+working these items out some other
+related sessions that were out there and
+with that we'll be happy to take some
+questions we have a few minutes left

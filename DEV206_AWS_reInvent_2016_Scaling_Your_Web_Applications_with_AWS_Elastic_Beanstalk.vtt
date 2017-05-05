@@ -1,0 +1,2431 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:06.000
+thanks for coming out I'm Jeff Hoffman
+I'm the director of the AWS Elastic
+Beanstalk team with me as other arcing
+
+2
+00:00:06.000 --> 00:00:12.000
+he's a senior product manager also with
+Beanstalk and we're here to talk to you
+today about scaling web applications
+
+3
+00:00:12.000 --> 00:00:19.000
+with us Elastic Beanstalk let's talk a
+little bit about what we're going to
+cover today I'm going to start with an
+
+4
+00:00:19.000 --> 00:00:25.000
+introduction for those of you who are
+already familiar with Beanstalk I'll go
+through this at a reasonably high level
+
+5
+00:00:25.000 --> 00:00:29.000
+but I don't want to leave anybody behind
+I want to make sure we level set
+everybody gets a good understanding of
+
+6
+00:00:29.000 --> 00:00:35.000
+what we do and what were for so we'll
+talk about that we'll talk about how you
+would use Beanstalk in favor of what I
+
+7
+00:00:35.000 --> 00:00:44.000
+call DIY in this case when I mean do it
+yourself I mean we're still with AWS not
+talking about baking your own servers
+
+8
+00:00:44.000 --> 00:00:51.000
+racking and mounting things so it's
+still going to be what Beanstalk does
+versus what you could do yourself with
+
+9
+00:00:51.000 --> 00:00:57.000
+all of the same services within AWS
+we'll talk a little bit about how you
+get started with Beanstalk that should
+
+10
+00:00:57.000 --> 00:01:02.000
+be again pretty simple and
+straightforward and then I'm going to
+turn it over to adhiraj and he's going
+
+11
+00:01:02.000 --> 00:01:12.000
+to actually show us a working demo of a
+somewhat complex but not crazy complex
+Beanstalk app and he's going to use that
+
+12
+00:01:12.000 --> 00:01:17.000
+as a springboard to go through a whole
+host of best practices and that actually
+is probably gonna be the meat of our
+
+13
+00:01:17.000 --> 00:01:29.000
+discussion today so why did we make
+Beanstalk we really wanted to address
+what we saw in the market as a host of
+
+14
+00:01:29.000 --> 00:01:38.000
+challenges for customers so you can see
+that that we believe one of the things
+that customers deal with a lot is either
+
+15
+00:01:38.000 --> 00:01:43.000
+complexity or for those of you who are
+feeling kind of a little more
+sophisticated have done this lot they're
+
+16
+00:01:43.000 --> 00:01:50.000
+kind of repetitiveness of deploying code
+provisioning and managing infrastructure
+every time you want to do something with
+
+17
+00:01:50.000 --> 00:01:57.000
+a web app the expertise or time again on
+that spectrum of how sophisticated you
+feel like to actually manage and
+
+18
+00:01:57.000 --> 00:02:04.000
+configure all of the infrastructure that
+goes into hosting a web app how to
+actually do auto scaling or manage the
+
+19
+00:02:04.000 --> 00:02:11.000
+scaling of the infrastructure itself and
+then even if you master all of that even
+if you've got that all down if you're a
+
+20
+00:02:11.000 --> 00:02:15.000
+big organization you don't want
+to relearn those lessons you don't want
+to do it differently for each team
+
+21
+00:02:15.000 --> 00:02:20.000
+that's going to have to go through these
+same steps so consistency across team is
+something else that we wanted to address
+
+22
+00:02:20.000 --> 00:02:29.000
+what is the last Beanstalk for those who
+have never seen this before it's we
+think of it as the easiest way to deploy
+
+23
+00:02:29.000 --> 00:02:39.000
+and manage web services of any kind in
+AWS that's our goal so it doesn't do
+anything magical that you couldn't do
+
+24
+00:02:39.000 --> 00:02:45.000
+with AWS any other way well maybe it's a
+little bit magical but it's it's all
+open you can actually figure out
+
+25
+00:02:45.000 --> 00:02:52.000
+everything that we're doing and extend
+it and we'll talk a little bit about
+that as we go what do you manage within
+
+26
+00:02:52.000 --> 00:03:02.000
+AWS Elastic Beanstalk versus doing
+this all yourself that top little box is
+your code our goal if we do it right is
+
+27
+00:03:02.000 --> 00:03:09.000
+that at least on an ongoing basis that's
+the only piece that you worry about with
+Elastic Beanstalk we take care of for
+
+28
+00:03:09.000 --> 00:03:17.000
+you once you choose what we think of as
+kind of a supported platform everything
+else that's below that box so we we
+
+29
+00:03:17.000 --> 00:03:25.000
+handle the HTTP server the app server
+the language interpreter if there is one
+for that language the OS and then of
+
+30
+00:03:25.000 --> 00:03:30.000
+course underneath that there's still the
+same infrastructure you're used to from
+ec2 there's a host all of that stuff is
+
+31
+00:03:30.000 --> 00:03:37.000
+managed as part of what Beanstalk will
+do for you if we zoom out one level from
+that there's actually another layer of
+
+32
+00:03:37.000 --> 00:03:43.000
+kind of management that we do so beyond
+just the stack that's running your code
+there's a whole host of other
+
+33
+00:03:43.000 --> 00:03:50.000
+infrastructure pieces that you would
+expect to want for any kind of a well
+provisioned app so we have a couple
+
+34
+00:03:50.000 --> 00:03:55.000
+different options as to how will let you
+deploy you can either do a single
+instance we'll talk about what that
+
+35
+00:03:55.000 --> 00:04:02.000
+means it's great for kind of dev test
+low-cost if you don't want to do a lot
+with load balancers or auto scaling and
+
+36
+00:04:02.000 --> 00:04:07.000
+then we have a more production centric
+kind of mode of operating where we'll
+offer load balancing options for you
+
+37
+00:04:07.000 --> 00:04:13.000
+will set up auto scaling for you we do
+offer both a web in a worker tier I'll
+talk a little bit more about what that
+
+38
+00:04:13.000 --> 00:04:19.000
+means in a minute and then you can see
+kind of this example of some of the
+infrastructure we might stand up for you
+
+39
+00:04:19.000 --> 00:04:25.000
+including all the way through two RDS
+databases at the back that doesn't have
+to be the way that your infrastructure
+
+40
+00:04:25.000 --> 00:04:32.000
+looks
+actually very flexible you can choose a
+lot of very cool like under the covers
+
+41
+00:04:32.000 --> 00:04:36.000
+kind of configuration things with
+something called eb extensions which
+I'll only tease you about right now and
+
+42
+00:04:36.000 --> 00:04:44.000
+let out a rush show you a little bit
+more about that later and we even do all
+of this through to providing a domain
+
+43
+00:04:44.000 --> 00:04:50.000
+for you actually give you a cname that's
+unique to your app of course if you have
+your own most people do when they get to
+
+44
+00:04:50.000 --> 00:04:57.000
+a production level you can provide that
+as well and we'll manage that with it so
+what you're going to get from this we
+
+45
+00:04:57.000 --> 00:05:03.000
+hope is a very easy to start with
+process for those of you who just want
+to kind of experiment or if you're in
+
+46
+00:05:03.000 --> 00:05:08.000
+dev test mode are you really are
+intimidated by the variety of things
+that you can do with AWS this is still
+
+47
+00:05:08.000 --> 00:05:15.000
+the way that I think is easiest to get
+started with our eye on making the
+developers as productive and agile as we
+
+48
+00:05:15.000 --> 00:05:22.000
+possibly can but our goal really is to
+be impossible to outgrow we don't want
+this to ever be a service that we think
+
+49
+00:05:22.000 --> 00:05:31.000
+of as the kind of the only the for the
+low end of the spectrum that's not our
+goal and so to that end we provide you
+
+50
+00:05:31.000 --> 00:05:37.000
+complete control over your resources
+even though we make it easy to get
+started you can actually reach into the
+
+51
+00:05:37.000 --> 00:05:44.000
+way that Beanstalk does management of
+infrastructure and again will tease you
+a little bit with that later on that
+
+52
+00:05:44.000 --> 00:05:49.000
+note at the bottom is also important
+there's no additional cost for using a
+tab us beats doggy that's only the
+
+53
+00:05:49.000 --> 00:05:54.000
+resources that we're provisioning on
+your behalf that you're paying for this
+is a service that we provide on top of
+
+54
+00:05:54.000 --> 00:06:02.000
+that for free so what do people use us
+for is you kind of guessed from my
+language so far it's mostly a lot of web
+
+55
+00:06:02.000 --> 00:06:09.000
+applications its websites its API
+backends mobile backends but we do have
+the support for kind of a worker model a
+
+56
+00:06:09.000 --> 00:06:16.000
+asynchronous workers and we'll show a
+little bit how you choose that in a
+minute how do you get started with it
+
+57
+00:06:16.000 --> 00:06:22.000
+that's a great question that I asked
+myself so this is all you need you need
+to provide your code and then answer a
+
+58
+00:06:22.000 --> 00:06:31.000
+few kind of questions you decide exactly
+how you want to walk through the process
+of standing up your application you pick
+
+59
+00:06:31.000 --> 00:06:38.000
+a region we're in every public region
+Beanstalk is among the very first to
+deploy so as the region
+
+60
+00:06:38.000 --> 00:06:45.000
+grow we hope to always be there near
+launch you pick what we call here a
+stack type or a container type you can
+
+61
+00:06:45.000 --> 00:06:53.000
+see the supported platforms on the right
+we support Java both in Tomcat mode and
+a native just raw Java container Node
+
+62
+00:06:53.000 --> 00:07:02.000
+PHP, .net with IIS, Python, Ruby and Go and
+you'll notice docker nested in the
+middle there if you want some kind of
+
+63
+00:07:02.000 --> 00:07:09.000
+control beyond any of our like very
+prescribed stacks you can choose either
+a single kind of what we think of as
+
+64
+00:07:09.000 --> 00:07:14.000
+like a native docker instance where we
+we push out a container that just has
+support for docker and that's the only
+
+65
+00:07:14.000 --> 00:07:20.000
+assumption we make everything else you
+add to it is up to you or we have
+integration with ECS you can actually do
+
+66
+00:07:20.000 --> 00:07:27.000
+multi container kind of deployments
+through a doctor interface all the way
+to ECS is the backend you choose whether
+
+67
+00:07:27.000 --> 00:07:32.000
+you want to do a single instance or
+load-balanced auto scaled kind of
+environment and again the decision there
+
+68
+00:07:32.000 --> 00:07:39.000
+is really how what's my trade-off
+between cost and speed of deploying this
+thing versus stability kind of
+
+69
+00:07:39.000 --> 00:07:45.000
+reliability that's the thing that you
+get with a load balanced auto scaled
+environment and then you'll notice i
+
+70
+00:07:45.000 --> 00:07:50.000
+have an optional RDS piece at the bottom
+it's actually pretty easy from our
+interface to say as i stand up this
+
+71
+00:07:50.000 --> 00:07:56.000
+application infrastructure go ahead and
+create an RDS database for me as well
+that's great if you're doing dev tests
+
+72
+00:07:56.000 --> 00:08:02.000
+but i want to give you a caveat on that
+the life cycle of the RDS database did
+you create this way in this example is
+
+73
+00:08:02.000 --> 00:08:07.000
+tied to the life cycle of that
+environment that you're creating so
+again great for dev test where you want
+
+74
+00:08:07.000 --> 00:08:13.000
+to stand up a set of data to test
+against and then tear it down when you
+throw that version away not great if
+
+75
+00:08:13.000 --> 00:08:19.000
+that's what you're trying to do for
+production data we do have ways
+obviously to tie into other production
+
+76
+00:08:19.000 --> 00:08:25.000
+data environments whether it's RDS
+Dynamo pretty much anything that you can
+think of behind the scenes we can
+
+77
+00:08:25.000 --> 00:08:33.000
+actually offer a way to integrate that
+into a Beanstalk environment so some
+basic terminology that will help you
+
+78
+00:08:33.000 --> 00:08:39.000
+understand kind of the rest of what we
+talked about everything within Elastic
+Beanstalk starts with an application and
+
+79
+00:08:39.000 --> 00:08:46.000
+that's just a generic way of grouping
+together a whole host of deployed
+versions of a single APP, and when you
+
+80
+00:08:46.000 --> 00:08:51.000
+create an application the first time you
+upload any code to us the first time you
+provide us something to deploy
+
+81
+00:08:51.000 --> 00:08:59.000
+you name it you pick an application
+version for that and it doesn't have to
+be v1 v2 it could be anything that you
+
+82
+00:08:59.000 --> 00:09:04.000
+want it to be you can actually name it
+based off of a good branch you can do
+whatever you want with it and that flows
+
+83
+00:09:04.000 --> 00:09:12.000
+directly into any number of environments
+that you have the cool thing is each
+environment and really we don't were not
+
+84
+00:09:12.000 --> 00:09:18.000
+very opinionated about what you use your
+environments for but you can imagine a
+typical use cases dev test you know
+
+85
+00:09:18.000 --> 00:09:25.000
+staging prod something like that each
+one of those versions are independently
+deployed to each of those environments
+
+86
+00:09:25.000 --> 00:09:31.000
+and the coolest thing of all is that you
+can say okay when this is tested and
+proven say integration testing I can
+
+87
+00:09:31.000 --> 00:09:37.000
+take that exact same deployed
+application version by name and move it
+into prod you don't re-upload anything
+
+88
+00:09:37.000 --> 00:09:43.000
+there's no chance to incorporate
+untested changes it just moves that one
+into another environment for you and I
+
+89
+00:09:43.000 --> 00:09:48.000
+don't I say move but it doesn't even
+have to move it actually be copies you
+can have the same environment versions
+
+90
+00:09:48.000 --> 00:09:55.000
+running our application versions running
+multiple environments if you want how do
+you deploy them let's take a look
+
+91
+00:09:55.000 --> 00:10:00.000
+there's a lot of methods you can do it
+through our console we have a full web
+console as you would expect for NE AWS
+
+92
+00:10:00.000 --> 00:10:07.000
+service we also have toolkits for
+Eclipse and Visual Studio so if you want
+to you can do deploys directly from your
+
+93
+00:10:07.000 --> 00:10:15.000
+IDE and really helpful for fast turn
+kind of iterations within dev test cycle
+we have obviously support in the AWS SDK
+
+94
+00:10:15.000 --> 00:10:20.000
+and the AWS CLI so if you want to
+automate some of this stuff or if you
+have kind of a pipeline that you want to
+
+95
+00:10:20.000 --> 00:10:28.000
+bake into a eb deploy you certainly can
+but we also have our own CLI and the eb CLIs
+what i'm going to show you a little
+
+96
+00:10:28.000 --> 00:10:34.000
+bit of you'll actually see a glimpse of
+it a little bit when adhiraj does his
+demo as well it's very rich and we're
+
+97
+00:10:34.000 --> 00:10:39.000
+going to walk through a little bit of
+what you get with that in just a second
+but any of these things will do the same
+
+98
+00:10:39.000 --> 00:10:45.000
+kind of work under the covers so again
+I've mentioned we'll do a little run
+through here of what you can do with the
+
+99
+00:10:45.000 --> 00:10:51.000
+CLI with our EB CLI including how to
+install it very easy to get started you
+can also just download it if you want to
+
+100
+00:10:51.000 --> 00:10:57.000
+you don't have to do a pip install we
+assume in this case you're going to
+start with some kind of a cloned sample
+
+101
+00:10:57.000 --> 00:11:03.000
+app but again you know could be your own
+code you can start something that you
+already had and get or whatever
+
+102
+00:11:03.000 --> 00:11:08.000
+repository you you'll see on number
+three there we're doing Annie be in
+it what this does is
+
+103
+00:11:08.000 --> 00:11:13.000
+like an interactive session of walking
+you through all of those decisions I
+talked about three or four slides ago so
+
+104
+00:11:13.000 --> 00:11:19.000
+it says tell me which region you want
+name this application tell me whether
+it's single instance or if its load
+
+105
+00:11:19.000 --> 00:11:26.000
+balanced auto scale and once that's all
+done once you've walked through those
+steps it actually does the deploy for
+
+106
+00:11:26.000 --> 00:11:32.000
+you when you say eb create you're off
+and running and then from that point
+let's say you want to iterate on this as
+
+107
+00:11:32.000 --> 00:11:39.000
+you would you can continually go in a
+cycle of updating your code committing
+your changes and just it could be as
+
+108
+00:11:39.000 --> 00:11:45.000
+simple as saying eb deploy and by
+default we pull the latest committed
+change and we deploy it with the same
+
+109
+00:11:45.000 --> 00:11:51.000
+name that you've given that commit again
+you can override any of this the EB CLIs
+very rich I encourage you there's
+
+110
+00:11:51.000 --> 00:11:57.000
+links at the end of this that will go
+into more detail for everything that
+we're covering including what entourage
+
+111
+00:11:57.000 --> 00:12:05.000
+is going to get to later but the EB CLI
+offers a lot of additional kind of
+command lines which is that you can put
+
+112
+00:12:05.000 --> 00:12:10.000
+in there to kind of tailor exactly what
+you wanted to do we even give you a
+shortcut to just hop straight to a
+
+113
+00:12:10.000 --> 00:12:21.000
+browser session with whatever cname
+we've set set aside for that deployed
+out so having said that what we're going
+
+114
+00:12:21.000 --> 00:12:27.000
+to walk through next is the sample app
+that shows everything kind of that I've
+described that it takes it one step
+
+115
+00:12:27.000 --> 00:12:34.000
+further and what we're going to do is
+talk about how to take the basics of
+what EB can do and then tailor it
+
+116
+00:12:34.000 --> 00:12:40.000
+configure it or customize it a little
+bit more so again I mentioned before
+this concept called eb extensions that's
+
+117
+00:12:40.000 --> 00:12:48.000
+a way for us to kind of plumb through
+additional AWS resources in a way that
+it makes very easy for your code to
+
+118
+00:12:48.000 --> 00:12:55.000
+consume references to those resources
+without having to hard code anything so
+you get a glimpse of that when I dheeraj
+
+119
+00:12:55.000 --> 00:13:01.000
+shows that sample app in this case we're
+going to show how to tie you in a DynamoDB,
+SNS, and SQS. so we're going well
+
+120
+00:13:01.000 --> 00:13:08.000
+beyond what the kind of initial sample
+app might have done and with that I'll
+turn it over to quash
+
+121
+00:13:08.000 --> 00:13:29.000
+thank you thank you Jeff so to avoid any
+network issues I created a video for the
+sample app this is essentially a launch
+
+122
+00:13:29.000 --> 00:13:46.000
+be sign up app which is filled in node
+the application let me activate this ok
+so the application stores data in so
+
+123
+00:13:46.000 --> 00:13:53.000
+essentially the customer would come in
+and they would given the name and their
+email address and it will sign them up
+
+124
+00:13:53.000 --> 00:14:02.000
+this data would be stored in Amazon
+DynamoDB and published notifications to
+amp amazon simple notification service
+
+125
+00:14:02.000 --> 00:14:08.000
+when a customer fills in the form the
+sample application is using Express
+framework and bootstrap to build the
+
+126
+00:14:08.000 --> 00:14:20.000
+simple application now let's look at
+some of the application components which
+this application is using let's give it
+
+127
+00:14:20.000 --> 00:14:34.000
+a second okay so if you see here this is
+the sample application these are all the
+subfolders and files in it first thing
+
+128
+00:14:34.000 --> 00:14:40.000
+to define is the dependencies of an
+application user we use standard
+dependency frameworks this is a note app
+
+129
+00:14:40.000 --> 00:14:48.000
+so if you see here you would have the
+dependencies you should not it is highly
+recommended that you do not use latest
+
+130
+00:14:48.000 --> 00:14:58.000
+you should hard-code your dependencies
+here we are using shrinkwrap.json
+which essentially is a dependency
+
+131
+00:14:58.000 --> 00:15:05.000
+manager file for node applications this
+locks down excuse me this locks down the
+version of package dependency so that
+
+132
+00:15:05.000 --> 00:15:14.000
+you can control exactly which version of
+a dependencies would be used when a
+package is installed so by default npm
+
+133
+00:15:14.000 --> 00:15:22.000
+recursively installs target dependencies
+now let's look at the eb extensions that
+
+134
+00:15:22.000 --> 00:15:28.000
+Jeff mentioned EB extension is a great
+framework which you can use to modify
+and customize the applications or
+
+135
+00:15:28.000 --> 00:15:36.000
+configuration stack configuration files
+are YAML format documents with the
+.com file extension that you place in
+
+136
+00:15:36.000 --> 00:15:43.000
+a folder named ebextensionS as you can
+see in your application source bundle
+two of the most important components of
+
+137
+00:15:43.000 --> 00:15:51.000
+ebextensions are option settings and
+resources now let's look at the option
+settings you configure so this helps you
+
+138
+00:15:51.000 --> 00:16:00.000
+to configure different options in this
+case we are configuring two tables one
+is startup signup table and
+
+139
+00:16:00.000 --> 00:16:10.000
+other is the new sign up topic it is
+also recommended that you use reference
+and avoid hard coding in these files
+
+140
+00:16:10.000 --> 00:16:19.000
+another section is the resource
+configurations I'm defining create
+DynamoDB table and create SNS topic so
+
+141
+00:16:19.000 --> 00:16:26.000
+which is essentially what's going to do
+is whenever someone signs up the admin
+is going to get an email based on those
+
+142
+00:16:26.000 --> 00:16:36.000
+notifications in addition to that this
+has an eye on policy defined you have to
+create an I'm instance profile name i
+
+143
+00:16:36.000 --> 00:16:44.000
+named it AWS Elastic Beanstalk sample
+role with the policy which has been
+defined in this file this allows EB to
+
+144
+00:16:44.000 --> 00:16:55.000
+communicate with DynamoDB and SNS
+service on behalf of the customer i'll
+be using EB CLI for this so i use DBA
+
+145
+00:16:55.000 --> 00:17:04.000
+net sorry it was a little quick and when
+you do any eb init it will ask for
+different options you select the right
+
+146
+00:17:04.000 --> 00:17:13.000
+region i selected one that is Virginia
+and then i selected an application I
+wanted to create my own so I created a
+
+147
+00:17:13.000 --> 00:17:21.000
+sample app one it is going to create a
+sample application and it will ask you
+for the platform version and if you see
+
+148
+00:17:21.000 --> 00:17:28.000
+here I'll probably pause it if you look
+here we have recently added support for
+Code Commit where you can store your
+
+149
+00:17:28.000 --> 00:17:41.000
+deposit fees and store your code so i
+have four repos i'm using
+free in it we reinvent so if you see I'm
+
+150
+00:17:41.000 --> 00:18:06.000
+choosing master for the branch and
+the SNS SSH and the key pair so
+i choose the repository there i
+
+151
+00:18:06.000 --> 00:18:23.000
+have the sample application and i give
+other information related to branch and
+the SSH and they keep their
+
+152
+00:18:23.000 --> 00:18:34.000
+ok now once this has been done I'm all my
+initialization is done so i can now go
+
+153
+00:18:34.000 --> 00:18:44.000
+ahead and create an application for that
+i will use an eb create hopefully it
+will come up ok perfect so i'm using any
+
+154
+00:18:44.000 --> 00:18:55.000
+be create i'm using an instance profile
+that we just discussed and and once you
+initiate this we will start creating a
+
+155
+00:18:55.000 --> 00:19:00.000
+lost invincible start creating an
+application version with distances
+profile giving us the capability of
+
+156
+00:19:00.000 --> 00:19:09.000
+interacting with DynamoDB and the SNS
+if you see it's asked for the default i
+choose all the default options for the
+
+157
+00:19:09.000 --> 00:19:20.000
+cname i use the classic load balancer
+and it will start creating the
+application for you now just to quickly
+
+158
+00:19:20.000 --> 00:19:30.000
+get to the end of it i have fast
+forwarded it and we have you can see the
+application getting deployed on Elastic
+
+159
+00:19:30.000 --> 00:19:39.000
+Beanstalk through the console if you see
+it this is a dashboard the dashboard
+would have the status the recent events
+
+160
+00:19:39.000 --> 00:19:52.000
+the running and the node now and kind of
+application that is running and there's
+URL if you click on the URL it will take
+
+161
+00:19:52.000 --> 00:20:00.000
+you to the application that we just
+deployed and you can quickly test it and
+you can put in the information of the
+
+162
+00:20:00.000 --> 00:20:11.000
+name and the email address and let's
+quickly check what happened here so this
+is the DynamoDB table that we created
+
+163
+00:20:11.000 --> 00:20:34.000
+DynamoDB table name the start of signup
+table it has this entry and same would
+be for the SNS topic that was created
+
+164
+00:20:34.000 --> 00:20:41.000
+okay so this was a quick run through our
+sample app now I'll cover biggest
+section of our presentation which is
+
+165
+00:20:41.000 --> 00:20:50.000
+referring to the best practices that we
+recommend for using Elastic Beanstalk we
+have many deployment options and managed
+
+166
+00:20:50.000 --> 00:20:57.000
+platform updates that was recently
+launched we also will touch upon auto
+scaling and some reference to load
+
+167
+00:20:57.000 --> 00:21:08.000
+testing and other smaller tips so we
+recently I'll give it a minute for you
+to absorb this slide essentially we
+
+168
+00:21:08.000 --> 00:21:15.000
+provide different options for deploying
+your application or your platform
+configuration it is based on either you
+
+169
+00:21:15.000 --> 00:21:23.000
+have a single instance environment or a
+load balance and auto scale instance
+auto scale environment based on if it is
+
+170
+00:21:23.000 --> 00:21:28.000
+an application deployment or a block
+phone configuration deployment you have
+different options if you see immutable
+
+171
+00:21:28.000 --> 00:21:33.000
+in single instances they have been
+recently added in fact last week we
+launched immutable deployments for
+
+172
+00:21:33.000 --> 00:21:46.000
+single incidents and we will discuss
+some of these options going forward now
+let's discuss all it wants eb deploys
+
+173
+00:21:46.000 --> 00:21:52.000
+the new version of all instance
+simultaneously so all instances in your
+environment are out of service for a
+
+174
+00:21:52.000 --> 00:21:59.000
+short time while the deployment occurs
+by default the environment uses all at
+once deployment if you create it with a
+
+175
+00:21:59.000 --> 00:22:07.000
+different client like API SDK or CLI
+if you see here the the instances
+are getting updated to version v2 and
+
+176
+00:22:07.000 --> 00:22:18.000
+v2 is successfully deployed and your
+application is up and running now let's
+discuss about rolling rolling this
+
+177
+00:22:18.000 --> 00:22:25.000
+essentially deploys the new version in
+touches each batch is taken out of
+service within these instances during a
+
+178
+00:22:25.000 --> 00:22:34.000
+deployment phase which reduces your own
+arm and capacity to number of instances
+in the batch so if you see here so you
+
+179
+00:22:34.000 --> 00:22:41.000
+can define the batch size by the number
+of instances or the percentage so here
+let's say it is fifty or two based on
+
+180
+00:22:41.000 --> 00:22:50.000
+percentage or numbers we deploy we take
+these down we deploy v2 to
+these two instances and they come up by
+
+181
+00:22:50.000 --> 00:22:56.000
+default your load balance on auto
+scaling environment uses rolling for
+application deployment if you create it
+
+182
+00:22:56.000 --> 00:23:09.000
+with the console or the EB CLI if you
+see here then the next two instances
+which were not updated they are updated
+
+183
+00:23:09.000 --> 00:23:21.000
+and it's available so one of the big
+because downside of using rolling is
+that if you are running traffic on this
+
+184
+00:23:21.000 --> 00:23:27.000
+application your capacity would be
+reduced because you're taking some of
+the instances down within the instances
+
+185
+00:23:27.000 --> 00:23:33.000
+that you have in that environment now
+let's talk about rolling with additional
+matches which solves some of these
+
+186
+00:23:33.000 --> 00:23:41.000
+problems drawing deployment with batches
+deploys the new version in batches but
+first they launch new set of instances
+
+187
+00:23:41.000 --> 00:23:52.000
+based on the batch sizes that you have to
+find if you see here we launched let's
+say you have defined as batch size 2 or
+
+188
+00:23:52.000 --> 00:24:01.000
+fifty percent it will launch two new
+instances which are getting deployed
+with version two and once they're up the
+
+189
+00:24:01.000 --> 00:24:08.000
+traffic is routed to them so at this
+instance you would have little higher
+capacity at that moment once they are up
+
+190
+00:24:08.000 --> 00:24:18.000
+we bring two of the existing instances
+down and bring them up with the new
+version of application you bring it up
+
+191
+00:24:18.000 --> 00:24:26.000
+and once we already have v2s on two
+instance or four instances that was the
+original batch sizes we take down the
+
+192
+00:24:26.000 --> 00:24:36.000
+rest of the two instances that already
+there so this essentially is the final
+look that you update now let's look at
+
+193
+00:24:36.000 --> 00:24:46.000
+immutable so immutable in immutable of
+this essentially even the the issue of
+turning down the existing instances is
+
+194
+00:24:46.000 --> 00:24:54.000
+also taken care of so immutable gives
+you new instances altogether in fact it
+creates a completely all together a new
+
+195
+00:24:54.000 --> 00:25:03.000
+auto scaling group it's temporary once
+the the instances are up and running
+it is the traffic is diverted to the
+
+196
+00:25:03.000 --> 00:25:10.000
+auto scaling group the new order scaling
+group and the previous one is taken down
+so with the first instance pass if they
+
+197
+00:25:10.000 --> 00:25:15.000
+pass so yeah so there are two steps
+essentially so first we bring one
+instance within the auto scaling group
+
+198
+00:25:15.000 --> 00:25:24.000
+and once that is successful in our
+health checks then we go ahead and add
+other instances which essentially
+
+199
+00:25:24.000 --> 00:25:33.000
+replicates the gear capacity in your
+application so during a mutable
+environment update the capacity of the
+
+200
+00:25:33.000 --> 00:25:40.000
+environment doubles for short line when
+the instance instances in the new auto
+scaling group starts serving requests
+
+201
+00:25:40.000 --> 00:25:45.000
+and before the region auto scaling group
+instances are terminated if your
+environment has many instances or
+
+202
+00:25:45.000 --> 00:25:51.000
+instances with a low on demand limit
+ensure that you have enough capacity to
+perform the immutable environment update
+
+203
+00:25:51.000 --> 00:25:58.000
+if you are nearing a limit service limit
+consider using rolling update instead
+immutable update requires an AS health
+
+204
+00:25:58.000 --> 00:26:06.000
+reporting to evaluate your health or
+your applications health so if like you
+see here it will take down the auto
+
+205
+00:26:06.000 --> 00:26:12.000
+scaling group which was already there
+and you haven't completely new artists
+getting group the new instances this has
+
+206
+00:26:12.000 --> 00:26:23.000
+a lot of advantages of over your rolling
+and rolling the batches because it take
+completely eliminates the possibility of
+
+207
+00:26:23.000 --> 00:26:29.000
+any issues during deployment if the
+deployment doesn't work it can quickly
+roll back by taking down the new
+
+208
+00:26:29.000 --> 00:26:38.000
+instance sorry the new auto scaling
+group which was temporary anyway and it
+reverts back to the previous auto
+
+209
+00:26:38.000 --> 00:26:48.000
+scaling now let's look at blue/green so
+we have a DNS space blue/green option for
+you in case you want to ensure that your
+
+210
+00:26:48.000 --> 00:26:56.000
+application should not have any downtime
+at all this is the best way for doing
+but it requires manual steps just
+
+211
+00:26:56.000 --> 00:27:02.000
+because lasting so performs an in-place
+update for for your update your
+application versions your application
+
+212
+00:27:02.000 --> 00:27:10.000
+may become unavailable for users of
+short for short time so what we do in
+blue green is you have an existing
+
+213
+00:27:10.000 --> 00:27:18.000
+environment that this auto scaling group
+you go ahead this is
+but from the console you go ahead and
+
+214
+00:27:18.000 --> 00:27:27.000
+click on actions do a clone so Elastic
+Beanstalk will create a clone
+environment for this current and mana
+
+215
+00:27:27.000 --> 00:27:32.000
+that you have and we'll give it a new
+name I mean you have to give a new name
+to it so that it can distinguish so once
+
+216
+00:27:32.000 --> 00:27:43.000
+you have this new cloned environment
+available you go ahead and on the new
+environment you go ahead and click on
+
+217
+00:27:43.000 --> 00:27:51.000
+actions and do a swap environment URL
+and you would have the screen you can
+select which environment you want to
+
+218
+00:27:51.000 --> 00:27:59.000
+swap in terms of the URL and once you do
+that the URLs are swapped so I missed
+one thing which i should point here so
+
+219
+00:27:59.000 --> 00:28:07.000
+you have to manually update this new
+environment with the new version the v2
+version that you have so once that is
+
+220
+00:28:07.000 --> 00:28:12.000
+available in the hill Jack surpassed
+then you can go ahead and do the swap so
+essentially you are not you don't have
+
+221
+00:28:12.000 --> 00:28:22.000
+any downtime so you swap this and as you
+can see the the old URL you can continue
+to use and and you have the latest
+
+222
+00:28:22.000 --> 00:28:29.000
+versions of applications to plant on the
+instances so what are the pros? the pros
+are fast rolled back because the
+
+223
+00:28:29.000 --> 00:28:37.000
+previous environment is still running so
+if it doesn't work then you can
+have the switchback and the cons are
+
+224
+00:28:37.000 --> 00:28:44.000
+slow because it takes we have to create
+a new environment all together so it
+takes a little longer and there are
+
+225
+00:28:44.000 --> 00:28:52.000
+there is a potential of DNS caching by
+mobile clients after CNN flops so this
+is this slice essentially summarizes
+
+226
+00:28:52.000 --> 00:29:00.000
+different deployment options application
+deployment options if I may emphasize so
+some of these are also used for
+
+227
+00:29:00.000 --> 00:29:09.000
+configuration but we have a brand new
+option for you to use application
+configuration deployments let's discuss
+
+228
+00:29:09.000 --> 00:29:16.000
+about these options here if you see in
+the column impact on fail deployments
+all at once has expected down time
+
+229
+00:29:16.000 --> 00:29:24.000
+rolling would have downtime but again it
+would be it will be based on error
+scenarios on rolling with additional
+
+230
+00:29:24.000 --> 00:29:33.000
+batches it is really minimized it
+see if the first patch failed otherwise
+it can have issues if the subsequent
+
+231
+00:29:33.000 --> 00:29:40.000
+batches have issues than it would have
+problems up during deployment an
+immutable it minimizes your downtime and
+
+232
+00:29:40.000 --> 00:29:46.000
+blue green has no downtime all together
+but I still use minimum because things
+can go wrong in terms of the deployment
+
+233
+00:29:46.000 --> 00:29:53.000
+time as you can see all at once is
+the fastest blue/green takes the longest,
+rolling and rolling with additional batches
+
+234
+00:29:53.000 --> 00:30:03.000
+it's essentially based on the
+size of your instances and the
+development complexity based on that it
+
+235
+00:30:03.000 --> 00:30:12.000
+will take lesser amount of time in terms
+of roll back if you have to roll back if
+anything goes wrong in any of these
+
+236
+00:30:12.000 --> 00:30:17.000
+scenarios most of them most of the
+synergies you have to do what redeploy
+only in blue green you can essentially
+
+237
+00:30:17.000 --> 00:30:30.000
+do a swap back of the URL and if you see
+all at once rolling it uses existing
+instances so the probability of
+
+238
+00:30:30.000 --> 00:30:35.000
+something going wrong could be higher in
+terms of rolling with additional batches
+and immutable we use new instances but
+
+239
+00:30:35.000 --> 00:30:43.000
+immutable it uses all together new
+instances blue green again it's a
+totally new environment now let's look
+
+240
+00:30:43.000 --> 00:30:50.000
+at managed platform updates earlier this
+year we launched manage part from
+updates which is essentially giving you
+
+241
+00:30:50.000 --> 00:30:55.000
+the ability to configure your
+environments to automatically upgrade to
+the latest version of a platform during
+
+242
+00:30:55.000 --> 00:31:03.000
+a scheduled maintenance window so until
+brevia slee recently you needed to
+initiate a managed update to a bed your
+
+243
+00:31:03.000 --> 00:31:10.000
+application Elastic Beanstalk
+environment to the new version of the
+platform so mannish platform updates
+
+244
+00:31:10.000 --> 00:31:17.000
+gives you the ability to configure you
+our environment automatically upgrade to
+the latest version some of the key
+
+245
+00:31:17.000 --> 00:31:23.000
+components to know about this
+functionality is that you need still
+need the permissions Elastic Beanstalk
+
+246
+00:31:23.000 --> 00:31:30.000
+needs to initiate a platform update on
+your behalf so you use the default
+service so so the console adds the
+
+247
+00:31:30.000 --> 00:31:36.000
+required permissions when you enable
+managed updates if you don't use the
+default service role you can manually go
+
+248
+00:31:36.000 --> 00:31:44.000
+ahead and do that maintain is milder so
+maintenance windows are sensitive
+long Elastic Beanstalk starts to
+
+249
+00:31:44.000 --> 00:31:50.000
+schedule update during the maintenance
+window but the update might not complete
+until during that time so this is our
+
+250
+00:31:50.000 --> 00:31:56.000
+best guess that it would take it
+generally takes about 20-25 minutes or
+could be less based on the complexity of
+
+251
+00:31:56.000 --> 00:32:07.000
+your environment but if it taking more
+than two hours then there's something
+wrong what kind of deployments that we
+
+252
+00:32:07.000 --> 00:32:13.000
+do you can configure your nonno to
+automatically apply patch version
+updates or both patch or minor version
+
+253
+00:32:13.000 --> 00:32:22.000
+updates manage platform updates don't
+support major version updates as of yet
+which may be introduced later let's look
+
+254
+00:32:22.000 --> 00:32:33.000
+at some of the key benefits now so we
+talked about automated upgrade
+this essentially gives you the free hand
+
+255
+00:32:33.000 --> 00:32:40.000
+to schedule it and forget about it
+instead of because we keep on adding new
+features updates to the environment of
+
+256
+00:32:40.000 --> 00:32:47.000
+the configurations so you don't have to
+worry about being at the latest versions
+with the manage update we ensure that
+
+257
+00:32:47.000 --> 00:32:52.000
+our application remains in service
+during update process there's no
+reduction in capacity so because
+
+258
+00:32:52.000 --> 00:32:57.000
+essentially underneath its using
+immutable deployments so this gives you
+the complete capacity of your
+
+259
+00:32:57.000 --> 00:33:05.000
+application so very good for even your
+production environments if for any
+reason the update isn't successful the
+
+260
+00:33:05.000 --> 00:33:11.000
+platform is rolled back to the previous
+version without impacting the capacity
+so one thing which is good about a
+
+261
+00:33:11.000 --> 00:33:18.000
+manager platform updates is that we
+ensure that your your application is
+always up and running so even if the
+
+262
+00:33:18.000 --> 00:33:30.000
+update doesn't happen we roll it back
+and to the previous version that you
+have so as I discussed there was no this
+
+263
+00:33:30.000 --> 00:33:37.000
+minimum downtime and the impact on
+capacity is also minimized you also have
+the flexibility of manually updating so
+
+264
+00:33:37.000 --> 00:33:44.000
+you have scheduled it but if you realize
+that your application has an unscheduled
+downtime or you want to update it you
+
+265
+00:33:44.000 --> 00:33:50.000
+can still do it using manage update and
+it also gives you the flexibility of
+doing an instance depletion what that
+
+266
+00:33:50.000 --> 00:33:55.000
+means is when you should you or manage
+update you can select an option of
+instance replacement
+
+267
+00:33:55.000 --> 00:34:03.000
+so even if when there is no available
+update you can still refresh your
+instances essentially have new set of
+
+268
+00:34:03.000 --> 00:34:11.000
+instances so this gives you a lot of
+flexibility in terms of refreshing your
+fleet every now and then although some
+
+269
+00:34:11.000 --> 00:34:16.000
+of the important things I would like to
+know that is part of the best practices
+you've got to be careful about
+
+270
+00:34:16.000 --> 00:34:22.000
+coordinating manage updates with
+time-based scaling if you're using
+time-based scaling the number of
+
+271
+00:34:22.000 --> 00:34:30.000
+instances are 0 we will talk about time-based
+scaling later in the next section so
+you've got you have to be a little
+
+272
+00:34:30.000 --> 00:34:37.000
+careful that manage updates may not work
+should not conflict with time-based
+scaling in terms of service limits the
+
+273
+00:34:37.000 --> 00:34:43.000
+manager updates are immutable
+deployments so it is recommended not to
+shit you manage update for multiple
+
+274
+00:34:43.000 --> 00:34:49.000
+environments at the same time because
+you may end up running into your service
+limits especially auto scaling groups
+
+275
+00:34:49.000 --> 00:35:00.000
+all right I have a small demo for
+manager updates it's again a video just
+to save time and not to rely on the
+
+276
+00:35:00.000 --> 00:35:14.000
+network so this is a single instance
+environment this is a single license
+moment it's if you see the configuration
+
+277
+00:35:14.000 --> 00:35:22.000
+it says that there is a new version
+available so I don't want to go ahead
+and do the change I want to schedule it
+
+278
+00:35:22.000 --> 00:35:31.000
+and I want to automate this process so
+you enable manage updates how do you do
+that you go ahead and click on
+
+279
+00:35:31.000 --> 00:35:41.000
+configuration you go to manage updates
+enable and you can define a window
+starting window and is essentially two
+
+280
+00:35:41.000 --> 00:35:49.000
+hours so you don't you define the end so
+we will start at the start of this
+window that you have defined you can
+
+281
+00:35:49.000 --> 00:35:56.000
+choose it and starting time on a date so
+this essentially would start doing it
+every week at this time and if you see
+
+282
+00:35:56.000 --> 00:36:03.000
+there are update level minor a patch
+which you can define what kind of
+updates you want to actually deploy
+
+283
+00:36:03.000 --> 00:36:09.000
+automatically and then you have the
+option of instance replacement which we
+discuss
+
+284
+00:36:09.000 --> 00:36:16.000
+that even if there is no updates you can
+still go ahead and refresh the instances
+that you already have or essentially get
+
+285
+00:36:16.000 --> 00:36:27.000
+a new fleet of instances so I'll go
+ahead and apply so this takes few
+minutes to configure so if you see it
+
+286
+00:36:27.000 --> 00:36:37.000
+will at the top it would say Elastic
+Beanstalk is updating your environment
+and you can look at the so so that's the
+
+287
+00:36:37.000 --> 00:36:46.000
+benefit of using a video so so you can
+see I clicked on the the manage action
+is so manage updates have been scheduled
+
+288
+00:36:46.000 --> 00:36:55.000
+but because it doesn't should do next
+week so what I'll do it now is I'll do
+an apply now using manage update so it
+
+289
+00:36:55.000 --> 00:37:05.000
+will still consider that as a managed
+update and use underneath immutable
+deployment let's do an apply now okay so
+
+290
+00:37:05.000 --> 00:37:13.000
+just get a confirmation and tells you
+about more information if you want to
+know and it tells you about from what
+
+291
+00:37:13.000 --> 00:37:23.000
+platform version to what platform
+version we are going to so if you do a
+deploy it will go ahead and it takes it
+
+292
+00:37:23.000 --> 00:37:36.000
+takes few seconds to configure and start
+the deployment so it will do the
+deployment and if you see you can always
+
+293
+00:37:36.000 --> 00:37:45.000
+see the recent events at the dashboard
+or also there is an event tab now if you
+see here the the the configuration has
+
+294
+00:37:45.000 --> 00:37:50.000
+been updated and if you go to manage
+update it will tell you the timestamp
+the duration that it took what took
+
+295
+00:37:50.000 --> 00:37:58.000
+about 14 minutes and the the platform
+version to what to what and it was
+completed success so this was a
+
+296
+00:37:58.000 --> 00:38:16.000
+successful video
+okay all right now let's talk about auto
+scaling so auto scaling is a web service
+
+297
+00:38:16.000 --> 00:38:23.000
+designed to automatically launch a
+dominate ec2 instances in an auto
+scaling group based on parameters that
+
+298
+00:38:23.000 --> 00:38:31.000
+you define this helps you to seamlessly
+deal with traffic changes to your
+application Elastic Beanstalk supports
+
+299
+00:38:31.000 --> 00:38:39.000
+auto scaling for load balanced auto
+scaling environments if you see at the
+start of the tree of the root of the
+
+300
+00:38:39.000 --> 00:38:50.000
+tree you have few default configuration
+elements minimum maximum instances
+availability zone scaling cool down so
+
+301
+00:38:50.000 --> 00:38:57.000
+allows auto scaling works with CloudWatch
+to relieve the matrix for the
+instances running an application and
+
+302
+00:38:57.000 --> 00:39:08.000
+also monitor the health of each instance
+so the minimum instance counted Maximus
+miss Kraus is essentially you define the
+
+303
+00:39:08.000 --> 00:39:15.000
+size of your auto scaling group so at
+what moment of time you want to have
+what instances you can control it by an
+
+304
+00:39:15.000 --> 00:39:22.000
+upper limit and a lower limit to
+maintain a fixed number of this is EC2
+instance you can also have same
+
+305
+00:39:22.000 --> 00:39:29.000
+number of minimum and maximum this
+ensures that you have a consistent
+number of instances but again that's not
+
+306
+00:39:29.000 --> 00:39:39.000
+auto scaling auto scaling auto scaling
+settings can impact rolling updates if
+you configure rolling updates and
+
+307
+00:39:39.000 --> 00:39:45.000
+rolling updates cannot happen if the
+minimum number of instances in inservice
+for rolling updates is larger than the
+
+308
+00:39:45.000 --> 00:39:50.000
+maximum size of the auto scaling group
+so you must change the value of either
+the minimum instance in the serving
+
+309
+00:39:50.000 --> 00:39:58.000
+service settings of the rolling updates
+or the maximum instances then you have
+the availability zone so that that lets
+
+310
+00:39:58.000 --> 00:40:04.000
+you specify the number of availability
+zones in which you want Elastic
+Beanstalk to larger instances we highly
+
+311
+00:40:04.000 --> 00:40:11.000
+recommend that you choose multiple
+availability zones so that instances can
+be launched in another AZ if one zone
+
+312
+00:40:11.000 --> 00:40:19.000
+becomes unavailable which makes your
+application fault tolerant and the scale
+scale on scaling cool down specifies how
+
+313
+00:40:19.000 --> 00:40:26.000
+long the auto scaling will wait
+before resuming any scaling activity so
+if by the time cool on period elapses
+
+314
+00:40:26.000 --> 00:40:33.000
+your environment has the appropriate
+level of resources to keep the CloudWatch
+alarm from continuing to fire the
+
+315
+00:40:33.000 --> 00:40:41.000
+new instances now let's talk about
+trigger based scaling now trigger as a
+very name suggests you can define the
+
+316
+00:40:41.000 --> 00:40:49.000
+triggers for the auto scaling to happen
+some of them has been noted here like CPU
+utilization network traffic disk
+
+317
+00:40:49.000 --> 00:40:59.000
+activity or instance health so Amazon so
+you can configure these triggers to fire
+and ec2 instance or the load balance
+
+318
+00:40:59.000 --> 00:41:08.000
+matrix and it is pushed to Amazon
+CloudWatch and it determines whether
+the condition you specified have been
+
+319
+00:41:08.000 --> 00:41:15.000
+met or not when the upper and the lower
+thresholds of the conditions for the the
+matrix have been breached for the
+
+320
+00:41:15.000 --> 00:41:24.000
+specific period of time time the trigger
+launches a scaling activity so you can
+choose the trigger measurement so
+
+321
+00:41:24.000 --> 00:41:32.000
+trigger measurement set a setting is
+essentially to specify the matrix for
+your triggers as we discussed so there
+
+322
+00:41:32.000 --> 00:41:40.000
+is trigger statistics so trigger
+statistics is the minimum maximum sum of
+the or the average what you want to use
+
+323
+00:41:40.000 --> 00:41:49.000
+as a measurement you want to use an
+average of the data or the sum or
+minimum maximum so my journal period
+
+324
+00:41:49.000 --> 00:41:55.000
+specifies how frequently the Amazon
+CloudWatch might use the matrix for the
+trigger default is essentially generally
+
+325
+00:41:55.000 --> 00:42:06.000
+five minutes then there is breach
+duration is the amount of time a matrix
+can extend beyond its defined limit
+
+326
+00:42:06.000 --> 00:42:16.000
+upper and lower breach scale increments
+specify how many Amazon EC2 instances to
+add or remove when performing a scaling
+
+327
+00:42:16.000 --> 00:42:30.000
+activity default is 1 and minus 1 you
+will notice that there is a dotted line
+between time based scaling and the basic
+
+328
+00:42:30.000 --> 00:42:38.000
+configuration that's because time-based
+scaling overrides the
+basic configuration settings that
+
+329
+00:42:38.000 --> 00:42:47.000
+you have for auto scaling so if your
+Elastic Beanstalk application has
+predictable needs for scaling then you
+
+330
+00:42:47.000 --> 00:42:53.000
+can use time-based scaling it is not
+recommended when you don't you're not
+sure about the kind of traffic that your
+
+331
+00:42:53.000 --> 00:42:59.000
+application is taking if you are very
+sure that okay your application is
+generally used over the weekend or it's
+
+332
+00:42:59.000 --> 00:43:04.000
+a test environment where you are sure of
+the the kind of scaling needs that you
+have time with scaling is a good option
+
+333
+00:43:04.000 --> 00:43:12.000
+so if you see at the different option
+settings that we have we have the course
+the name and minimum maximum instances
+
+334
+00:43:12.000 --> 00:43:18.000
+this essentially overrides the default
+configuration that you may have in the
+basic auto scaling and that's where it
+
+335
+00:43:18.000 --> 00:43:25.000
+can also conflict with manage updates
+because if the minimum if you define
+minimum as zero you can define minimum
+
+336
+00:43:25.000 --> 00:43:31.000
+as zero that at certain point you can
+actually reduce the number of its tezur0
+save any money at that moment managed
+
+337
+00:43:31.000 --> 00:43:39.000
+update will not happen because it needs
+instances to be able to
+continue so that you need to be able to
+
+338
+00:43:39.000 --> 00:43:49.000
+understand some of the dependencies
+there in addition to that occurrence so
+if it is time you need to define the
+
+339
+00:43:49.000 --> 00:43:59.000
+time frame of the or the starting point
+of the time-based scaling you can choose
+a one time or a recurrent one time could
+
+340
+00:43:59.000 --> 00:44:07.000
+be you can define a specific duration of
+the of the day month week and from there
+on it will do the action one time action
+
+341
+00:44:07.000 --> 00:44:13.000
+that you defined in the time-based
+scaling or you can do a recurring
+recurring can be weekly monthly you can
+
+342
+00:44:13.000 --> 00:44:21.000
+define the regular frequency in the
+recurring you can define rectly you can
+define it as a cron expression like here
+
+343
+00:44:21.000 --> 00:44:37.000
+we have it's so 30 8 * * 3 which is
+essentially Wednesday at eight thirty
+p.m. one not of advice be careful with
+
+344
+00:44:37.000 --> 00:44:46.000
+time be scaling because it can as a toad
+it can it can conflict with other auto
+scaling configurations so it is not
+
+345
+00:44:46.000 --> 00:44:57.000
+recommended to use both
+simultaneously unless you are doing some
+tests these are some of the other tips
+
+346
+00:44:57.000 --> 00:45:06.000
+that I have for you you should always
+enable log rotation to automatically
+plush locks to s3 this saves you the
+
+347
+00:45:06.000 --> 00:45:13.000
+hassle of looking for logs and you have
+a slow location where you can extract
+the logs that you want to how you want
+
+348
+00:45:13.000 --> 00:45:22.000
+to use it so it's also advisable to
+understand the available matrix for the
+environments and what they mean so that
+
+349
+00:45:22.000 --> 00:45:31.000
+you can use them wisely like in case of
+auto scaling and other CloudWatch
+related logs also I recommend using
+
+350
+00:45:31.000 --> 00:45:38.000
+alarms to automatically monitor critical
+matrix and send notifications when the
+beta sort of normal operation operating
+
+351
+00:45:38.000 --> 00:45:47.000
+range so you can always set an email
+notification for yourself and also
+enable Amazon Route 53 health check and
+
+352
+00:45:47.000 --> 00:45:57.000
+alarms another important feature is
+tagging if you don't know what
+tagging is, it essentially is a way of
+
+353
+00:45:57.000 --> 00:46:05.000
+managing your resources or at least
+tracking them you can also track the
+usage of those resources in terms of the
+
+354
+00:46:05.000 --> 00:46:11.000
+number of people that they may be using
+that being used by those people or it
+could be in terms of the financial
+
+355
+00:46:11.000 --> 00:46:17.000
+impact that those resources have so you
+can use the cost allocated reports to
+track the usage for a dubious resources
+
+356
+00:46:17.000 --> 00:46:26.000
+the reports include both tagging and
+untagging resources but they aggregate
+cost about you the tags Elastic
+
+357
+00:46:26.000 --> 00:46:34.000
+Beanstalk recently updated the number of
+tags that you can use from 7 to 47,
+3 of them are retained by us
+
+358
+00:46:34.000 --> 00:46:47.000
+which includes environment name and ID
+add a little bit of color here so
+just to kind of this feel like very
+
+359
+00:46:47.000 --> 00:46:53.000
+disparate almost random like best
+practices when they're presented this
+way but I want to give you one example
+
+360
+00:46:53.000 --> 00:46:59.000
+by like kind of weaving one thread
+through everything that auto Rogers is
+walk through just to give you a sense of
+
+361
+00:46:59.000 --> 00:47:04.000
+how these can be interconnect
+why it's important to really keep all of
+these kinds of things in mind so let's
+
+362
+00:47:04.000 --> 00:47:12.000
+take the example early on in the sample
+app a taraji of showing you that he had
+a not best practice kind of a something
+
+363
+00:47:12.000 --> 00:47:21.000
+to avoid in the first example of how he
+was not pinning versions in his note app
+and he mentioned correctly don't do this
+
+364
+00:47:21.000 --> 00:47:26.000
+and he talked a little bit about how
+it's better to kind of like bake the
+versions in that case he's using
+
+365
+00:47:26.000 --> 00:47:32.000
+shrinkwrap that there's really
+equivalence and other language platforms
+to take that example and then now
+
+366
+00:47:32.000 --> 00:47:38.000
+imagine what happens if you don't do
+that when you couple it with some of the
+other deployment methodologies that we
+
+367
+00:47:38.000 --> 00:47:44.000
+looked at in particular if you're doing
+manage platform updates so think about
+how let's say I'm migrating a minor
+
+368
+00:47:44.000 --> 00:47:53.000
+version or even a patch of version of
+node the node platform should be
+relatively safe should be relatively low
+
+369
+00:47:53.000 --> 00:48:02.000
+impact but I've always said draw the
+latest version of all my dependencies
+middle of your kind of defined window of
+
+370
+00:48:02.000 --> 00:48:10.000
+time in the middle of night sometime we
+deploy the new version and it pulls
+latest versions of dependencies down
+
+371
+00:48:10.000 --> 00:48:17.000
+you've not tested those combinations and
+maybe not surprisingly you actually have
+something that breaks you can see why
+
+372
+00:48:17.000 --> 00:48:22.000
+there would be a problem now think about
+how in manage platform update I don't
+know if you actually you may be
+
+373
+00:48:22.000 --> 00:48:27.000
+mentioned this in there but managed
+platform allah plates always uses the
+immutable deploy technique the one that
+
+374
+00:48:27.000 --> 00:48:32.000
+we went through that showed creating an
+entire second auto scaling group and
+making sure that we do kind of almost
+
+375
+00:48:32.000 --> 00:48:38.000
+like a one box deploy within that auto
+scaling group we watch the health of
+that run there's a reason we do it that
+
+376
+00:48:38.000 --> 00:48:45.000
+way and we were the reason we don't even
+let you override that in even those
+cases we test that one box make sure
+
+377
+00:48:45.000 --> 00:48:50.000
+that it actually appears to be running
+healthfully and the way we do that we
+haven't talked too much about our
+
+378
+00:48:50.000 --> 00:48:56.000
+enhanced health feature but we actually
+watch for traffic flowing watch the
+return codes that we're resulting from
+
+379
+00:48:56.000 --> 00:49:02.000
+that so if the app is throwing five
+hundreds we're actually going to abandon
+any attempts to deploy not only that but
+
+380
+00:49:02.000 --> 00:49:09.000
+all of your original version is still
+running we leave those completely alone
+so we actually just tear down that one
+
+381
+00:49:09.000 --> 00:49:13.000
+box and you're left with kind of the
+original capacity in the original
+service version
+
+382
+00:49:13.000 --> 00:49:21.000
+still intact it gives you a sense of
+kind of how there's like a connections
+between some of these best practices
+
+383
+00:49:21.000 --> 00:49:30.000
+that may not be a parent right up up
+front I'll also mention another one I
+don't know if this was in here but you
+
+384
+00:49:30.000 --> 00:49:37.000
+never ever ever baked state into your
+instances is by the way not a beanstalk
+best practice is kind of a cloud best
+
+385
+00:49:37.000 --> 00:49:44.000
+practice if you are doing something with
+local file systems if you're counting on
+something that exists within instances
+
+386
+00:49:44.000 --> 00:49:51.000
+that you've deployed you can want to
+spend some some serious minutes thinking
+about why that is and what you want to
+
+387
+00:49:51.000 --> 00:49:57.000
+avoid that and we actually put in again
+in the manage platform update that you
+saw there's a checkbox to allow for
+
+388
+00:49:57.000 --> 00:50:04.000
+instance refresh and basically on every
+scheduled window whether or not there's
+a platform update will let you kind of
+
+389
+00:50:04.000 --> 00:50:09.000
+wipe through the entire set of recorded
+instances we're basically offering you a
+way to guarantee that you're not
+
+390
+00:50:09.000 --> 00:50:16.000
+building up state on those instances
+again best practice and it actually has
+repercussions throughout all of these
+
+391
+00:50:16.000 --> 00:50:24.000
+things if you're counting on state if
+you're counting on variable or if you're
+not counting on a fixed version you'll
+
+392
+00:50:24.000 --> 00:50:29.000
+you might even have problems outside of
+managed platform updates let's say you
+have an auto scaling event you're going
+
+393
+00:50:29.000 --> 00:50:36.000
+to pull up the latest versions of
+whatever dependencies you might have for
+let's say your node app so again a lot
+
+394
+00:50:36.000 --> 00:50:42.000
+of these best practices kind of you
+want to think of as like a your weaving
+them throughout your planning of your
+
+395
+00:50:42.000 --> 00:50:48.000
+architecture it's not I like that one so
+I'll do that but I don't care about this
+other one so I'm not going to do it not
+
+396
+00:50:48.000 --> 00:50:52.000
+to say you can't have success if you
+don't follow every one of these but you
+should at least be considering a lot of
+
+397
+00:50:52.000 --> 00:51:04.000
+these things as part of the total story
+this was actually bring us to the end of
+the session d here are some of the key
+
+398
+00:51:04.000 --> 00:51:11.000
+links which were referred to during the
+session which includes the resources for
+sample application deployment options
+
+399
+00:51:11.000 --> 00:51:17.000
+managed updates we did not cover load
+testing because its lack of time but I
+have some sample links which you can use
+
+400
+00:51:17.000 --> 00:51:24.000
+for using locust for low testing with
+Elastic Beanstalk and some information
+without entangled
+
+401
+00:51:24.000 --> 00:51:32.000
+well I'll say one other thing before we
+we finish two we will have these
+throughout the week we're going to be at
+
+402
+00:51:32.000 --> 00:51:37.000
+the expo floor you can find sometimes
+odd row sometimes other members of my
+team there so if you have questions
+
+403
+00:51:37.000 --> 00:51:45.000
+certainly stop by the AWS booth there
+and ask those questions we have a repeat
+of this session Thursday colorstay to a
+
+404
+00:51:45.000 --> 00:51:52.000
+plug and what else should we mentioned I
+guess that's probably good so the
+versions of this presentation will be
+
+405
+00:51:52.000 --> 00:52:00.000
+made available to everybody so you'll be
+able to kind of get these links the easy
+way click on them instead of try to copy
+them all down thanks everybody for
+coming really appreciate your time

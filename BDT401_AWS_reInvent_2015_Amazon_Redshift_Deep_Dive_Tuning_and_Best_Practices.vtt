@@ -1,0 +1,2510 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:08.000
+good afternoon make sure in the right
+room this is the Amazon redshift deep
+dive my name is Eric Ferreira I'm a
+
+2
+00:00:08.000 --> 00:00:14.000
+database engineer with the Redshift
+development team and sharing the stage
+with me I have Ari Miller one of our
+
+3
+00:00:14.000 --> 00:00:22.000
+customers we're going to talk about
+specifically today tuning and best
+practices for performance on redshift
+
+4
+00:00:22.000 --> 00:00:31.000
+used some of the topics we're going to
+talk about today ingestion some recent
+features we added for you some migration
+
+5
+00:00:31.000 --> 00:00:39.000
+tips workload tuning and then I'll have the
+privilege to have Ari from tripadvisor
+talk to you about how they implement
+
+6
+00:00:39.000 --> 00:00:46.000
+their redshift environment for
+performance and i highly recommend you
+stay to the end at the beginning I took
+
+7
+00:00:46.000 --> 00:00:54.000
+a picture I will know who left or who
+didn't okay so do you hear so this is an
+advanced said sesh I'm not going to go
+
+8
+00:00:54.000 --> 00:01:01.000
+to the details redshift but it's always
+good to remember redshift is our fast
+simple petabyte scale data warehouse for
+
+9
+00:01:01.000 --> 00:01:08.000
+less than a thousand dollars per
+terabyte per year and today I want to
+focus on the fast part and there are
+
+10
+00:01:08.000 --> 00:01:16.000
+many customers that are really happy
+about the performance they get with
+redshift and the idea of this session is
+
+11
+00:01:16.000 --> 00:01:22.000
+to make sure you also that a using
+redshift can achieve the same
+performance as those customers are
+
+12
+00:01:22.000 --> 00:01:32.000
+enjoying here's a review of the
+architecture of redshift we are a
+columnar multi-node share-nothing
+
+13
+00:01:32.000 --> 00:01:40.000
+cluster database service and you have a
+leader node where you connect for a
+SQL and then the compute nodes where
+
+14
+00:01:40.000 --> 00:01:47.000
+the data resides and they all the work
+happens and a lot of the operations
+happens in parallel directly through the
+
+15
+00:01:47.000 --> 00:01:54.000
+compute nodes and that some of the
+things we're going to talk about today
+if you focus on the compute nodes
+
+16
+00:01:54.000 --> 00:02:02.000
+details you're going to see that the
+node has different slices and the unit
+of work on redshift is actually the
+
+17
+00:02:02.000 --> 00:02:09.000
+slice and so it cares more about how
+many slices total we have in your
+cluster than the number of nodes you
+
+18
+00:02:09.000 --> 00:02:16.000
+have in your cluster we have two
+platforms one with SSDs
+that has different types that have
+
+19
+00:02:16.000 --> 00:02:25.000
+the large and 8xlarge and normally we
+have ratio one-to-one slices per CPU and
+we have our dance storage nodes which we
+
+20
+00:02:25.000 --> 00:02:34.000
+have hard drives and on this particular
+platform we have two CPUs per slice and
+by the way these RDS choose if you're
+
+21
+00:02:34.000 --> 00:02:42.000
+still using a just once or D s ones i
+highly recommend you move because it's
+double the cpu double the memory same
+
+22
+00:02:42.000 --> 00:02:50.000
+price no-brainer so focus on how the
+redshift does the work on each slice
+we're going to talk about a different
+
+23
+00:02:50.000 --> 00:02:59.000
+things to achieve the parallelism the
+performance you need for your workload
+so first let's talk about ingestion if
+
+24
+00:02:59.000 --> 00:03:08.000
+you copy a single file into redshift
+only one slice is doing work because
+they slice is the one that cop is a
+
+25
+00:03:08.000 --> 00:03:13.000
+different file each slice copy a
+different file so instead of getting a
+hundred megabytes per second you're
+
+26
+00:03:13.000 --> 00:03:21.000
+going to get 6 megabytes per second and
+that's not fun if you have enough files
+then on the phase one of your copy
+
+27
+00:03:21.000 --> 00:03:28.000
+command you're going to have every slice
+doing work and then you can achieve the
+100 megabytes per second per node and
+
+28
+00:03:28.000 --> 00:03:37.000
+expect to scale near linearly as you add
+more nodes assume you have enough files
+to feed those slices right you want
+
+29
+00:03:37.000 --> 00:03:45.000
+those files to be similar size amongst
+each other of course and just one extra
+tip files between one megabyte and one
+
+30
+00:03:45.000 --> 00:03:57.000
+gigabyte gzipped works best in terms of
+performance another thing related to
+ingestion is the primary Keys redshift
+
+31
+00:03:57.000 --> 00:04:06.000
+allows you to add primary key to the
+table and to define them and it's good
+documentation for you and the optimizer
+
+32
+00:04:06.000 --> 00:04:14.000
+can use that information to make
+optimizations during the query however
+if you try to load the same data twice
+
+33
+00:04:14.000 --> 00:04:20.000
+Red chief is not going to complain we
+don't force primary keys but we still
+recommend you to use them so make sure
+
+34
+00:04:20.000 --> 00:04:27.000
+if you declare a column as primary key
+you maintain that unique otherwise you
+might get wrong
+
+35
+00:04:27.000 --> 00:04:36.000
+results when the optimizer assumes the
+data is unique and it's not also when
+you load in data into redshift you might
+
+36
+00:04:36.000 --> 00:04:44.000
+create a number of files on s3 and
+immediately try to copy with the prefix
+giving the eventual consistency on s3
+
+37
+00:04:44.000 --> 00:04:51.000
+you may not see all the files
+immediately on the other copy command so
+you might leave some files behind and of
+
+38
+00:04:51.000 --> 00:04:59.000
+course you can go on stl load commits
+and see which files you actually load it
+and make sure you got all the files you
+
+39
+00:04:59.000 --> 00:05:06.000
+wanted but if you use a manifest file
+then you declare what exact files you
+want to load and what you do with the
+
+40
+00:05:06.000 --> 00:05:14.000
+file is not there error out or ignore
+and at the end you guarantee you load
+exactly the files you want to load the
+
+41
+00:05:14.000 --> 00:05:22.000
+beauty of the manifest file is that if I
+five supposed to be there and it's not
+it retries a few times so if I might
+
+42
+00:05:22.000 --> 00:05:35.000
+show up and if it doesn't show up after
+a few tries that is when it errors out
+let's talk about data hygiene lots of
+
+43
+00:05:35.000 --> 00:05:41.000
+customers create their cluster start
+loading your data are amazed by the
+performance and month down the road they
+
+44
+00:05:41.000 --> 00:05:50.000
+say oh my god my performance tanked
+something is wrong and they're not doing
+data hygiene so gathering stats on table
+
+45
+00:05:50.000 --> 00:05:56.000
+is very important for the optimizer to
+know which day was bigger which table is
+going to turn more roles so you can do
+
+46
+00:05:56.000 --> 00:06:04.000
+the joint on the right order so every
+time you add rows to a table you should
+analyze at least the sort key column
+
+47
+00:06:04.000 --> 00:06:11.000
+it's very fast because you do on a
+single column and isn't enough for the
+optimizer to know the size of the table
+
+48
+00:06:11.000 --> 00:06:19.000
+weekly you should do a full analyze of
+all the columns so the optimizer has
+better statistics about all the data in
+
+49
+00:06:19.000 --> 00:06:28.000
+your table there is a view we added
+recently that's called svv table info
+and the column called stats off can tell
+
+50
+00:06:28.000 --> 00:06:37.000
+you how much percent of the table has
+stay 0 stats and then you know when
+together steps also you can look on the
+
+51
+00:06:37.000 --> 00:06:44.000
+stl alert event log for tables that are
+nice nice tats all together if you never
+get our stats on a table which is
+
+52
+00:06:44.000 --> 00:06:54.000
+possible and can cause you a lot of
+problems vacuum vacuum I don't want you
+to run with every load not part of it
+
+53
+00:06:54.000 --> 00:07:03.000
+etl vacuum is a very expensive process
+you want to run kind of once a week is a
+good start and see how that works for
+
+54
+00:07:03.000 --> 00:07:13.000
+you use for your environment the number
+of unsorted box as a trigger to know
+when to run vac you on your table again
+
+55
+00:07:13.000 --> 00:07:20.000
+if you look on svv table info on the
+column unsorted or empty you know when
+it's time to run vacuum because you
+
+56
+00:07:20.000 --> 00:07:28.000
+deleted too many rows or because we have
+too many unsorted rose be aware however
+that if you have too many on started
+
+57
+00:07:28.000 --> 00:07:36.000
+blocks or too many deleted rose it might
+be faster to do a DP copy on your table
+create a brand new table just copy the
+
+58
+00:07:36.000 --> 00:07:46.000
+data over then run vacuum usually that
+thresholds about twenty percent but your
+mileage will vary automatic compression
+
+59
+00:07:46.000 --> 00:07:53.000
+it's a great thing because automatically
+compress the data for you you get better
+performance on your scans and lower
+
+60
+00:07:53.000 --> 00:08:00.000
+costs on your storage because you can
+fit more dating glass space and what it
+does is actually samples the data about
+
+61
+00:08:00.000 --> 00:08:09.000
+a hundred thousand million rows worth of
+data it tries to compress every possible
+way figure is out which one is going to
+
+62
+00:08:09.000 --> 00:08:18.000
+be smaller drops the table creates the
+table again and starts loading all over
+again that's great to do once not every
+
+63
+00:08:18.000 --> 00:08:26.000
+time you load the same type of data so
+if you load using copy command into up
+empty table like a staging table or a
+
+64
+00:08:26.000 --> 00:08:34.000
+temporary table load the data analyze
+compression define what's the best
+compression for that column for each
+
+65
+00:08:34.000 --> 00:08:41.000
+column on that table and then you bake
+those on the create table then you don't
+do out to compression every single load
+
+66
+00:08:41.000 --> 00:08:50.000
+its victim cost you a lot of time
+loading if you try to figure out the
+compression of every single time okay
+
+67
+00:08:50.000 --> 00:09:00.000
+talking about compression be careful
+when you compress your sort keys
+on red shift we use zone maps to figure
+
+68
+00:09:00.000 --> 00:09:09.000
+out which blocks we're going to actually
+scan now we start on the sort key
+because your workload likely to be on
+
+69
+00:09:09.000 --> 00:09:19.000
+the sort key and if for example you have
+a column one there to be your sort key
+it's highly compressed I have a hundred
+
+70
+00:09:19.000 --> 00:09:26.000
+thousand rows on a single block when I
+find the one roll I'm looking for it
+marked that block okay I need to scan
+
+71
+00:09:26.000 --> 00:09:35.000
+the roll-up set of this blog so I'm
+going to scan between rows 10 and 100
+thousand when I go to the other columns
+
+72
+00:09:35.000 --> 00:09:43.000
+like in our example column number two
+which is five times bigger I going to
+scan five blocks for each one block of
+
+73
+00:09:43.000 --> 00:09:50.000
+the start key I need to scan and that
+can be wasteful if my date is only one
+block of every single column the goal is
+
+74
+00:09:50.000 --> 00:09:59.000
+to have all columns similar size between
+the Sarge key and the non search key
+column so I can most efficient map row
+
+75
+00:09:59.000 --> 00:10:08.000
+offsets from one column to the next a
+good rule of thumb is don't compress the
+circus compress everything else don't
+
+76
+00:10:08.000 --> 00:10:14.000
+compare the start keys because usually
+the start key will be a date or an
+integer or something like that and you
+
+77
+00:10:14.000 --> 00:10:21.000
+compress really well because of you
+ordering by that so be careful rule of
+thumb don't compress sort keys now if
+
+78
+00:10:21.000 --> 00:10:30.000
+you want to check your data for possible
+problems again svv table info there's a
+column called excuse Alt key one with
+
+79
+00:10:30.000 --> 00:10:37.000
+the ratio between the largest column
+after compression and the first column
+the sort key that number is too big you
+
+80
+00:10:37.000 --> 00:10:44.000
+might have this problem and if you have
+this problem even having the proper
+search key and even having the queries
+
+81
+00:10:44.000 --> 00:10:52.000
+using the sort key you're going to show
+the alert that says very selective
+filter meaning it scans too many rows or
+
+82
+00:10:52.000 --> 00:10:59.000
+too many blocks in our case to return to
+few rows and that's their sign that
+either a search key is wrong or you
+
+83
+00:10:59.000 --> 00:11:08.000
+would need to uncompress your sort keys
+as you create your design your tables
+you want to keep your tables as narrow
+
+84
+00:11:08.000 --> 00:11:13.000
+as for
+to go in terms of the size of your VAR
+charts we only store the amount of data
+
+85
+00:11:13.000 --> 00:11:22.000
+that the VAR char has however as we pull
+the data back we create a buffer off the
+declared size because we don't know how
+
+86
+00:11:22.000 --> 00:11:29.000
+much the size of the date we're going to
+get back and why they're means less rose
+in the same memory means spilling more
+
+87
+00:11:29.000 --> 00:11:36.000
+to this and low and poor performance on
+queries so make sure you don't have a
+VAR char 2004 our state column of two
+
+88
+00:11:36.000 --> 00:11:46.000
+okay I've seen that trust me is no I'm
+not kidding look at your tables on svv
+table info for the max VAR char and that
+
+89
+00:11:46.000 --> 00:11:54.000
+might give a hint that you have a very
+64,000 that maybe should you need to
+exist if you have the data that feels a
+
+90
+00:11:54.000 --> 00:12:01.000
+large VAR chart that's fine right but if
+you don't don't create a bunch of our
+char 1000 varsh are 256 when you need to
+
+91
+00:12:01.000 --> 00:12:11.000
+10 12 right be careful about how you
+sighs your table now I want to talk to
+you about some recent features we
+
+92
+00:12:11.000 --> 00:12:18.000
+launched and some some people I have a
+customer talking today where he said you
+know I got surprised you guys launch
+
+93
+00:12:18.000 --> 00:12:26.000
+such and such feature I'm going to talk
+about here and we didn't know for a
+month so there are lists on the AWS blog
+
+94
+00:12:26.000 --> 00:12:31.000
+that you can see what's new and getting
+information but who has time to be
+looking for what's going on all the time
+
+95
+00:12:31.000 --> 00:12:39.000
+so I want to catch you up on the new
+features that can help with performance
+as well on redshift we added a number of
+
+96
+00:12:39.000 --> 00:12:46.000
+new SQL functions my favorite to least
+egg and there's two version of it
+there's the wyndham function version and
+
+97
+00:12:46.000 --> 00:12:54.000
+the regular aggregate function version
+we add an approximate count drop if he
+exists in a number of others and we keep
+
+98
+00:12:54.000 --> 00:13:01.000
+interacting and we're going to keep
+adding more functions for your workload
+but we also want to allow you to create
+
+99
+00:13:01.000 --> 00:13:10.000
+your own functions and we launched
+user-defined functions you can write
+your code in Python 2.7 and and use
+
+100
+00:13:10.000 --> 00:13:18.000
+whatever you want in terms of how you're
+going to use your functions which you
+want to hear about specific functions
+
+101
+00:13:18.000 --> 00:13:24.000
+you use a lot they might be useful for
+other customers we might bake that into
+the system directly so don't stop
+
+102
+00:13:24.000 --> 00:13:30.000
+talking to us about what features and
+ought what functions you want editor
+redshift we still wanna listen because
+
+103
+00:13:30.000 --> 00:13:39.000
+we might add them for you the library
+added for Python already comes with
+bundles nope I on syfy and you can
+
+104
+00:13:39.000 --> 00:13:46.000
+create and install your own libraries
+and it's a great great use case for for
+example you create outside the database
+
+105
+00:13:46.000 --> 00:13:54.000
+a huge scoring model very complicated
+save on a small little python library
+load the library and redshift and use to
+
+106
+00:13:54.000 --> 00:14:02.000
+score very fast your data so there's
+limitless applications and we love to
+hear what you're going to do with you DX
+
+107
+00:14:02.000 --> 00:14:14.000
+a couple of examples is could be like if
+you have a hostname to extract from a
+URL you could use our reg ex but it's
+
+108
+00:14:14.000 --> 00:14:20.000
+kind of complex you might miss the coma
+here and get something wrong or it can
+create a UDF that make it simple for
+
+109
+00:14:20.000 --> 00:14:29.000
+anybody to pull a hostname out of URL
+that's a scene for example that's how
+kind of child's play we had partners
+
+110
+00:14:29.000 --> 00:14:37.000
+that as soon as we announced the feature
+they created a list of examples of UDF
+that are quite useful both lucre and
+
+111
+00:14:37.000 --> 00:14:45.000
+periscope created a very good set of
+functions some related to date
+manipulation JSON manipulation I highly
+
+112
+00:14:45.000 --> 00:14:52.000
+recommend you take a look go they have
+tons of them and we love because it's
+immediately can be used for to you on
+
+113
+00:14:52.000 --> 00:15:02.000
+your application talking about partners
+don't forget there there's a number of
+partners that have their services run
+
+114
+00:15:02.000 --> 00:15:10.000
+directly on top of redshift that you can
+deploy in come together when a single
+click things like attunity or
+
+115
+00:15:10.000 --> 00:15:19.000
+MicroStrategy or looker so make sure you
+don't forget that the mark marketplace
+can have things for you now I want to
+
+116
+00:15:19.000 --> 00:15:27.000
+talk to you about interleaved sort keys
+we added some time ago and we making it
+better as as we process and get more
+
+117
+00:15:27.000 --> 00:15:32.000
+feedback from customers and we want to
+make sure that you understand what it
+does and how can help you with your
+
+118
+00:15:32.000 --> 00:15:39.000
+queries so before I go there
+let me explain how compound start keys
+work when I have a tape with a compound
+
+119
+00:15:39.000 --> 00:15:47.000
+search key I sort everything for the
+first column in our example here
+customer ID and then for the same value
+
+120
+00:15:47.000 --> 00:15:54.000
+of customer ID I start everything by
+product ID the table is physically
+ordered by that every column even though
+
+121
+00:15:54.000 --> 00:16:03.000
+it's a separate file it's ordered by the
+same order sorting by customer ID in
+product ID so my first seeker you see
+
+122
+00:16:03.000 --> 00:16:11.000
+there when I do a query and let's say
+customer ID equals 1 for example i will
+hit only one block because of zone maps
+
+123
+00:16:11.000 --> 00:16:19.000
+a min max values i know i don't have to
+scan all the blocks beautiful i get the
+sum I only open that that fire that has
+
+124
+00:16:19.000 --> 00:16:28.000
+the amount and Macri is really really
+fast when I do I want a some by-product
+now i'm using the second column of the
+
+125
+00:16:28.000 --> 00:16:35.000
+start key and doesn't help me i have to
+scan the whole table and because of
+parallelism and brute force share
+
+126
+00:16:35.000 --> 00:16:42.000
+nothing class it's not that slow but i
+have to scan the whole tape is linear
+cost i have to scan the whole table the
+
+127
+00:16:42.000 --> 00:16:50.000
+interleaved start key instead of
+starting by one column then by another
+than by another what we do is we get all
+
+128
+00:16:50.000 --> 00:16:58.000
+the columns you declare on your sort key
+and we get beats information from all of
+them in a complex math equation and we
+
+129
+00:16:58.000 --> 00:17:08.000
+ordered a table by that result of that
+math equation in our example now my
+customer ID is spread across two blocks
+
+130
+00:17:08.000 --> 00:17:15.000
+and my product ID is a scary about two
+blocks have a like a two dimension way
+of entry on the table so I mixed up
+
+131
+00:17:15.000 --> 00:17:23.000
+proud of that information and customize
+the information on a new value looking
+at my distribution of data to find the
+
+132
+00:17:23.000 --> 00:17:30.000
+best mathematical function that we
+represent the new number in order by
+that when I query by product IG I hit
+
+133
+00:17:30.000 --> 00:17:39.000
+two blocks not for when a query by
+customer ID I hit two blocks not one
+anymore however if I hit by customer ID
+
+134
+00:17:39.000 --> 00:17:47.000
+and product ID I go straight to a single
+block so it's a great feature if you
+have tables where sometimes you created
+
+135
+00:17:47.000 --> 00:17:51.000
+by
+sometimes you create by customers
+sometimes you query by region and so
+
+136
+00:17:51.000 --> 00:17:59.000
+forth it can be very helpful many other
+database what they do is makes you
+create another index or a projection or
+
+137
+00:17:59.000 --> 00:18:06.000
+a joint index however they call it but
+it's redundant data on this case there's
+no redundant data the data is ordered in
+
+138
+00:18:06.000 --> 00:18:16.000
+a different way and mathematics makes us
+the scan analog in fashion instead of
+linear on the table the way to use the
+
+139
+00:18:16.000 --> 00:18:24.000
+feature you just add the interleaved key
+word on when you create the table you
+can have up to eight columns on the
+
+140
+00:18:24.000 --> 00:18:31.000
+interleaved start key and of course the
+more columns you add the less each one
+gets relevance on the on the on the
+
+141
+00:18:31.000 --> 00:18:39.000
+scheme of things and the data as you
+first copy into the table we analyze the
+data to create that special function
+
+142
+00:18:39.000 --> 00:18:47.000
+over time if the distribution of your
+customer ID is in product is changed too
+much you get skew on the function and we
+
+143
+00:18:47.000 --> 00:18:55.000
+have a way to monitor that so if you
+look on the SVD interleaved columns view
+on the interleaved skill when that
+
+144
+00:18:55.000 --> 00:19:02.000
+number grows like above five it's time
+to run a command called vacuum reindex
+which is going to happen is we're going
+
+145
+00:19:02.000 --> 00:19:08.000
+to reread all the data reanalyze the
+distributions you get the best
+mathematical function and then restart
+
+146
+00:19:08.000 --> 00:19:17.000
+the table by that particular value and
+then you get performance back again very
+useful feature we are we are getting
+
+147
+00:19:17.000 --> 00:19:24.000
+started with the feature make it better
+make it more useful making faster to do
+different things there is a load penalty
+
+148
+00:19:24.000 --> 00:19:30.000
+because there's some mathematical
+calculations that need to happen but
+it's i highly recommend you try to see
+
+149
+00:19:30.000 --> 00:19:38.000
+not normally this feature is not very
+conducive for range scans for date so if
+your main filter is like a date range
+
+150
+00:19:38.000 --> 00:19:45.000
+that might not be for you but you should
+try just to make sure that all your
+generic crees work better or worse with
+
+151
+00:19:45.000 --> 00:19:55.000
+that feature now let's talk about
+migrating your existing workloads if you
+don't get anything else out of here
+
+152
+00:19:55.000 --> 00:20:02.000
+don't four clique your system because
+they're going to be fast to get create
+new tables and right
+
+153
+00:20:02.000 --> 00:20:07.000
+she's loaded data point your system to
+read chieftain ok I'm done right you're
+going to spend a lot of time tuning and
+
+154
+00:20:07.000 --> 00:20:14.000
+troubleshooting when things go wrong
+don't do that the problem is a lot of
+legacy data warehouse have some patterns
+
+155
+00:20:14.000 --> 00:20:22.000
+of usage that people have used for tens
+tens of years and they are actually
+anti-patterns for red shift for example
+
+156
+00:20:22.000 --> 00:20:28.000
+I've used to load large day with a
+single file extract a single file and
+load to the final system and we already
+
+157
+00:20:28.000 --> 00:20:36.000
+talked about single file not good for
+load or I run many updates on my data I
+load my date and then a massage massage
+
+158
+00:20:36.000 --> 00:20:43.000
+massage and then ok now it's good
+instead of doing a one-step processing
+that's more complex hard to write but
+
+159
+00:20:43.000 --> 00:20:49.000
+you do a single step you massage the
+date and that's in Japan and for my
+chief because updates we're going to
+
+160
+00:20:49.000 --> 00:20:56.000
+talk about that or every job clears all
+the data for the day before loading I'm
+not sure if I loaded yet or not so I'm
+
+161
+00:20:56.000 --> 00:21:01.000
+just going to clear the data you should
+know if you load your date or not you
+should not just clear it's like I'm not
+
+162
+00:21:01.000 --> 00:21:10.000
+sure if I have breakfast or not so I'm
+just going to anyway you get it here or
+you count on primary keys to avoid you
+
+163
+00:21:10.000 --> 00:21:17.000
+from duplicating your data again right
+chief does not enforce primary keys yet
+and you should make sure you know what
+
+164
+00:21:17.000 --> 00:21:25.000
+you load in your data the other thing
+it's a normal pattern on other legacy
+data warehouse is that you have a high
+
+165
+00:21:25.000 --> 00:21:31.000
+concurrency of load jobs and the reason
+is a single job on a regular legacy
+theater house cannot use all your
+
+166
+00:21:31.000 --> 00:21:39.000
+hardware so if you load one table at a
+time you're never going to be done so
+you have to load 1020 202,000 tables at
+
+167
+00:21:39.000 --> 00:21:45.000
+a time because then you the different
+jobs are kind of using more than harder
+that's the way for you to utilize the
+
+168
+00:21:45.000 --> 00:21:52.000
+hardware bought and you're paying for on
+Red chief is not quite that Andrea chief
+a single job can use the whole cluster
+
+169
+00:21:52.000 --> 00:21:58.000
+Ohio all cpu all memory and it might be
+better to let happen this way we're
+going to talk a little bit about that in
+
+170
+00:21:58.000 --> 00:22:07.000
+a few seconds and the other thing which
+is a pet peeve of mine is you create a
+small control table to control your load
+
+171
+00:22:07.000 --> 00:22:14.000
+process inside the target data house
+database where you do a single row
+insert a single row update and then a
+
+172
+00:22:14.000 --> 00:22:20.000
+single rupee date again and
+another single update and then insert
+and then another delete and over time
+
+173
+00:22:20.000 --> 00:22:27.000
+those transactions are expensive in red
+shift and you get in a way of actually
+loading your data we're going to talk a
+
+174
+00:22:27.000 --> 00:22:35.000
+little bit about that as well when you
+start your process of migrating to
+redshift I want you to ask two questions
+
+175
+00:22:35.000 --> 00:22:44.000
+first why you do what you do people may
+not know or it might be a limitation
+that doesn't exist anymore or maybe a
+
+176
+00:22:44.000 --> 00:22:50.000
+limitation that you know the new system
+does not have right you should know why
+you do what you do we've always done
+
+177
+00:22:50.000 --> 00:22:59.000
+this way why I don't know you have to
+know the other thing what your customer
+needs the system day was developed 10
+
+178
+00:22:59.000 --> 00:23:04.000
+years ago may not meet their
+requirements anymore since you're going
+to get a new system why not get the
+
+179
+00:23:04.000 --> 00:23:10.000
+fresh requirements understand what they
+need now so it implemented and on the
+process we might even benefit from using
+
+180
+00:23:10.000 --> 00:23:21.000
+other AWS services that can make the
+whole package much more attractive for
+your customer so on redshift why those
+
+181
+00:23:21.000 --> 00:23:28.000
+things or ant patterns an update on
+redshift is a delete and insert there's
+no rear updates blocks are immutable and
+
+182
+00:23:28.000 --> 00:23:36.000
+of course the deletes themselves are not
+real deletes we mark the row for
+deletion and later on vacuum we clear
+
+183
+00:23:36.000 --> 00:23:45.000
+the data so it can be expensive to
+update over and over again many rows a
+single column of a table the blocks are
+
+184
+00:23:45.000 --> 00:23:54.000
+immutable the minimum space used by a
+table is one block per slice per column
+blocks are one megabyte you do the math
+
+185
+00:23:54.000 --> 00:24:01.000
+so you want to load thousands of rows at
+a time not single row operation because
+then you add a block every time first
+
+186
+00:24:01.000 --> 00:24:07.000
+slice for column and it becomes
+expensive over at the end because your
+table grows a lot and there's not a lot
+
+187
+00:24:07.000 --> 00:24:15.000
+of data there commits on Red chief are
+expensive because they are designed for
+batch processing every commit is about
+
+188
+00:24:15.000 --> 00:24:21.000
+four gigabytes right on each node on a
+8xl knowed it Nevers the whole
+dictionary from the leader know to the
+
+189
+00:24:21.000 --> 00:24:28.000
+compute nodes for recovery just in case
+you break right after the commit and it
+cluster wide sterilized so there's no
+
+190
+00:24:28.000 --> 00:24:34.000
+suggesting
+small comets on redshift you want to
+make the most of it bat your work and do
+
+191
+00:24:34.000 --> 00:24:44.000
+many steps and then a single commit on
+red chief aggregates can be really
+really really fast especially if the
+
+192
+00:24:44.000 --> 00:24:51.000
+first column of the group by matches the
+distribution key because then we can do
+a single step aggregation all the data
+
+193
+00:24:51.000 --> 00:24:59.000
+is already on the same node if you're
+that does not true you might want to do
+a pre aggregation to reduce the amount
+
+194
+00:24:59.000 --> 00:25:05.000
+of data that goes cross notes or the
+order if you're going to buy can't
+change your performance because if the
+
+195
+00:25:05.000 --> 00:25:10.000
+first call on the group ABBA is not the
+distribution key but the second is you
+just flip them in again see the
+
+196
+00:25:10.000 --> 00:25:20.000
+difference try me on that concrete genre
+achieved should be low especially for
+loaded jobs because every job will have
+
+197
+00:25:20.000 --> 00:25:28.000
+the opportunity to use the whole cluster
+use the whole harder if 844 reads then
+you have heavy reads and small reads and
+
+198
+00:25:28.000 --> 00:25:34.000
+then small reads can play together well
+with other reads way at the same time
+but very heavy reads the less
+
+199
+00:25:34.000 --> 00:25:40.000
+concurrence you do the faster the whole
+thing runs so instead of thinking about
+how long it takes to run one job or
+
+200
+00:25:40.000 --> 00:25:47.000
+thinking about how long it takes how
+many jobs that can submit at the same
+time think about how long it takes to
+
+201
+00:25:47.000 --> 00:25:53.000
+run the 2,000 jobs I have to run today
+and you can tune it up the concurrency
+one or time two at a time until you find
+
+202
+00:25:53.000 --> 00:26:00.000
+the ideal usually the rights would be
+good at local currency and small reads
+can be good at high concurrency and
+
+203
+00:26:00.000 --> 00:26:08.000
+large crees is somewhere in between you
+can test this if you have a dashboard
+that you want to connect against
+
+204
+00:26:08.000 --> 00:26:14.000
+redshift make sure you have a caching
+layer in between to protect the cluster
+from repeated queries of the exact same
+
+205
+00:26:14.000 --> 00:26:21.000
+data that will take a long way and you
+may not you can save money by having
+smaller cluster with the cash on top
+
+206
+00:26:21.000 --> 00:26:28.000
+they have to have a huge cluster so you
+can get the performance and of course
+think about that board they think of a
+
+207
+00:26:28.000 --> 00:26:35.000
+quick site who is looking a quick side
+already it's a great tool and the spicy
+tea in the middle can be a great thing
+
+208
+00:26:35.000 --> 00:26:42.000
+to put on frontal red shift i rightly
+recommend you look into that it was made
+for red shift now workload management on
+
+209
+00:26:42.000 --> 00:26:49.000
+chief we call wlm it parses only Ram two
+different queries so you should
+configure different queues for different
+
+210
+00:26:49.000 --> 00:26:57.000
+usages and there's a new feature then
+it's in right now then I'm going to talk
+to you about when you create data from
+
+211
+00:26:57.000 --> 00:27:04.000
+redshift sometimes you need to get not
+only the data but the metadata about the
+date what the name of the columns so you
+
+212
+00:27:04.000 --> 00:27:11.000
+run select or Java you can get that
+easily from a query no problem on red
+shift when you load extract a lot of
+
+213
+00:27:11.000 --> 00:27:20.000
+data out we recommend using unload which
+in parallel write files directly from
+the compute nodes into s3 however we
+
+214
+00:27:20.000 --> 00:27:29.000
+don't give column names on the files yet
+and that's as far as I'm going to go on
+that but what people do is they run the
+
+215
+00:27:29.000 --> 00:27:37.000
+unload and then they run the same query
+again with 1 equals 0 at the end so he
+can people can get the metadata of the
+
+216
+00:27:37.000 --> 00:27:44.000
+of the column the names of the calls and
+things the problem is very complex
+queries by the time the optimizer gas to
+
+217
+00:27:44.000 --> 00:27:51.000
+that equals 1 equals 0 it already create
+empire tables already loaded a lunch of
+data and it kind of takes it at the same
+
+218
+00:27:51.000 --> 00:27:59.000
+time as the original query talk instead
+until we fix this you can do a select
+top 0 because the optimizer we know
+
+219
+00:27:59.000 --> 00:28:09.000
+right off the bat is a fake select and
+it runs much faster we made available
+recently a number of open source tools
+
+220
+00:28:09.000 --> 00:28:16.000
+for you to manage your database i'm at
+25-year DBA and i'd like to have my
+scripts to do things on the database and
+
+221
+00:28:16.000 --> 00:28:23.000
+i got those scripts along with other
+people that helped a lot and put this
+together and made them available to
+
+222
+00:28:23.000 --> 00:28:29.000
+everybody so we have multiple sections
+that are highly recommend you keep your
+eyes on this it keeps growing keeps
+
+223
+00:28:29.000 --> 00:28:35.000
+adding new things and make them better
+we have adam in script with a bunch of
+tuning and monitoring for the database
+
+224
+00:28:35.000 --> 00:28:45.000
+views to get DD else out of table
+permissions things like that column
+encodings to for analyzing vacuum a two
+
+225
+00:28:45.000 --> 00:28:50.000
+for unloading copy move data from one
+color to another cluster i highly
+recommend you take a look on that the
+
+226
+00:28:50.000 --> 00:28:56.000
+bottom three are python written tools
+you can get the source code change make
+it yours make it
+
+227
+00:28:56.000 --> 00:29:02.000
+better give us suggestions give us a
+this is broken we're going to fix it
+make contributions we love to have your
+
+228
+00:29:02.000 --> 00:29:09.000
+code being there too now for this means
+scrapes I'm going to show you a few of
+them so you can have an idea of how they
+
+229
+00:29:09.000 --> 00:29:17.000
+work so imagine you want to tune your
+workload plus is not quite running as
+fast as you want so the first thing I
+
+230
+00:29:17.000 --> 00:29:24.000
+look top queries what are the queries
+that are using most of my time on my
+cluster either because a single query
+
+231
+00:29:24.000 --> 00:29:32.000
+like the first one takes a long time or
+the second one there where it rains too
+many times it's fast on itself but runs
+
+232
+00:29:32.000 --> 00:29:39.000
+too many times and then you can go and
+see how can i fix those queries of
+course on the right inside on the event
+
+233
+00:29:39.000 --> 00:29:46.000
+column there on the right you see there
+is some of them that shares future or
+stats those are performance alerts where
+
+234
+00:29:46.000 --> 00:29:52.000
+the system is telling you what is wrong
+with the query it missing stats or the
+future is not appropriate for the sort
+
+235
+00:29:52.000 --> 00:30:00.000
+key of the table another way of doing
+look at your performance is looking at
+the summary of your alerts related to a
+
+236
+00:30:00.000 --> 00:30:07.000
+particular table so you summarize all
+your alerts for a table and also add the
+number of minutes you spend scanning
+
+237
+00:30:07.000 --> 00:30:15.000
+that table so you have a prioritized
+order which table you can fix and if you
+fix them everybody that use the table
+
+238
+00:30:15.000 --> 00:30:20.000
+benefits from the performance
+improvement for example this particular
+flights table needs a new sort key or
+
+239
+00:30:20.000 --> 00:30:26.000
+maybe need to uncompress the sort key i
+don't know we have to look specific
+there but then gets a point where to
+
+240
+00:30:26.000 --> 00:30:34.000
+start your work another way of
+performance tuning is to making sure
+that not my careers are running fast but
+
+241
+00:30:34.000 --> 00:30:40.000
+actually I'm not waiting queue if I'm
+submitting more queries that can run at
+the same time if you look on the WLM
+
+242
+00:30:40.000 --> 00:30:48.000
+apex orally it's going to give you / q
+and for our what's the pressure on the
+queue my queue is 5 I have 10 people
+
+243
+00:30:48.000 --> 00:30:55.000
+waiting line maybe the queue needs to be
+adjusted right and now that we allow you
+to change the memory and the concurrency
+
+244
+00:30:55.000 --> 00:31:01.000
+of the workload management on the fly
+without bouncing the cluster you can
+change those parameters throughout the
+
+245
+00:31:01.000 --> 00:31:08.000
+day for example you're going to start
+your load process you give more memory
+to the queue number one there and then
+
+246
+00:31:08.000 --> 00:31:15.000
+when your ETL ends you
+back to 5050 for example it so it's an
+example right now this is all to point
+
+247
+00:31:15.000 --> 00:31:22.000
+you to a particular location and where
+to look now you're going to ask me how
+do I tune a specific query how do I know
+
+248
+00:31:22.000 --> 00:31:30.000
+explain plane is kind of fuzzy I kind of
+know how to read the explain plan but
+those queers are big right how do I know
+
+249
+00:31:30.000 --> 00:31:35.000
+exactly what's going on so I'm going to
+show you something we launched some time
+ago that I know many of you haven't used
+
+250
+00:31:35.000 --> 00:31:43.000
+yet it's the console and query detail
+for the console so imagine you have a
+query that runs on the console that has
+
+251
+00:31:43.000 --> 00:31:48.000
+the query and they explain play on the
+bottom but you don't know each of the
+steps really took longer but then you
+
+252
+00:31:48.000 --> 00:31:56.000
+click on the actual tab and voila you
+have a list of all the explain plan
+steps and how long each one took if they
+
+253
+00:31:56.000 --> 00:32:04.000
+are unbalanced or not balance is skewed
+and you can't even get details about
+your step like how many megabytes o 29
+
+254
+00:32:04.000 --> 00:32:10.000
+gigabytes of data transmitted that's why
+that step was slow and you can figure
+out what's going on it's a very good
+
+255
+00:32:10.000 --> 00:32:16.000
+tool when you've narrowed down to one
+query what's wrong with that query and
+then you can go and fix it and
+
+256
+00:32:16.000 --> 00:32:23.000
+understand exactly where who is
+contributing where you need to fix
+sometimes multiple steps look bad Oh
+
+257
+00:32:23.000 --> 00:32:30.000
+distribute data across the network that
+must be bad well if it's 10 bytes is ok
+if it's 10 megabytes I'm ok 10 gigabytes
+
+258
+00:32:30.000 --> 00:32:36.000
+that is really bad so this can tell you
+exactly what's going on which step of
+the crew took longest and help you
+
+259
+00:32:36.000 --> 00:32:42.000
+figure out and even see there's alerts
+they're going to show here a these
+tables missing stats that's what's your
+
+260
+00:32:42.000 --> 00:32:49.000
+problem right so I highly recommend you
+take a look on this and I hope you can
+you can enjoy tuning on red shift all
+
+261
+00:32:49.000 --> 00:32:58.000
+the performs those customers show in the
+beginning now it's my pleasure to bring
+re miller from tripadvisor you're going
+
+262
+00:32:58.000 --> 00:33:10.000
+to tell you how they created their
+environment to get the performance they
+needed from redshift
+
+263
+00:33:10.000 --> 00:33:16.000
+so I'm going to talk for about 15
+minutes and then we'll have 10 minutes
+at the end for questions because I know
+
+264
+00:33:16.000 --> 00:33:24.000
+how have some follow-up questions so
+we're this presentation is about sharing
+Amazon redshift so it's how do you
+
+265
+00:33:24.000 --> 00:33:29.000
+maximize your particular cluster
+especially with a whole bunch of
+different users using it it's a variety
+
+266
+00:33:29.000 --> 00:33:34.000
+of patterns we're using some tools that
+were in the process of open sourcing
+hopefully you guys will recognize some
+
+267
+00:33:34.000 --> 00:33:40.000
+of these problems and be able to benefit
+from some of the patterns that we're
+using or some of the tools we've built
+
+268
+00:33:40.000 --> 00:33:48.000
+so a brief introduction tripAdvisor's
+375 million unique monthly visitors
+we're using a fairly small cluster it's
+
+269
+00:33:48.000 --> 00:33:55.000
+an eight note D s 28 x-large our largest
+table is 12 terabytes it's got about a
+month of data and everything for us is
+
+270
+00:33:55.000 --> 00:34:01.000
+time series so we're really not about
+real-time analytics most of our use of
+redshift is about understanding user
+
+271
+00:34:01.000 --> 00:34:09.000
+behavior what people are looking for and
+how we can better serve them we have a
+big shared resource problem which is we
+
+272
+00:34:09.000 --> 00:34:15.000
+have about 460 engineers data scientists
+analysts and product managers all of
+whom have personal logins to redshift
+
+273
+00:34:15.000 --> 00:34:23.000
+they've created more than 2,500 tables
+and our experience has been that if you
+don't build it be it infrastructure or
+
+274
+00:34:23.000 --> 00:34:31.000
+whatever they're still going to come the
+company motto is speed wins there's no
+tolerance for delayed analysis if we
+
+275
+00:34:31.000 --> 00:34:36.000
+don't make the correct path the easiest
+path they're still going to find a way
+to accomplish it it will just be
+
+276
+00:34:36.000 --> 00:34:44.000
+accomplished in a way that interferes
+with the other 459 users my favorite
+recent example was one of our data
+
+277
+00:34:44.000 --> 00:34:49.000
+scientists needed to bring over a 293
+million row table and we hadn't
+communicated as well as we should have
+
+278
+00:34:49.000 --> 00:34:57.000
+how you would do that and so they
+noticed that you could just use JDBC and
+do a bunch of insert statements and it
+
+279
+00:34:57.000 --> 00:35:04.000
+worked but it kind of crippled some of
+the underlying redshift used for query
+monitoring because you now have 293
+
+280
+00:35:04.000 --> 00:35:10.000
+million rows and those underlying tables
+for each individual insert so those are
+the kind of things that happen unless
+
+281
+00:35:10.000 --> 00:35:19.000
+you establish the patterns and the tools
+that users need they will find a way to
+do it anyway so our solution
+
+282
+00:35:19.000 --> 00:35:25.000
+break down into four points reduce
+contention so where you're doing
+something expensive that you control
+
+283
+00:35:25.000 --> 00:35:31.000
+find a way to do it on a custom cluster
+that's really effective for what you're
+trying to accomplish and I'll talk
+
+284
+00:35:31.000 --> 00:35:36.000
+specifically about the types of custom
+clusters we use for different types of
+tasks ad infrastructure and automation
+
+285
+00:35:36.000 --> 00:35:43.000
+add a lot of monitoring tables
+performance and usage and where you can
+if you know everyone's trying to
+
+286
+00:35:43.000 --> 00:35:49.000
+accomplish some similar goals do as much
+of that as you can yourself so that they
+can then benefit in just query instead
+
+287
+00:35:49.000 --> 00:35:57.000
+of doing the ETL you know and how five
+people doing the same et al so for
+custom computation clusters your goal
+
+288
+00:35:57.000 --> 00:36:02.000
+there is to stay out of the way and our
+favorite type of custom computation
+cluster from a performance and cost
+
+289
+00:36:02.000 --> 00:36:10.000
+perspective so what we call a mighty
+mouse cluster and that's a specialized
+ephemeral cluster the Mighty Mouse one
+
+290
+00:36:10.000 --> 00:36:17.000
+in particular is 32 DC one large nodes
+so that's great bang for the buck in
+terms of a lot of computation cases it's
+
+291
+00:36:17.000 --> 00:36:26.000
+eight dollars an hour for the whole
+cluster for all 32 nodes for a four-hour
+job on d1 asses you could end up doing
+
+292
+00:36:26.000 --> 00:36:32.000
+it in 40 minutes on a mighty mouse
+cluster so you can get some real
+performance wins the d2s for us we've
+
+293
+00:36:32.000 --> 00:36:37.000
+seen fifty to two hundred percent
+performance improvements compared to the
+D ones that's Eric's advice to if you're
+
+294
+00:36:37.000 --> 00:36:45.000
+still on the D ones get off so much
+smaller wins versus the d2's but if you
+look at performance / cost you can still
+
+295
+00:36:45.000 --> 00:36:53.000
+see 3x better performance / costs for a
+lot of use cases compared to sort of the
+bigger nodes so we had seven of these 32
+
+296
+00:36:53.000 --> 00:36:58.000
+node clusters running last week doing
+some custom computation and we ended up
+saving it's about three times cheaper
+
+297
+00:36:58.000 --> 00:37:05.000
+than it would have been how we done the
+same computation on the d2s some of the
+winds you're getting or you can
+
+298
+00:37:05.000 --> 00:37:12.000
+customize a configuration of these
+ephemeral clusters so as Eric was saying
+redshift is really good at parallelizing
+
+299
+00:37:12.000 --> 00:37:19.000
+and operating a single query at a time
+in spreading the workload over nodes so
+a lot of times run with two slots only
+
+300
+00:37:19.000 --> 00:37:25.000
+to maximize the amount of memory
+available to each query and that's been
+very effective on us you're just relying
+
+301
+00:37:25.000 --> 00:37:31.000
+on the underlying technology to parallel
+eyes across the nodes you do have to be
+careful right if you're making any
+
+302
+00:37:31.000 --> 00:37:35.000
+mistakes
+your query that are causing nodes to
+need to talk to one another more than
+
+303
+00:37:35.000 --> 00:37:41.000
+they have to that blows up when you're
+dealing with 32 nodes at a time so you
+have to experiment make sure you're
+
+304
+00:37:41.000 --> 00:37:46.000
+doing things in an optimized way but it
+actually is kind of a good way canary in
+a coalmine style to really know that
+
+305
+00:37:46.000 --> 00:37:51.000
+you're not doing something effective
+with a query because while you might get
+away with it with eight nodes if there's
+
+306
+00:37:51.000 --> 00:37:57.000
+you know bad distribution keys or too
+much node communication it really blows
+up once you start talking about thirty
+
+307
+00:37:57.000 --> 00:38:04.000
+two nodes at a time the primary
+limitation we found with these custom
+computation clusters is the size of the
+
+308
+00:38:04.000 --> 00:38:11.000
+copy so with 32 of these nodes you have
+five terabytes of storage but if you're
+trying to bring in for us anything more
+
+309
+00:38:11.000 --> 00:38:17.000
+than 300 gigabytes compressed you end up
+in the process of bringing it in using
+all the available space on the cluster
+
+310
+00:38:17.000 --> 00:38:23.000
+and you're quite your load will fail so
+that's it's not a an awful limitation
+but you got to keep that in mind like
+
+311
+00:38:23.000 --> 00:38:28.000
+just because you have five terabytes
+usable on a cluster like this doesn't
+mean you can bring in five terabytes of
+
+312
+00:38:28.000 --> 00:38:37.000
+data compressed all at once the
+additional pieces of infrastructure and
+as I said one of the process of open
+
+313
+00:38:37.000 --> 00:38:42.000
+sourcing some of these if you're going
+to use custom computation clusters you
+don't want to rebuild your cluster every
+
+314
+00:38:42.000 --> 00:38:49.000
+time you want tools that let you say
+okay I need this schema from my main
+cluster on this ephemeral cluster so we
+
+315
+00:38:49.000 --> 00:38:55.000
+have some of those tools sync redshift
+objects is basically a way to bring over
+entire schemas to an ephemeral cluster
+
+316
+00:38:55.000 --> 00:39:01.000
+from your main cluster we have specific
+unload and copy for transferring the
+data back and forth but it sounds like
+
+317
+00:39:01.000 --> 00:39:07.000
+some of the tools that Eric's already
+open source might be more effective than
+that one key thing to keep in mind is
+
+318
+00:39:07.000 --> 00:39:15.000
+use a manifest file wherever possible
+with analytics it's much better to fail
+than it is to lie and a really easy way
+
+319
+00:39:15.000 --> 00:39:22.000
+to lie is to get into trouble with
+eventual consistency in the standard
+region and only be you know only have
+
+320
+00:39:22.000 --> 00:39:28.000
+some of your files that got unloaded
+available at the time you do the copy so
+I heavily recommend whenever you're
+
+321
+00:39:28.000 --> 00:39:34.000
+doing it unload or ever whenever you're
+doing a copy you take advantage of the
+manifest file option don't find out
+
+322
+00:39:34.000 --> 00:39:39.000
+later that you've come to the wrong
+business decision because you only had
+you know eighty percent of your data at
+
+323
+00:39:39.000 --> 00:39:48.000
+the time you copied back in the next bit
+is infrastructure in automation in
+the easiest path there is to start with
+
+324
+00:39:48.000 --> 00:39:55.000
+your engineers so what can you add that
+lets engineers take advantage of things
+you've built for yourself already and
+
+325
+00:39:55.000 --> 00:40:01.000
+one of the things that we are using is
+something that LinkedIn open source
+called Azkaban and that's a batch
+
+326
+00:40:01.000 --> 00:40:09.000
+workflow and UI and scheduler and it's
+really very easy for people to adopt
+it's nice you can basically divide your
+
+327
+00:40:09.000 --> 00:40:16.000
+logic for bringing data over or runnin
+sequel into a series of jobs and it'll
+create visual dependencies for you you
+
+328
+00:40:16.000 --> 00:40:22.000
+can parameterize running your jobs you
+can parallelize running them you can
+visually see when things are happening
+
+329
+00:40:22.000 --> 00:40:28.000
+it gives you a list of how long things
+takes you get a whole bunch of things
+baked in and it's a very easy adoption
+
+330
+00:40:28.000 --> 00:40:35.000
+for engineers so these jobs get run and
+Azkaban is calling the data transfer
+infrastructure that we've already built
+
+331
+00:40:35.000 --> 00:40:41.000
+so that's been very effective for us in
+terms of skaz a scheduler and
+understanding dependencies and making
+
+332
+00:40:41.000 --> 00:40:48.000
+sure things happen in the right order
+and to Eric's point we actually have a
+normal postgres admin database that's
+
+333
+00:40:48.000 --> 00:40:56.000
+tracking what rant what runs when we're
+not trying to have a small control table
+that we're doing lots of individual
+
+334
+00:40:56.000 --> 00:41:01.000
+rights to in sort of a transactional way
+that's living on redshift so that's
+another pattern that you might want to
+
+335
+00:41:01.000 --> 00:41:09.000
+make sure to copy once you've handled
+the engineer problem and you've given
+them a pathway for writing custom flows
+
+336
+00:41:09.000 --> 00:41:14.000
+and we're at about 70 individual flows
+at different engineering teams have
+created at this point with their own
+
+337
+00:41:14.000 --> 00:41:23.000
+independent schedules you want to go for
+solutions for your data your data
+analysts your data scientists give them
+
+338
+00:41:23.000 --> 00:41:29.000
+a way to have a point-and-click UI for
+scheduling so custom UI for
+non-engineers something that allows you
+
+339
+00:41:29.000 --> 00:41:36.000
+to import from file or hive and as I
+said we're in the process of trying to
+open source these solutions what we do
+
+340
+00:41:36.000 --> 00:41:42.000
+in these cases is we ought to analyze
+the source data either from file or high
+if we suggest a table ddl sort
+
+341
+00:41:42.000 --> 00:41:49.000
+distribution and compression and we can
+schedule automated imports and automated
+runs of particular sequel we it was
+
+342
+00:41:49.000 --> 00:41:55.000
+probably a mistake to have automatically
+suggested compression we probably would
+have been better off bringing in a
+
+343
+00:41:55.000 --> 00:42:01.000
+subset of the data and relying on reg
+to suggest the compression or just not
+trying for that at all and relying on
+
+344
+00:42:01.000 --> 00:42:06.000
+automated redshift it depends whether as
+Eric said if you're doing something over
+and over again you're better off
+
+345
+00:42:06.000 --> 00:42:11.000
+eventually coming up with the
+compression through and analyze if
+you're just doing a one-off much better
+
+346
+00:42:11.000 --> 00:42:19.000
+off just not to specify compression and
+let redshift do it the next thing we
+added was monitoring and the key thing
+
+347
+00:42:19.000 --> 00:42:25.000
+to keep in mind here is you've got
+compatibility with postgres so you can
+throw up simple monitoring that's
+
+348
+00:42:25.000 --> 00:42:32.000
+emailing alerts out with a simple query
+statement and then emailing the results
+of that query which is what we're doing
+
+349
+00:42:32.000 --> 00:42:39.000
+at the bottom so we have long run
+inquiry alerts every account that gets
+created is mapped to an email address so
+
+350
+00:42:39.000 --> 00:42:46.000
+we know who to tell if a car has gone
+off the rails are these different users
+we have daily and peak usage reports by
+
+351
+00:42:46.000 --> 00:42:53.000
+user and type of activity daily table
+size space taken up I delete a rose by
+table we tend to use deep copy instead
+
+352
+00:42:53.000 --> 00:42:58.000
+of vacuum because by the time we see
+that a table is a problem we're well
+over the twenty percent where you're
+
+353
+00:42:58.000 --> 00:43:04.000
+going to be feasible to vacuum and as I
+said the initial monitoring cost for
+this type of solution is can be really
+
+354
+00:43:04.000 --> 00:43:13.000
+really cheap all you have to do is write
+a query like that p sequel quiet HTML
+output you go from a file do an output
+
+355
+00:43:13.000 --> 00:43:19.000
+and then email it out to whoever needs
+to be notified so it's just a very
+simple way of setting up alerts seeing
+
+356
+00:43:19.000 --> 00:43:27.000
+if they have value we've actually found
+a slightly better pattern is to insert
+the results of the query into a date
+
+357
+00:43:27.000 --> 00:43:32.000
+partition table so you have a record of
+what things were going on at what time
+you can build dashboards on top of it
+
+358
+00:43:32.000 --> 00:43:38.000
+then you select and then you email so
+slightly more complicated but it gives
+you a historical record for things that
+
+359
+00:43:38.000 --> 00:43:44.000
+prove themselves out on the monitoring
+side you can then do things like build
+tableau dashboards on top of your
+
+360
+00:43:44.000 --> 00:43:50.000
+monitoring so this is you know different
+sized is is for different users is how
+much of the cluster resources of giving
+
+361
+00:43:50.000 --> 00:43:55.000
+users taking off so we can start knowing
+who to communicate with if someone's
+sort of overly aggressively using
+
+362
+00:43:55.000 --> 00:44:03.000
+different cluster resources the next
+thing I wanted to talk about from an
+engineering side is a shared development
+
+363
+00:44:03.000 --> 00:44:10.000
+cluster so you obviously don't want to
+be doing most of your development on
+your main clusters if you're
+
+364
+00:44:10.000 --> 00:44:17.000
+testing out we a good example for us we
+had people testing out a new uses of the
+list AG query and we found you can take
+
+365
+00:44:17.000 --> 00:44:25.000
+up ten percent of the usable space on a
+fairly large cluster in about 30 minutes
+if you use the list at query wrong so
+
+366
+00:44:25.000 --> 00:44:31.000
+you know you want as much of that to
+happen not on your main cluster so we
+found can be very effective as a shared
+
+367
+00:44:31.000 --> 00:44:36.000
+development cluster and we use something
+we call Khaleesi syntax after the
+engineer who invented it which is a very
+
+368
+00:44:36.000 --> 00:44:45.000
+simple way of marking up the schemas and
+your query so what this lets you do is
+if let's say given flow a given sort of
+
+369
+00:44:45.000 --> 00:44:52.000
+unit of work might operate on a
+particular schema to say we're looking
+at something like hotel bookings what
+
+370
+00:44:52.000 --> 00:44:58.000
+you do is you mark it up so everywhere
+you reference that schema is noted like
+this so it's completely legitimate
+
+371
+00:44:58.000 --> 00:45:04.000
+sequel can run as is but it's marked up
+in a way that lets a tool do
+substitutions so when people are
+
+372
+00:45:04.000 --> 00:45:09.000
+operating on that flow trying to
+engineer it and make it better on the
+shared development cluster you can
+
+373
+00:45:09.000 --> 00:45:16.000
+automatically create copies of the
+schema that this runs against for their
+own for their own personal users so if
+
+374
+00:45:16.000 --> 00:45:22.000
+both jeff bezos and werner vogels wants
+to develop the short on the Sherpa flow
+you basically can just have some tools
+
+375
+00:45:22.000 --> 00:45:28.000
+that go and create them their own
+version of the schema and run against
+that schema and use the same precursors
+
+376
+00:45:28.000 --> 00:45:34.000
+so rather than having the overhead of
+spinning up an individual cluster per
+user you can instead all operate on the
+
+377
+00:45:34.000 --> 00:45:40.000
+same shared development environment and
+as I said we're working on open sourcing
+this so it'll be sort of available if
+
+378
+00:45:40.000 --> 00:45:45.000
+you guys want to see exactly what we did
+but feel free to reach out as well
+there's a little bit of example code for
+
+379
+00:45:45.000 --> 00:45:50.000
+what we do to do that you can see it's
+not particularly complicated we're
+creating a schema we have a target
+
+380
+00:45:50.000 --> 00:45:56.000
+schema and then the schema for the
+individual user we just go through the
+tables we load the information and we
+
+381
+00:45:56.000 --> 00:46:02.000
+substitute basically for the schema so
+that we can recreate the entire schema
+and clone it over to another to another
+
+382
+00:46:02.000 --> 00:46:11.000
+schema that's personalized for the
+developer to operate on the next trick I
+wanted to talk about is view performance
+
+383
+00:46:11.000 --> 00:46:16.000
+this is actually less relevant because
+of the recent improvements that they've
+made a few performance but you can also
+
+384
+00:46:16.000 --> 00:46:24.000
+mark up views such that if the users
+using your tools and you note that
+they're using a subsection of
+
+385
+00:46:24.000 --> 00:46:29.000
+that only comes from one table as I said
+we're using the time series pattern so
+we tend to divide our tables up by
+
+386
+00:46:29.000 --> 00:46:35.000
+months so we can drop old months without
+having to deal with vacuum costs and you
+can find that pattern on the redshift
+
+387
+00:46:35.000 --> 00:46:41.000
+documentation so the syntax is
+completely legitimate sequel against a
+view you can have it auto complete if
+
+388
+00:46:41.000 --> 00:46:48.000
+you're developing your sequel and an IDE
+but your underlying framework can
+substitute in and run against an
+
+389
+00:46:48.000 --> 00:46:54.000
+individual table instead of using the
+view to get performance optimizations
+that way as I said a lot less relevant
+
+390
+00:46:54.000 --> 00:47:01.000
+now that the view performance is around
+is good for Union all type views but it
+used to be a very large wins to avoid
+
+391
+00:47:01.000 --> 00:47:09.000
+doing Union all running queries against
+Union all views final thing I wanted to
+talk about is queue management so the
+
+392
+00:47:09.000 --> 00:47:14.000
+idea there is keep it simple because the
+memory is reserved though you no longer
+need to keep it as simple because you
+
+393
+00:47:14.000 --> 00:47:20.000
+can now dynamically move queues around
+without actually needing to reboot your
+cluster so we have four cubes for
+
+394
+00:47:20.000 --> 00:47:28.000
+example mission-critical queries that
+might run a while a queue 4shared
+basically shared computation the DBA q a
+
+395
+00:47:28.000 --> 00:47:34.000
+quick Q which we use for tableau so if
+you need to run quick queries to find
+very quick answers or for tableau
+
+396
+00:47:34.000 --> 00:47:40.000
+dashboards where you need immediate
+responses but don't use a lot of
+computational resources and then a
+
+397
+00:47:40.000 --> 00:47:46.000
+default queue that everyone fell in we
+have a default timeout so when some user
+does a Cartesian product on a you know
+
+398
+00:47:46.000 --> 00:47:53.000
+12 billion row table you don't end up
+bringing the whole cluster down for
+three hours it's only sort of slow for
+
+399
+00:47:53.000 --> 00:47:59.000
+30 minutes since that's been pretty
+helpful to have default timeouts on the
+particular keys and then groups allow
+
+400
+00:47:59.000 --> 00:48:05.000
+you to dynamically switch queues for
+particular users you can associate a
+group with a queue and you can
+
+401
+00:48:05.000 --> 00:48:13.000
+dynamically move users from group to
+group so for environments like tableau
+where you can't set your query group you
+
+402
+00:48:13.000 --> 00:48:18.000
+can actually just have UI is that let a
+tableau user move between groups
+depending on whether it's loading a
+
+403
+00:48:18.000 --> 00:48:25.000
+large extract or just servicing the
+needs of a dashboard so we found that to
+be pretty effective where users can't
+
+404
+00:48:25.000 --> 00:48:35.000
+set their own query groups is a way to
+dynamically adjust which ques users fall
+in soon wrap up amazon redshift is
+
+405
+00:48:35.000 --> 00:48:41.000
+transformed analytics a tripadvisor we
+get thousands of queries
+hundreds of users and all unknot that
+
+406
+00:48:41.000 --> 00:48:47.000
+larger clusters you can really optimize
+your use of a cluster if you really
+spend the time to optimize it in these
+
+407
+00:48:47.000 --> 00:48:53.000
+ways we generally use tableau dashboards
+built directly on Amazon redshift and it
+allows for iterative real time
+
+408
+00:48:53.000 --> 00:49:00.000
+exploration which is hundreds of times
+faster than poking around in hive or a
+variety of other options and we have
+
+409
+00:49:00.000 --> 00:49:06.000
+openldap access for any employee we had
+to do a little bit of custom work to
+just sort of man automatically create
+
+410
+00:49:06.000 --> 00:49:13.000
+instead of manually create accounts but
+I'm that the ldap abscess and ability to
+plug into LDAP repositories is I think
+
+411
+00:49:13.000 --> 00:49:20.000
+coming at some point and we're going to
+be open sourcing these solutions we're
+currently targeting February of 2016 but
+
+412
+00:49:20.000 --> 00:49:25.000
+if there's anything you particularly
+interested in early feel free to reach
+out and contact me we're just trying to
+
+413
+00:49:25.000 --> 00:49:30.000
+sort of divorce some of our custom stuff
+from some of the more generically usable
+aspects of the tools we've built and
+
+414
+00:49:30.000 --> 00:49:36.000
+some of the patterns are usable now and
+when we do open source it you'll be able
+to find the link it HTTP engineering
+
+415
+00:49:36.000 --> 00:49:52.000
+tripadvisor com thank you very much
+so another example of customer they
+started with redshift and created their
+
+416
+00:49:52.000 --> 00:49:58.000
+own environment around it there is those
+other sessions with other customers are
+discussing their user redshift some of
+
+417
+00:49:58.000 --> 00:50:05.000
+them already happened and you can go on
+the archives on the video or audio or
+the share of the slides but the ones
+
+418
+00:50:05.000 --> 00:50:12.000
+that are still going to happen i highly
+recommend you take a look and and see
+what you can learn from redshift now I'm
+going to take a few questions

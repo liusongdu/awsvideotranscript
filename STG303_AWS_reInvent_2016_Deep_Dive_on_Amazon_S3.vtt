@@ -1,0 +1,2668 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:10.000
+hello everyone welcome to the deep dive
+on amazon s3 my name is Susan Chan I'm a
+Senior Product Manager with Amazon with
+
+2
+00:00:10.000 --> 00:00:24.000
+the Amazon s3 team so Amazon have a full
+range of storage portfolio if you need
+file we have Amazon EFS if you need
+
+3
+00:00:24.000 --> 00:00:34.000
+block storage you can choose between MS
+on EBS for persistence store or Amazon
+ec2 for your instance store today we're
+
+4
+00:00:34.000 --> 00:00:44.000
+going to focus on amazon s3 on the
+object storage so here's what we're
+going to talk about we're going to dive
+
+5
+00:00:44.000 --> 00:00:50.000
+deep into how you can pick the right
+storage class for your use case well
+talk to a little bit about some of the
+
+6
+00:00:50.000 --> 00:00:57.000
+tools we are we offering you to automate
+your management tasks so you can focus
+on growing your business and building
+
+7
+00:00:57.000 --> 00:01:05.000
+your application and leave the heavy
+lifting to 2 s 3 i'll talk a little bit
+about some of the best practice you can
+
+8
+00:01:05.000 --> 00:01:12.000
+get better performance out of s3 and
+i'll also go through some of the new
+tools that we're offering to help you
+
+9
+00:01:12.000 --> 00:01:21.000
+manage your storage does it start with i
+love to hear how many of you are
+actually currently using s3 majority of
+
+10
+00:01:21.000 --> 00:01:29.000
+you fantastic this is a deep dive
+session I am assuming that you have work
+some working knowledge of s 3 i'm likely
+
+11
+00:01:29.000 --> 00:01:35.000
+going to go all the way up to the top of
+the hour but i will stay back to answer
+questions for as long as you need and
+
+12
+00:01:35.000 --> 00:01:42.000
+i'll have a few colleagues with me as
+well so you what we probably won't have
+a time for Q&A but i'll stay back at the
+
+13
+00:01:42.000 --> 00:01:51.000
+end and you can answer your question to
+answer your questions to start off with
+let's talk about oh what happened here
+
+14
+00:01:51.000 --> 00:02:02.000
+getting your data into s3 not all data
+not all data transfer is the same we
+know that and therefore we offer a range
+
+15
+00:02:02.000 --> 00:02:10.000
+of tools to help you get your data into
+s3 if you want to stream data into into
+Amazon you can consider amazon kinesis
+
+16
+00:02:10.000 --> 00:02:17.000
+fire hose
+if you have a data on premises and you
+wanted to connect your on-premise
+
+17
+00:02:17.000 --> 00:02:25.000
+infrastructure with the AWS cloud
+consider the air the AWS Storage Gateway
+a couple days ago we announced that we
+
+18
+00:02:25.000 --> 00:02:36.000
+added a file gateway so you can use the
+if you have on premise application that
+I that has the NFS protocol you can
+
+19
+00:02:36.000 --> 00:02:45.000
+connect to your s3 bucket as an NFS
+mount point so that's something new if
+you have if you have petabytes of
+
+20
+00:02:45.000 --> 00:02:54.000
+storage in a location that doesn't have
+very good connectivity you can consider
+AWS snowball edge which is also compute
+
+21
+00:02:54.000 --> 00:03:01.000
+power so you can do some processing as
+you load your data onto the snowball and
+of course if you have hundreds of
+
+22
+00:03:01.000 --> 00:03:10.000
+petabyte or try exabyte of data consider
+our AWS snowmobile they won't let me
+drive the snowmobile on stage but here
+
+23
+00:03:10.000 --> 00:03:21.000
+you have it for effect if you have data
+on premises you probably have software
+from one of these industry leaders some
+
+24
+00:03:21.000 --> 00:03:30.000
+of these can help you migrate workload
+on to AWS so your application can run on
+AWS or in a hybrid architecture mode
+
+25
+00:03:30.000 --> 00:03:39.000
+they make it easy for you to migrate or
+scale your growth leveraging amazon s3
+and amazon glacier as your cloud storage
+
+26
+00:03:39.000 --> 00:03:51.000
+targets
+so once you once you figure out how to
+get your data into into onto the cloud
+
+27
+00:03:51.000 --> 00:04:01.000
+you have a choice of storage classes on
+amazon s3 all three of these storage
+classes are highly durable and and
+
+28
+00:04:01.000 --> 00:04:08.000
+they're designed for 11 nines of
+durability let's start with S three
+standard it is designed for active data
+
+29
+00:04:08.000 --> 00:04:15.000
+that hot workload that you have it is
+highly performance designed for four
+nights of availability so it's always
+
+30
+00:04:15.000 --> 00:04:22.000
+available it this is the general-purpose
+storage class when you have new data
+that comes in and they're frequently
+
+31
+00:04:22.000 --> 00:04:30.000
+access consider starting with s three
+standard and this data age it's a lot of
+the times you see the access pattern to
+
+32
+00:04:30.000 --> 00:04:38.000
+drop off standard in frequent access is
+designed for this coder and less
+frequently accessed data this still have
+
+33
+00:04:38.000 --> 00:04:46.000
+the same high performance as s3 standard
+so when you need that data you still
+have access to it right away this has a
+
+34
+00:04:46.000 --> 00:04:54.000
+much lower cost point with cost starting
+at one point two five cents per gigabyte
+which is forty five percent lower in
+
+35
+00:04:54.000 --> 00:05:02.000
+storage costs than s3 standard it does
+there is a retrieval course costs for
+standard in frequent access but if you
+
+36
+00:05:02.000 --> 00:05:09.000
+are putting that colder store l coder
+object in in the storage class you are
+able to take advantage of that lower
+
+37
+00:05:09.000 --> 00:05:17.000
+storage costs and as your data h even
+further at some point no one is really
+actively interacting with your data
+
+38
+00:05:17.000 --> 00:05:25.000
+anymore you might need to keep it for
+record-keeping purposes glacier is
+designed for this long term archive
+
+39
+00:05:25.000 --> 00:05:33.000
+purpose it has very very low cost with
+storage starting at four tenth of a cent
+and earlier we announced that there's
+
+40
+00:05:33.000 --> 00:05:41.000
+additional retrieval option so there are
+now three retrieval option ranging from
+minutes to hours so you can choose
+
+41
+00:05:41.000 --> 00:05:48.000
+depending on how quickly you need the
+data before I move on this slide I also
+want to mention that we have just
+
+42
+00:05:48.000 --> 00:05:57.000
+dropped pricing for s3 standard
+effective today so a standard has
+pricing now starting at 2.3 cents per
+
+43
+00:05:57.000 --> 00:06:05.000
+gigabyte per month
+so how does this all these storage
+classes relate to your use case how do
+
+44
+00:06:05.000 --> 00:06:12.000
+you pick the right storage classes well
+here's kind of a rule of thumb if you
+are thinking if your storage is for big
+
+45
+00:06:12.000 --> 00:06:21.000
+data analysis content distribution or
+static website you likely going to see a
+lot of retrieval on your on your data so
+
+46
+00:06:21.000 --> 00:06:29.000
+consider starting with s three standard
+using s three standard for those data if
+your use case is for backup and archive
+
+47
+00:06:29.000 --> 00:06:37.000
+or disaster recovery you generally don't
+access this data until the very rare
+occasion when you need it you know when
+
+48
+00:06:37.000 --> 00:06:44.000
+your primary copy it becomes unavailable
+but when you need it you need it right
+away standard in frequent access is
+
+49
+00:06:44.000 --> 00:06:52.000
+designed for this so I'll consider using
+step directly putting into standard in
+frequent access for these data glacier
+
+50
+00:06:52.000 --> 00:06:59.000
+is for your long-term archive other than
+the really really old data that you need
+you need to keep we also see customer
+
+51
+00:06:59.000 --> 00:07:08.000
+just directly putting into Glacier for
+preservation for digital preservation
+for example earlier Sony's shared that
+
+52
+00:07:08.000 --> 00:07:17.000
+they have just moved over a million
+hours of videos from magnetic tape into
+Glacier for digital preservation so
+
+53
+00:07:17.000 --> 00:07:23.000
+maybe you can consider us maybe you also
+have some of these use cases and you can
+think about which storage classes you
+
+54
+00:07:23.000 --> 00:07:32.000
+should you should be using so as I
+mentioned the as your data H a lot of
+the times even when you when you start
+
+55
+00:07:32.000 --> 00:07:39.000
+with S three standard and your your new
+data that you doing at your big data
+analysis at some point you at some point
+
+56
+00:07:39.000 --> 00:07:44.000
+that the access pattern drops just
+because you've got new your data and the
+older data is no longer used so the next
+
+57
+00:07:44.000 --> 00:07:56.000
+big question is when should you move
+this data into into standard and
+frequent access so for that we recently
+
+58
+00:07:56.000 --> 00:08:06.000
+we just announced us s3 analytics
+storage class analysis what it is it
+helps you visualize the access pattern
+
+59
+00:08:06.000 --> 00:08:11.000
+on your data over time so that you can
+you can you can see what the access
+pattern if you
+
+60
+00:08:11.000 --> 00:08:22.000
+data is and visualize it so you can take
+a data-driven approach to manage your
+storage once you what storage class
+
+61
+00:08:22.000 --> 00:08:28.000
+analysis help you with other than
+visualizing is also it also measures the
+object age when the data becomes
+
+62
+00:08:28.000 --> 00:08:42.000
+infrequently access you can you can
+configure you can configure storage
+class analysis by the bucket or you can
+
+63
+00:08:42.000 --> 00:08:49.000
+also selectively configure it into
+prefix or specific object tags so you
+can dive deep and figure out which part
+
+64
+00:08:49.000 --> 00:09:01.000
+of your data is infrequently access and
+take advantage of that and what storage
+class analysis that you do is is that it
+
+65
+00:09:01.000 --> 00:09:08.000
+gives you it gives you an easy output so
+that you can easily create a lifecycle
+policy based on the data life cycle
+
+66
+00:09:08.000 --> 00:09:15.000
+policies are based on age so you can you
+can observe the age of the of the object
+and and figure out when you should tell
+
+67
+00:09:15.000 --> 00:09:22.000
+at what point you should you should set
+your life cycle policy and transition
+that into standard infrequent access
+
+68
+00:09:22.000 --> 00:09:35.000
+sorry this is a little glitchy so here's
+how a storage class analysis look like
+once you enable it you get a dashboard
+
+69
+00:09:35.000 --> 00:09:43.000
+that look like this on the top of the
+dashboard it tells you how long you have
+been you have have this enabled
+
+70
+00:09:43.000 --> 00:09:52.000
+obviously the longer the longer the data
+the longer you've had this enable the
+more the more confident you are with you
+
+71
+00:09:52.000 --> 00:09:59.000
+know how long your your time series is
+so what you can see in here you know
+based on the storage over the last 115
+
+72
+00:09:59.000 --> 00:10:08.000
+days that we've been observing this data
+we're seeing that objects older than 30
+90 days are infrequently access so you
+
+73
+00:10:08.000 --> 00:10:15.000
+can tell that in my in my bucket I have
+three petabytes of storage and I'm
+retrieving about two petabyte of it so
+
+74
+00:10:15.000 --> 00:10:22.000
+overall it seems like this is actually
+pretty frequently accessed i'm looking
+at sixty-five percent of my data it's
+
+75
+00:10:22.000 --> 00:10:30.000
+pretty active so it looks like standard
+either right storage class for me and
+down below you can see the kind of the
+
+76
+00:10:30.000 --> 00:10:47.000
+time series so the blue is the amount of
+storage stored and the purple is the
+amount of data retrieved okay but if you
+
+77
+00:10:47.000 --> 00:10:57.000
+so what we also give you other than that
+broad analysis is we also dissect your
+data into H buckets so here you can see
+
+78
+00:10:57.000 --> 00:11:05.000
+the top three the top three box is data
+less than 60 days old you we are
+frequently accessing those so those are
+
+79
+00:11:05.000 --> 00:11:14.000
+s3 standard is the right storage class
+for them you can see the to the bottom
+right hand left hand two boxes data
+
+80
+00:11:14.000 --> 00:11:21.000
+older than 90 days they are actually
+very infrequently access most all your
+access is actually concentrated on data
+
+81
+00:11:21.000 --> 00:11:30.000
+that is newer than 90 days so that is an
+opportunity for you to set a lifecycle
+policy at 90 days to transition anything
+
+82
+00:11:30.000 --> 00:11:37.000
+that is older than 90 days into standard
+in frequent access and you can see
+there's over out of that three petabyte
+
+83
+00:11:37.000 --> 00:11:48.000
+that I saw over a 1 / 1 petabyte of that
+could have been in standard in frequent
+access
+
+84
+00:11:48.000 --> 00:11:57.000
+so this data is where is this this
+valuable data you can also export s3
+analytics so you can use it with the
+
+85
+00:11:57.000 --> 00:12:04.000
+tools that your that you wanted to use
+with so you can use it with Amazon click
+quick site or Excel or any of these
+
+86
+00:12:04.000 --> 00:12:13.000
+tools that that you would like the the
+LP export is is an output a flat file so
+you can you can do the analysis in the
+
+87
+00:12:13.000 --> 00:12:22.000
+way that you like so how do you get
+started you might so this is this is
+actually a de management console that
+
+88
+00:12:22.000 --> 00:12:30.000
+some most of you probably familiar with
+this is our old management console in
+order for you to see these new features
+
+89
+00:12:30.000 --> 00:12:39.000
+you need to opt in and get into the new
+management console so once you up into
+the new management console you can see
+
+90
+00:12:39.000 --> 00:12:50.000
+this new interface you can go to the
+management tab under analytics you be
+able to enable storage class analytics
+
+91
+00:12:50.000 --> 00:13:01.000
+on the left on the right hand side you
+can also add filters as you can filter
+for by prefix or by object tag so you
+
+92
+00:13:01.000 --> 00:13:09.000
+can have detail analysis for specific
+part of you of your bucket and you can
+also off to export the data so you can
+
+93
+00:13:09.000 --> 00:13:17.000
+use it into with the tools that you want
+when you enable this for the first time
+it may take one to two days before you
+
+94
+00:13:17.000 --> 00:13:26.000
+start seeing your analysis as we
+populate your data so Nix let's talk
+about how you can Madame ate some of
+
+95
+00:13:26.000 --> 00:13:34.000
+these management tasks so we've talked
+about storage class analysis you figured
+out that maybe some of your so many data
+
+96
+00:13:34.000 --> 00:13:42.000
+for my example 9 anything over 90 days I
+should really move in 2s 3s standard in
+frequent access you can use lifecycle
+
+97
+00:13:42.000 --> 00:13:51.000
+policy to automate all of that life
+cycle policy allows you to set a
+transition data into standard in
+
+98
+00:13:51.000 --> 00:14:01.000
+frequent access or glacier and also at
+the end you can also set a policy to
+remove data that you no longer need you
+
+99
+00:14:01.000 --> 00:14:06.000
+can you can
+choose some of one or more of these
+action or you can also combine all of
+
+100
+00:14:06.000 --> 00:14:13.000
+these actions so you can transition to
+standard in frequent access in 90 days
+and then later on transition to glacier
+
+101
+00:14:13.000 --> 00:14:21.000
+and then at the end expire or you can
+just choose expire if that's what you
+need you can set a policy at a very
+
+102
+00:14:21.000 --> 00:14:28.000
+granular level you can do it at the
+bucket level prefix or object tags the
+same way that you can you can get your
+
+103
+00:14:28.000 --> 00:14:36.000
+s3 analytics with you can also set up
+different policy for current or
+non-current version if you have a
+
+104
+00:14:36.000 --> 00:14:45.000
+version and able buckets so quickly the
+best way to walk through how to set
+livecycle policy is actually through the
+
+105
+00:14:45.000 --> 00:14:54.000
+management console so this is the new
+console interface the first step is you
+would you would add any filter that you
+
+106
+00:14:54.000 --> 00:15:00.000
+want it by default lifecycle policies
+are at the bucket level so you can
+either set at the bucket level or in my
+
+107
+00:15:00.000 --> 00:15:10.000
+case in this demonstration objects that
+are in prefix one and tagged as
+Department equal Finance will get will
+
+108
+00:15:10.000 --> 00:15:20.000
+be will apply this will have this life
+cycle policy applied Nix you said you
+can optionally set transition so here
+
+109
+00:15:20.000 --> 00:15:25.000
+based on the observation from the
+storage class analysis I'm setting my
+transition to stand it in frequent
+
+110
+00:15:25.000 --> 00:15:36.000
+access for 90 days after the object is
+created and remember when we were as
+object transition from standard to
+
+111
+00:15:36.000 --> 00:15:44.000
+standard IA there is no change in the
+URI so your application don't need to
+change at all the reed the reed path is
+
+112
+00:15:44.000 --> 00:15:58.000
+the same
+and here I also try also set to
+transition so after after the objects
+
+113
+00:15:58.000 --> 00:16:06.000
+transition into standard in frequent
+access I also asked a lifecycle policy
+to transition into Amazon glacier a year
+
+114
+00:16:06.000 --> 00:16:17.000
+after the object is created you can also
+set exploration so here I'm setting
+exploration for ten years after ten
+
+115
+00:16:17.000 --> 00:16:26.000
+years I no longer need to retain my my
+record and so I asked lifecycle policy
+to remove that after ten years so once
+
+116
+00:16:26.000 --> 00:16:34.000
+you set this life cycle policy you can
+you can move on to you know developing
+your application and and managing your
+
+117
+00:16:34.000 --> 00:16:41.000
+business and s3 will will evaluate your
+policy every day and make changes
+according to the rule that you have set
+
+118
+00:16:41.000 --> 00:16:51.000
+so you don't have to think about it
+anymore it's all automated so second
+topic that I want to cover is policy so
+
+119
+00:16:51.000 --> 00:16:58.000
+you can protect your data from
+accidental delete we encourage you to
+consider versioning versioning gives you
+
+120
+00:16:58.000 --> 00:17:07.000
+the ability to recover from unintended
+deletes or application logic failure you
+know s3 is a highly durable storage but
+
+121
+00:17:07.000 --> 00:17:14.000
+we cannot tell a delete that is
+unintentional versus intentional if it
+is a delete request we take that the
+
+122
+00:17:14.000 --> 00:17:24.000
+request and we remove your object what
+when you have versioning and able what
+it does is that every upload every
+
+123
+00:17:24.000 --> 00:17:32.000
+upload is created as a new version of
+the object so if you put an object in an
+existing key instead of overriding that
+
+124
+00:17:32.000 --> 00:17:40.000
+key we'll put a new version on top of
+that and so all the previous versions
+are preserved when you delete an object
+
+125
+00:17:40.000 --> 00:17:49.000
+in a version and able bucket instead of
+removing that object we actually put a
+delete marker on top and when you read
+
+126
+00:17:49.000 --> 00:17:55.000
+the object will behave as this as if the
+object no longer exists but if you
+decide that that was an intentional
+
+127
+00:17:55.000 --> 00:18:05.000
+delete you can remove that delete marker
+and you you can elegantly you know row
+back to your previous version so we we
+
+128
+00:18:05.000 --> 00:18:13.000
+recommend this
+the best practice so as an advanced tip
+you can actually create a life cycle bin
+
+129
+00:18:13.000 --> 00:18:21.000
+for your storage by combining versioning
+and lifecycle policy so you can enable
+versioning on your bucket and that
+
+130
+00:18:21.000 --> 00:18:30.000
+creates the recycle bin because it
+maintains every version of your object
+as you as you write on it and and you
+
+131
+00:18:30.000 --> 00:18:38.000
+use lifecycle policy you can set up a
+non-current exploration policy to define
+the duration of your recovery window for
+
+132
+00:18:38.000 --> 00:18:43.000
+example you want you want to maintain
+all the old version for 14 days and
+beyond that you probably don't need it
+
+133
+00:18:43.000 --> 00:18:50.000
+anymore so use a lifecycle exploration
+policy and we just automatically remove
+that after 14 days of it being non
+
+134
+00:18:50.000 --> 00:19:03.000
+current so the third topic I want to go
+through is is for you to consider
+automating with trigger based workflow
+
+135
+00:19:03.000 --> 00:19:11.000
+for example when you get raw data into
+your bucket you may want to process it
+and you can automate you can automate
+
+136
+00:19:11.000 --> 00:19:20.000
+that with event notification you can set
+up event notification in response to
+specific change changes to your object
+
+137
+00:19:20.000 --> 00:19:29.000
+be it object creation or deletion and
+you can also be very specific that says
+to set up a filter on either by prefix
+
+138
+00:19:29.000 --> 00:19:39.000
+or by suffix so you can say hey only
+triggered the event if an object is
+created in my / image prefix or only
+
+139
+00:19:39.000 --> 00:19:50.000
+triggering event if an object is created
+that has a dot raw suffix notification
+can be published in into three different
+
+140
+00:19:50.000 --> 00:19:58.000
+three different targets you can publish
+a push notification with Amazon SNS so
+you can broadcast event to a large
+
+141
+00:19:58.000 --> 00:20:09.000
+number of clients or you can you know
+trigger a mobile alert you can also you
+can do a push notification with SQS
+
+142
+00:20:09.000 --> 00:20:18.000
+queue so your worker fleet can
+asynchronously process process your data
+in the back end
+
+143
+00:20:18.000 --> 00:20:25.000
+a third way you can get notification is
+through a lambda function so with you
+can trigger notifications so that the
+
+144
+00:20:25.000 --> 00:20:34.000
+lambda would automatically execute your
+code when that s3 event that you define
+occurs lambda lambda would run that code
+
+145
+00:20:34.000 --> 00:20:41.000
+without you having to provision server
+or manage instances so it's very
+convenient we're seeing a lot of
+
+146
+00:20:41.000 --> 00:20:49.000
+customers adopting event notification we
+have customers like human longevity
+who's using s3 event to trigger their
+
+147
+00:20:49.000 --> 00:20:58.000
+genoa genome genomics processing we also
+hear that Turner the broadcasting
+company uses s3 event to trigger lambda
+
+148
+00:20:58.000 --> 00:21:05.000
+function for their content processing so
+think about whether or not there's
+there's a place in your application for
+
+149
+00:21:05.000 --> 00:21:15.000
+event notification the fourth topic I
+want to talk about is cross region
+replication there are many reasons why
+
+150
+00:21:15.000 --> 00:21:22.000
+you may want that why you may need to
+replicate across regions you may have
+compliance requirement that that
+
+151
+00:21:22.000 --> 00:21:30.000
+necessitate you to store data hundreds
+of miles apart you may want to enhance
+security by replicating data between
+
+152
+00:21:30.000 --> 00:21:39.000
+buckets with completely separate owners
+and account account owners we here ring
+who have just shared with us that the
+
+153
+00:21:39.000 --> 00:21:45.000
+video doorbell company they use cross
+region replication so they have data in
+two different region to take advantage
+
+154
+00:21:45.000 --> 00:21:55.000
+of spot instance pricing so they can
+process data so they could process their
+video in a lower cost and they also use
+
+155
+00:21:55.000 --> 00:22:05.000
+cross-range replication to provide low
+latency access to their end users so how
+cross region replication works is you
+
+156
+00:22:05.000 --> 00:22:13.000
+put a policy in that's a that tells s3
+the destination region and the
+destination bucket of your choice to
+
+157
+00:22:13.000 --> 00:22:20.000
+replicate to and once you put the policy
+in we automatically and asynchronously
+replicate your storage for so every new
+
+158
+00:22:20.000 --> 00:22:30.000
+upload into s3 is replicated in to that
+destination bucket you can also you can
+choose to
+
+159
+00:22:30.000 --> 00:22:38.000
+placate a full bucket or specific
+prefixes within that bucket you can also
+you can also choose to replicate into a
+
+160
+00:22:38.000 --> 00:22:44.000
+different storage class for example if
+all your if you have a mix of standard
+or standard in frequent access in your
+
+161
+00:22:44.000 --> 00:22:50.000
+source bucket and you wanted everything
+in standard in frequent access you can
+just you can set that as part of your
+
+162
+00:22:50.000 --> 00:22:58.000
+replication policy once you set that
+policy just like all the other policy
+you can you can let s 3 do the work and
+
+163
+00:22:58.000 --> 00:23:07.000
+you can focus on developing your
+application so in summary we've talked
+about four ways of automating management
+
+164
+00:23:07.000 --> 00:23:13.000
+tasks across your application as a
+policy you can automate transition and
+exploration with lifecycle policy
+
+165
+00:23:13.000 --> 00:23:25.000
+consider doing trigger based workflow
+with s3 event notification and also
+think we recommend using versioning so
+
+166
+00:23:25.000 --> 00:23:34.000
+that you can easily recover from
+accidental delete the third big topic
+that I want to discuss is best some of
+
+167
+00:23:34.000 --> 00:23:43.000
+the best practices you can use to
+optimize s3 performance we're going to
+start with faster upload if you have if
+
+168
+00:23:43.000 --> 00:23:50.000
+you have a user-generated content
+content use case you may have customers
+that are uploading from all over the
+
+169
+00:23:50.000 --> 00:23:57.000
+world into your central ice bucket you
+may also well maybe you have you have to
+transfer data large amount of data
+
+170
+00:23:57.000 --> 00:24:07.000
+across the continent frequently in your
+use case consider using s3 transfer
+acceleration s3 transfer acceleration
+
+171
+00:24:07.000 --> 00:24:17.000
+leverages the AWS edge network when you
+enable transfer acceleration we we would
+automatically route your data into the
+
+172
+00:24:17.000 --> 00:24:26.000
+closest endpoint into the closest edge
+network so that your data travels in
+travels the shortest distance a shorter
+
+173
+00:24:26.000 --> 00:24:35.000
+distance on the public internet and they
+travel the remaining remaining longer
+distance in the AWS backbone which is an
+
+174
+00:24:35.000 --> 00:24:43.000
+optimized network so you get much faster
+performance that way transfer
+acceleration you
+
+175
+00:24:43.000 --> 00:24:51.000
+just a standard tcp and HTTP protocol so
+there's you don't need to change any
+firewall there's no client software to
+
+176
+00:24:51.000 --> 00:24:59.000
+da to upload all you do all you need to
+do is to enable the enable transfer
+acceleration for your bucket and we'll
+
+177
+00:24:59.000 --> 00:25:06.000
+give you an endpoint and you change that
+endpoint on your on your application and
+once you do that every upload is
+
+178
+00:25:06.000 --> 00:25:19.000
+automatically accelerated for you you'll
+notice that the the benefit of it
+depends on how long you how long the
+
+179
+00:25:19.000 --> 00:25:25.000
+distance is from your source to your
+destination generally you'll find that
+the longer the distance and the larger
+
+180
+00:25:25.000 --> 00:25:33.000
+the file the more you benefit from using
+s3 transfer acceleration so we have 68
+global edge locations we just added
+
+181
+00:25:33.000 --> 00:25:40.000
+three more or less last week so there's
+bound to be one that is close to your
+source region you can also try it before
+
+182
+00:25:40.000 --> 00:25:48.000
+you want to implement it you can try it
+at s3 speed test calm from your source
+region you can see how much in your
+
+183
+00:25:48.000 --> 00:26:00.000
+specific use case you'll benefit before
+you implement it
+a second way of getting faster upload of
+
+184
+00:26:00.000 --> 00:26:08.000
+large object is to parallel eyes put
+with multi-part uploads multi-part
+uploads allow you to upload large
+
+185
+00:26:08.000 --> 00:26:17.000
+objects in a set of parts you can upload
+parts in parallel or in any order you
+can pause you can resume when you
+
+186
+00:26:17.000 --> 00:26:27.000
+complete a multi-part upload s3 puts the
+parts together and create the object for
+you when you're uploading large objects
+
+187
+00:26:27.000 --> 00:26:35.000
+over a stable network over a stable
+connection with significant bandwidth
+you can parallel eyes uploading that
+
+188
+00:26:35.000 --> 00:26:49.000
+your parts to maximize that network
+throughput to get and to get multi
+threaded performance
+
+189
+00:26:49.000 --> 00:26:56.000
+if you're uploading on the contrary if
+you're uploading objects over a spotty
+network you may see you may see your
+
+190
+00:26:56.000 --> 00:27:03.000
+partner your upload drops being
+interrupted using multiple heart upload
+would actually increase the resiliency
+
+191
+00:27:03.000 --> 00:27:10.000
+for your application to network error
+because you only need to retry the one
+or two parts that are dropped and you
+
+192
+00:27:10.000 --> 00:27:19.000
+don't have to restart that upload from
+the beginning when we talked about
+upload let's talk about download you can
+
+193
+00:27:19.000 --> 00:27:31.000
+also parallel eyes get the same way you
+parallelized puts if you are if you are
+getting large objects consider using
+
+194
+00:27:31.000 --> 00:27:39.000
+range base gets here's an example of a
+range base gets where I specify that I
+wanted to see the first 10 bytes of the
+
+195
+00:27:39.000 --> 00:27:48.000
+object to come back so you can you can
+parallel eyes with range base gets and
+and get your object back faster if you
+
+196
+00:27:48.000 --> 00:27:56.000
+know that your object was uploaded with
+multi parts you can get you can align
+your get ranges with those parts so that
+
+197
+00:27:56.000 --> 00:28:08.000
+you will actually get the best
+performance that way
+okay if you're doing lots of gets on the
+
+198
+00:28:08.000 --> 00:28:16.000
+same object over the Internet consider
+using Amazon CloudFront cloud front is
+integrated with s3 and what it does is
+
+199
+00:28:16.000 --> 00:28:23.000
+it caches the object at the edge
+locations what it does once it catch the
+object into the in the edge location
+
+200
+00:28:23.000 --> 00:28:30.000
+then your your end user will see much
+lower latency data transfer to them and
+so the performance of their get object
+
+201
+00:28:30.000 --> 00:28:41.000
+is much better that way the third topic
+that I want to get to is is how what are
+the ways that you can get higher
+
+202
+00:28:41.000 --> 00:28:48.000
+requests per second out of s3 by
+distributing your key names you only
+need to consider this if you're planning
+
+203
+00:28:48.000 --> 00:28:55.000
+to have an application that would spike
+over a hundred requests per second on
+your bucket as three routinely scales up
+
+204
+00:28:55.000 --> 00:29:02.000
+to millions of requests per second and
+the way we do that is that we spread
+your key names among petitions and we do
+
+205
+00:29:02.000 --> 00:29:10.000
+that automatically over time as we see
+your request rate increase it's
+interesting to know that our index layer
+
+206
+00:29:10.000 --> 00:29:17.000
+is sorted in an alphanumeric order the
+same way you see the result when you
+list your bucket so if you name your
+
+207
+00:29:17.000 --> 00:29:26.000
+objects starting with a date which is
+quite common all of these Keys will
+actually fall into the same partition
+
+208
+00:29:26.000 --> 00:29:34.000
+and if you when you spiked to hundreds
+of thousands of transaction for some
+requests per second it is likely that
+
+209
+00:29:34.000 --> 00:29:48.000
+you might get throttle and so we want
+you to consider we want you to consider
+adding randomness to the beginning of
+
+210
+00:29:48.000 --> 00:29:57.000
+your key name either with a hash or
+reverse time stamp so it would look
+something like this and you as you can
+
+211
+00:29:57.000 --> 00:30:03.000
+see every one of these key name now
+would fall into a different partition
+and you so your transaction can be
+
+212
+00:30:03.000 --> 00:30:12.000
+distributed across petitions and you'll
+be able to get much higher requests per
+second without getting throttled the
+
+213
+00:30:12.000 --> 00:30:20.000
+last topic I want to talk about it for
+performance is its list
+as you know the s3 lists requests page
+
+214
+00:30:20.000 --> 00:30:26.000
+and eights and a thousand so we give you
+a thousand record at a time if you have
+a bucket with lots and lots of lots and
+
+215
+00:30:26.000 --> 00:30:34.000
+lots of objects you may spend
+significant amount of time and effort
+just to try to list your bucket so let
+
+216
+00:30:34.000 --> 00:30:42.000
+us do that for you we're introducing s3
+inventory what it is is it is a
+scheduled alternative to the synchronous
+
+217
+00:30:42.000 --> 00:30:52.000
+list you can get the list result deliver
+to to you and your bucket either on a
+daily or weekly basis as a flat CSV file
+
+218
+00:30:52.000 --> 00:31:02.000
+so you can you can instruct us to list
+either the full bucket or by specific
+prefix and what's better is pricing of
+
+219
+00:31:02.000 --> 00:31:14.000
+that is half of our sacred synchronous
+list API at a quarter of a penny per
+million object listed and I want to give
+
+220
+00:31:14.000 --> 00:31:21.000
+you a quick getting started with our new
+management console it is also under the
+management tab go to go to inventory
+
+221
+00:31:21.000 --> 00:31:30.000
+under management and you can you specify
+the destination bucket of your choice
+you can specify either a daily interval
+
+222
+00:31:30.000 --> 00:31:39.000
+or weekly interval if you have a version
+and able bucket you can choose to only
+list the current version of those of
+
+223
+00:31:39.000 --> 00:31:47.000
+those objects or you can also choose you
+can also ask us to list everything you
+can also choose optional fields
+
+224
+00:31:47.000 --> 00:31:52.000
+additional fields to include in the
+inventory report including replication
+status if you do in cross your
+
+225
+00:31:52.000 --> 00:32:03.000
+application let's see we want we also
+want to make sure that you're aware that
+you need to give us permission to write
+
+226
+00:32:03.000 --> 00:32:10.000
+to your bucket you know when when you
+add your inventory report when you
+enable inventory report we want to make
+
+227
+00:32:10.000 --> 00:32:20.000
+sure that you're giving us the right
+bucket policy to allow s3 to write to
+your bucket so in summary we've kind of
+
+228
+00:32:20.000 --> 00:32:27.000
+gone through a lot of best practices
+will give you two ways to get faster
+upload through s3 transfer acceleration
+
+229
+00:32:27.000 --> 00:32:34.000
+or s3 multi-part upload talked a little
+bit about keen
+aiming for high TPS workload and a
+
+230
+00:32:34.000 --> 00:32:44.000
+couple ways to optimize you get
+performance as well as optimized lists
+by using s for their inventory now let's
+
+231
+00:32:44.000 --> 00:32:53.000
+move to some tools that would help you
+manage your storage as used to learn s3
+you are probably used to organizing your
+
+232
+00:32:53.000 --> 00:33:00.000
+data by location as we are a flat
+namespace storage you probably are
+organizing it by bucket or by prefix
+
+233
+00:33:00.000 --> 00:33:10.000
+we're introducing s3 object tags so now
+you can organize your data based on the
+nature of data based on what it is s3
+
+234
+00:33:10.000 --> 00:33:19.000
+tags object tags are key value pairs
+then you can apply to an object you can
+put as many as 10 tags per object with
+
+235
+00:33:19.000 --> 00:33:27.000
+tags you can set up an IAM access
+control policy so you can control access
+you can set up a lifecycle policy with
+
+236
+00:33:27.000 --> 00:33:36.000
+tags as I previously mentioned you can
+also customize storage metrics and
+analytics with tags there are two ways
+
+237
+00:33:36.000 --> 00:33:44.000
+that you can you can put you can tag
+your object one is when you put when you
+put your object in your put object
+
+238
+00:33:44.000 --> 00:33:54.000
+request you can enable the tech you can
+put your tags as part of the tag header
+or you can also add tag to existing
+
+239
+00:33:54.000 --> 00:34:05.000
+object with a separate API tags can be
+created edited or deleted and any time
+during the lifetime of the of the object
+
+240
+00:34:05.000 --> 00:34:17.000
+here's an example of how you can manage
+access with object tags this user
+permission policy grants the user get
+
+241
+00:34:17.000 --> 00:34:25.000
+object permission to the to the object
+in example bucket that has been tagged
+with Project X so as you can see you can
+
+242
+00:34:25.000 --> 00:34:41.000
+you can now use tags to to basically
+manage access with with the policies
+well to manage your storage you also
+
+243
+00:34:41.000 --> 00:34:51.000
+need the ability to audit and monitor
+access you can do that by enabling a
+cloud trail AWS cloud trail cloud trail
+
+244
+00:34:51.000 --> 00:34:58.000
+logs captures a bucket level and object
+both bucket level and object level
+details you might have been you might
+
+245
+00:34:58.000 --> 00:35:04.000
+have been familiar with the bucket level
+details which we've had for about a year
+and last week we just added object level
+
+246
+00:35:04.000 --> 00:35:14.000
+detail which we're calling a data event
+for each request the log would include
+who made the API all the details who
+
+247
+00:35:14.000 --> 00:35:21.000
+made the API calls when it was made what
+resource was affected so you can use
+that the logs to perform security
+
+248
+00:35:21.000 --> 00:35:32.000
+analysis media IT auditing needs as well
+as understand what your end user
+behavior is and and also consider
+
+249
+00:35:32.000 --> 00:35:41.000
+changing some of your policy to tighten
+access control if it needs to be the
+logs are delivered directly to your s3
+
+250
+00:35:41.000 --> 00:35:49.000
+bucket of your choice you can enable a
+cloud trail logs at the bucket level
+pricing is ten cents per 10,000 data
+
+251
+00:35:49.000 --> 00:35:58.000
+events and we also there's also charges
+for storage you can also optionally set
+a notification so you get notified when
+
+252
+00:35:58.000 --> 00:36:10.000
+the log is delivered to your bucket who
+of you are running a web mobile of the
+business application that depends on
+
+253
+00:36:10.000 --> 00:36:18.000
+your cloud storage Oh lots of you so
+you'll be you'll be interesting you
+probably be interested in on the
+
+254
+00:36:18.000 --> 00:36:26.000
+visibility in your storage performance
+so you can so you can see what how your
+operation how their storage is operating
+
+255
+00:36:26.000 --> 00:36:33.000
+against your against your application
+Amazon CloudWatch metrics will be
+something that you should consider
+
+256
+00:36:33.000 --> 00:36:41.000
+CloudWatch metrics give you the
+visibility into storage performance so
+you can quickly identify and act on any
+
+257
+00:36:41.000 --> 00:36:50.000
+operation operational issue that comes
+up you can use UK with cloud wash
+metrics we've just added 30
+
+258
+00:36:50.000 --> 00:36:57.000
+new metrics including request level
+metrics as well as been with metrics
+within one minute granularity so these
+
+259
+00:36:57.000 --> 00:37:05.000
+are really good for this is the use
+cases for operational operational
+metrics you can also set cloud watch
+
+260
+00:37:05.000 --> 00:37:13.000
+alarm to get an alert if the metrics
+exceeds the level that you have
+predefined so you can act on issues
+
+261
+00:37:13.000 --> 00:37:23.000
+timely for example you can you can set
+you can you can see 400 400 series error
+and you can set a level where you need
+
+262
+00:37:23.000 --> 00:37:29.000
+you you would like to get page because
+those are those are the time when you
+your end user is getting their
+
+263
+00:37:29.000 --> 00:37:40.000
+performance impacted you can configure
+metrics by by the bucket prefix or tags
+so you can align your metrics and
+
+264
+00:37:40.000 --> 00:37:50.000
+customize the alert to the specific
+application or workflow that your
+monitoring for metrics is thirty cents
+
+265
+00:37:50.000 --> 00:37:57.000
+per metric per month we want to show you
+a little bit about how it looks like so
+this is how it looks like it is it is
+
+266
+00:37:57.000 --> 00:38:05.000
+also part of the management tab within
+the AWS 3 console and what you can see
+this example is the total request
+
+267
+00:38:05.000 --> 00:38:14.000
+latency in millisecond per request you
+can see that you can up you can you can
+hover over each of these data points and
+
+268
+00:38:14.000 --> 00:38:20.000
+it would actually shows you the reading
+on it so you can get real time
+operations and performance of your
+
+269
+00:38:20.000 --> 00:38:29.000
+storage when you enable this for the
+first time it may take up to 15 minutes
+to to see the metrics start flowing and
+
+270
+00:38:29.000 --> 00:38:36.000
+you can also see on the top there you
+can get a time series of it you can
+choose between one anywhere between one
+
+271
+00:38:36.000 --> 00:38:47.000
+hour all the way up to two weeks so you
+can see how your operations is doing
+historically as well so that we have we
+
+272
+00:38:47.000 --> 00:38:57.000
+added 13 new metrics to cloud watch we
+we have existing before this we have
+storage metrics so you can see object
+
+273
+00:38:57.000 --> 00:39:03.000
+count and how much storage you have so
+their storage related metrics and now
+we've we have just added
+
+274
+00:39:03.000 --> 00:39:13.000
+13 more including nine requests related
+metrics so all the different kinds of
+requests as well as 400 or 500 arrows
+
+275
+00:39:13.000 --> 00:39:25.000
+and latency related metrics you can set
+alarms off on any of those in the cloud
+watch console okay here's how you get
+
+276
+00:39:25.000 --> 00:39:32.000
+started you probably be familiar with
+this console now under the management
+tab in the middle is the it's the
+
+277
+00:39:32.000 --> 00:39:41.000
+metrics in the middle of the metrics tab
+you can enable metrics in on the left
+side of the console by checking the box
+
+278
+00:39:41.000 --> 00:39:51.000
+you can add filter under the under the
+filter column and again once you enable
+this you'll start seeing you start
+
+279
+00:39:51.000 --> 00:40:01.000
+seeing metrics flowing in about 15
+minutes okay so in sum in summary we've
+talked about quite a few ways for you to
+
+280
+00:40:01.000 --> 00:40:09.000
+manage your storage you can classify
+your storage and manage access using s3
+object tags you can audit and monitor
+
+281
+00:40:09.000 --> 00:40:18.000
+access using AWS cloud trail logs you
+can also monitor operation monitor your
+operational performance and set alarm
+
+282
+00:40:18.000 --> 00:40:29.000
+with s3 cloud watch metrics and to recap
+we've kind of gone through quite a bit
+today to recap which we've talked about
+
+283
+00:40:29.000 --> 00:40:36.000
+how you can pick the right storage class
+for your use case including some tools
+to help you do that we've talked about
+
+284
+00:40:36.000 --> 00:40:44.000
+how to automate management task some of
+the best practices you can use to
+optimize your s3 performance as well as
+
+285
+00:40:44.000 --> 00:40:55.000
+tools to help you manage storage so and
+I think with that actually one thing
+that I before before i end this
+
+286
+00:40:55.000 --> 00:41:03.000
+presentation if you're interested in how
+one of our customer uses s3 for their
+Big Data Platform FINRA is sharing their
+
+287
+00:41:03.000 --> 00:41:11.000
+architecture and their experience in the
+next hour in Venetian ballroom B so you
+can you can go and listen to them listen
+
+288
+00:41:11.000 --> 00:41:19.000
+to their experience firsthand if you
+like so with that
+I actually conclude this this
+
+289
+00:41:19.000 --> 00:39:48.000
+presentation and I'm going to stay out
+in the foyer here to take any questions
+you have thank you very much
+
+290
+00:39:48.000 --> 00:39:55.000
+whether that's merging them or
+rearranging them and then it's going to
+send it in to the to the request queue
+
+291
+00:39:55.000 --> 00:40:03.000
+so this is a ring buffer for the Zen
+device driver that interrupts between
+the instance itself and the hypervisor
+
+292
+00:40:03.000 --> 00:40:14.000
+and it's made up of 32 requests can be
+in the ring at any point in time and his
+buffer so pre 38 the max size of any
+
+293
+00:40:14.000 --> 00:40:24.000
+request was 44 kb that was flat so with
+some later enhancements the Linux kernel
+you're able to the default now is 128 so
+
+294
+00:40:24.000 --> 00:40:31.000
+anything over a kernel version of 38 the
+default will be 128 kb for a request and
+you're able to tune that up to a full
+
+295
+00:40:31.000 --> 00:40:36.000
+meg
+that's what I met windows does not
+support this so Windows this is stuck at
+
+296
+00:40:36.000 --> 00:40:47.000
+44 and on to the actual hypervisor and
+then on to EBS and actually the train
+that all the train stuff in accounting
+
+297
+00:40:47.000 --> 00:40:56.000
+and the logical merging we discuss that
+happens back in the actual service so
+that's where that is now another change
+
+298
+00:40:56.000 --> 00:41:06.000
+happened in Linux 42 so Zen adopted the
+Block in Q model in 42 afterwards so
+blocking cook you did away with the old
+
+299
+00:41:06.000 --> 00:41:13.000
+schedulers then most of those schedulers
+were very much designed for optimizing
+workloads on hard disk drives and
+
+300
+00:41:13.000 --> 00:41:22.000
+introduced block in queue which does a
+queue requests per core which is great
+for ssds right because you can each core
+
+301
+00:41:22.000 --> 00:41:29.000
+has its own request queue you can you
+know send down a lot of parallel
+parallel iOS but what's good for ssds is
+
+302
+00:41:29.000 --> 00:41:38.000
+is not so great for our disk drives so
+this is why we recommend that if you're
+running on a 42 or later kernel that you
+
+303
+00:41:38.000 --> 00:41:46.000
+crank up the maximum request size to the
+full amount the full one mag and you
+might say well why is that and it's
+
+304
+00:41:46.000 --> 00:41:56.000
+because if you stick it out 128 and
+you're sending down large block iOS so
+say you send 31 Meg iOS and you're at
+
+305
+00:41:56.000 --> 00:42:04.000
+the default 128k those are going to get
+chopped up so that's 2428 case sections
+that might end up on different core
+
+306
+00:42:04.000 --> 00:42:12.000
+queues and by the time it gets to EBS
+that looks random you know you started
+with three one megabyte iOS by the time
+
+307
+00:42:12.000 --> 00:42:19.000
+EVS sees it it could be completely mixed
+up so cranking that up to a full Meg
+means those three iOS stay as one unit
+
+308
+00:42:19.000 --> 00:42:26.000
+in the request queue so helps with the
+throughput so that's that's recommended
+in general but definitely after 42 when
+
+309
+00:42:26.000 --> 00:42:34.000
+blocking mq comes into the scene keep in
+mind the memory is allocated per device
+so be careful if you're doing one Meg's
+
+310
+00:42:34.000 --> 00:42:45.000
+that's 32 megs of ram per device and
+here's the command to actually enable it
+and crank it up so it's a boot level
+
+311
+00:42:45.000 --> 00:42:51.000
+command
+a second performance tuning we do
+recommend with st1 an sc one is to crank
+
+312
+00:42:51.000 --> 00:42:58.000
+up the read ahead vote Reed had buffer
+so this is recommended for any high
+throughput workloads it's per device so
+
+313
+00:42:58.000 --> 00:43:07.000
+it's / actual volume the default is 128
+play with this this setting will take
+you up to a Meg we've seen really great
+
+314
+00:43:07.000 --> 00:43:14.000
+performance with to Meg for mag it all
+depends on your workload but it is very
+important for st 1 and for
+
+315
+00:43:14.000 --> 00:43:25.000
+high-throughput read workloads to to
+work with the the read ahead buffer so
+hopefully by now it's kind of a parent
+
+316
+00:43:25.000 --> 00:43:32.000
+where the balance is between throughput
+versus I ops so the example here is an
+i/o one volume provision I ops at 20,000
+
+317
+00:43:32.000 --> 00:43:40.000
+so it all depends on the actual block
+size that you're sending what you can do
+so on the far left side which is the
+
+318
+00:43:40.000 --> 00:43:50.000
+smallest block so 16k we can send the
+full 20,000 and get the full throughput
+if we have that 10,000 I ops but send
+
+319
+00:43:50.000 --> 00:44:00.000
+double the size as far as request sighs
+and iOS we can still do that what we
+can't do is send 10,000 64k that would
+
+320
+00:44:00.000 --> 00:44:06.000
+obviously be six hundred forty megabytes
+to the volume I would exceed the volumes
+throughput characteristics and we
+
+321
+00:44:06.000 --> 00:44:17.000
+couldn't do that but we can do is send
+the largest amount the largest block
+size for the ir one 256k at 12 1250 I
+
+322
+00:44:17.000 --> 00:44:28.000
+ops and that would get you to the full
+throughput so it's always a spectrum
+between I ops and throughput
+
+323
+00:44:28.000 --> 00:44:35.000
+which means when we talk about EBS
+optimized bandwidth is really important
+bandwidth matters that you know how much
+
+324
+00:44:35.000 --> 00:44:40.000
+bandwidth you have your EBS volume and
+your expectations are for that workload
+and how much you want to drive to the
+
+325
+00:44:40.000 --> 00:44:50.000
+volume so here we are with a C for large
+which has 500 megabytes megabits excuse
+me of bandwidth dedicated to EBS and
+
+326
+00:44:50.000 --> 00:44:59.000
+we've attached a two terabyte gb to
+volume obviously that volume can do a
+lot more than the band width that you
+
+327
+00:44:59.000 --> 00:45:12.000
+have to the volume so it's really not a
+good match if you jump up one size to a
+c4 to extra-large same volume size now
+
+328
+00:45:12.000 --> 00:45:20.000
+we've got double the bandwidth so we can
+do 125 megabytes a second much better
+match for that volume type you know we
+
+329
+00:45:20.000 --> 00:45:27.000
+can actually get to where we can almost
+put full throughput to that volume but
+it can take so pay attention to what you
+
+330
+00:45:27.000 --> 00:45:39.000
+want to push through your volumes and
+how much actual network bandwidth you
+have so here we see a full 10 so an m4
+
+331
+00:45:39.000 --> 00:45:48.000
+16 x large has 10 full gigs of EBS
+bandwidth available to it so you can
+push 1250 megabytes a second of data to
+
+332
+00:45:48.000 --> 00:45:58.000
+EBS so if you just put 18 terabyte st1
+volume that does a max burst of 500 you
+got a lot of bandwidth left over so
+
+333
+00:45:58.000 --> 00:46:05.000
+that's where striping starts to come
+into play and rating raid 0 we're going
+to attach multiple volumes and be able
+
+334
+00:46:05.000 --> 00:46:16.000
+to push against all of them and get a
+collective throughput amount for all the
+volumes so when should you consider
+
+335
+00:46:16.000 --> 00:46:23.000
+rating when the storage requirements
+greater than 16 terabytes it's obviously
+the max size for a single volume when
+
+336
+00:46:23.000 --> 00:46:31.000
+the throughput requirements are greater
+than 500 that's again the max for the
+st14 it's a throughput or I ops on I ops
+
+337
+00:46:31.000 --> 00:46:40.000
+and if your office requirements are
+greater than 20,000 at 16k you're going
+to need more than one volume
+
+338
+00:46:40.000 --> 00:46:50.000
+but what we don't recommend is rating
+for redundancy so here we see sending
+down to a raid 0 set we talked about the
+
+339
+00:46:50.000 --> 00:46:58.000
+replicas you're basically emulating what
+a raid 10 would do right you have a
+replicated copy of every block that
+
+340
+00:46:58.000 --> 00:47:04.000
+you're sending down to your raid 0 but
+you're not paying for the two times the
+storage which is what you would do with
+
+341
+00:47:04.000 --> 00:47:15.000
+a raid 10 so that's why we say we avoid
+raid for redundancy data is already
+replicated here if you're doing a raid
+
+342
+00:47:15.000 --> 00:47:20.000
+one you're having the available EBS
+bandwidth available to your volume
+because you're sending everything down
+
+343
+00:47:20.000 --> 00:47:26.000
+twice and same with something like a
+raid 5 or 6 all that parity data is
+taking up your eye ops taking up your
+
+344
+00:47:26.000 --> 00:47:38.000
+network bandwidth a few things
+unreliability so instance failure if an
+instance fails and EBS volume is
+
+345
+00:47:38.000 --> 00:47:46.000
+attached to it your volume is persistent
+still in doors outside the life of the
+instance you know obviously attach it to
+
+346
+00:47:46.000 --> 00:47:54.000
+another instance and get access to your
+data but there's also a feature called
+ec2 auto recovery that is enabled by EBS
+
+347
+00:47:54.000 --> 00:48:01.000
+which is a much better option for
+recovering instance failures so you have
+a cloud watch metrics on a per instance
+
+348
+00:48:01.000 --> 00:48:09.000
+basis so it's called status check failed
+system and this is a rollup of all kinds
+of different health checks that ec2 is
+
+349
+00:48:09.000 --> 00:48:16.000
+doing on your behalf to validate the
+health of both the system and your
+instance and if the system fails and
+
+350
+00:48:16.000 --> 00:48:23.000
+this health check fails you can choose a
+recovery action within cloud watch so on
+that alarm what action would you like to
+
+351
+00:48:23.000 --> 00:48:32.000
+trigger it's called recover and we will
+migrate that instance to new hardware
+automatically recover that instance and
+
+352
+00:48:32.000 --> 00:48:38.000
+it will have all the characteristics
+that that instance has so whether that's
+the IP addresses the instance ID the
+
+353
+00:48:38.000 --> 00:48:45.000
+volume mounts everything will be the
+same and that's supported on any of our
+modern generation instance types that
+
+354
+00:48:45.000 --> 00:48:53.000
+are EBS only storage
+and what about if you terminate your
+instance what happens to your volume
+
+355
+00:48:53.000 --> 00:49:00.000
+that completely depends upon the Delete
+on termination flag that you set on
+either instance launch or volume
+
+356
+00:49:00.000 --> 00:49:08.000
+creation so if you create a volume
+outside of an instance launch the Delete
+on termination flag is set to false
+
+357
+00:49:08.000 --> 00:49:17.000
+which means if the instance that it's
+attached to is terminated EBS volume
+endures if however that flag is set to
+
+358
+00:49:17.000 --> 00:49:24.000
+true which is the default for any volume
+that you launch with an instance so boot
+volumes or if you attach a bunch of data
+
+359
+00:49:24.000 --> 00:49:32.000
+volumes to an instance when you actually
+launch it the flag by default will be
+set to true those volumes will go with
+
+360
+00:49:32.000 --> 00:49:38.000
+the instance itself which is actually a
+good point of housekeeping because I see
+a lot of customers who launched volumes
+
+361
+00:49:38.000 --> 00:49:43.000
+outside of instance creations and they
+have a lot of volumes just sitting out
+there that aren't doing anything and
+
+362
+00:49:43.000 --> 00:49:49.000
+aren't attached and a lot of it is
+because they haven't set these flags so
+it's a good point of housekeeping to pay
+
+363
+00:49:49.000 --> 00:49:54.000
+attention and make sure that the volumes
+that are out there and unattached are
+ones that you actually want to be out
+
+364
+00:49:54.000 --> 00:50:06.000
+there what about taking snapshots so a
+few best practices about snapshots and
+this is this is really the difference
+
+365
+00:50:06.000 --> 00:50:14.000
+between crash consistency versus
+application consistency so you know by
+default if you pull the virtual plug on
+
+366
+00:50:14.000 --> 00:50:19.000
+your instances with EBS you will still
+have crash consents to see as long as
+you're using a journal file system which
+
+367
+00:50:19.000 --> 00:50:27.000
+I hope most of you are so this is how
+you get these are best practices for
+getting application consistency so this
+
+368
+00:50:27.000 --> 00:50:34.000
+is all the caches everything in the file
+system and application that's not yet
+committed to disk that you would lose if
+
+369
+00:50:34.000 --> 00:50:40.000
+the plug was pulled so for example on a
+database you flush you lock the tables
+you clear out the database caches on a
+
+370
+00:50:40.000 --> 00:50:48.000
+file system you sink and fs freeze it
+all do all these things before you
+actually take a snapshot so that you are
+
+371
+00:50:48.000 --> 00:50:54.000
+guaranteed that everything that's in
+cash in state and memory has been
+flushed to disk before you take your
+
+372
+00:50:54.000 --> 00:51:01.000
+snapshot and when you when you issue
+that create snapshot API you'll get an
+answer back within a few seconds so you
+
+373
+00:51:01.000 --> 00:51:07.000
+only have two FS freeze for
+just a second or two before you get back
+in okay from the API call you're good to
+
+374
+00:51:07.000 --> 00:51:13.000
+go from then you don't you don't have to
+wait for the actual transfer of data to
+s3 to complete the depending it will
+
+375
+00:51:13.000 --> 00:51:19.000
+stay in a pending state the snapshot but
+you can go ahead and keep using the
+volume as soon as that creates snapshot
+
+376
+00:51:19.000 --> 00:51:30.000
+API returns a 200 success windows is a
+little different because NTFS does not
+have an equivalent file system freeze so
+
+377
+00:51:30.000 --> 00:51:37.000
+it does have a sink that's available out
+there in sysinternals you can download a
+sink equivalent but really it's it's all
+
+378
+00:51:37.000 --> 00:51:45.000
+about VSS so volume Shadow Copy Service
+is is is Microsoft's technology for
+doing their own brand of snapshots so
+
+379
+00:51:45.000 --> 00:51:54.000
+what we recommend is is what you saw
+within for the case study is attaching
+dedicated backup volumes for your
+
+380
+00:51:54.000 --> 00:52:01.000
+windows backups all of Windows you know
+whether it's exchange or sequel server
+they all support VSS based backups
+
+381
+00:52:01.000 --> 00:52:10.000
+natively so the idea is that you you use
+those native windows backup utilities to
+create your backups you store those
+
+382
+00:52:10.000 --> 00:52:19.000
+backups on the EBS volume and then you
+snap shot that backup EBS for you so
+here you see here we've dedicated TBS
+
+383
+00:52:19.000 --> 00:52:29.000
+volume just for backups backups are sent
+to that volume and that's what we
+snapshot so what about initializing a
+
+384
+00:52:29.000 --> 00:52:37.000
+volume so a new EBS volume you just
+attach it and it's ready to go the
+performance characteristics there's
+
+385
+00:52:37.000 --> 00:52:43.000
+nothing you have to do to get to the
+full volume performance it's ready to go
+out of the box but if you're creating a
+
+386
+00:52:43.000 --> 00:52:51.000
+volume from a snapshot we obviously have
+to get that data from s3 to the new
+volume so there's going to be a latency
+
+387
+00:52:51.000 --> 00:52:58.000
+impact there because you might be
+hitting blocks that haven't arrived yet
+so there is a lazy load process where if
+
+388
+00:52:58.000 --> 00:53:04.000
+you do try to access a block on the
+device that's not there yet it'll get
+queued to the front but you're obviously
+
+389
+00:53:04.000 --> 00:53:11.000
+still going to get a latency impact
+before it actually arrives so we do
+recommend if you're generating a new
+
+390
+00:53:11.000 --> 00:53:16.000
+volume from a snapshot and you do want
+full performance out of that volume as
+fast as
+
+391
+00:53:16.000 --> 00:53:26.000
+able to initialize first so how do you
+actually initialize so we recommend a
+random read across volumes and here's
+
+392
+00:53:26.000 --> 00:53:35.000
+the file that we recommend so we
+recommend file over something like DD if
+I was multi-threaded it's also a lot
+
+393
+00:53:35.000 --> 00:53:44.000
+more tunable so random going back to the
+you know that the the split logical
+volume across a lot of physical physical
+
+394
+00:53:44.000 --> 00:53:50.000
+blocks across many devices if you
+randomize that you can you can bring
+that parallel nature of the volume
+
+395
+00:53:50.000 --> 00:53:56.000
+itself to bear if you're running a
+sequential initialization you're just
+going to hit each of those along the
+
+396
+00:53:56.000 --> 00:54:00.000
+line you're not going to take advantage
+of the fact that this is a distributed
+system and all that stuff can come at
+
+397
+00:54:00.000 --> 00:54:09.000
+you in parallel fashion so you can play
+with the block size 128 is kind of a
+compromise between file running a really
+
+398
+00:54:09.000 --> 00:54:15.000
+long time versus your data already being
+there so what I always recommend is
+watch the latency volume characteristics
+
+399
+00:54:15.000 --> 00:54:22.000
+so the cloud watch latency curve for the
+volume while you're recommending your
+file so you don't necessarily need to
+
+400
+00:54:22.000 --> 00:54:27.000
+run your Phi 0 to completion if you're
+watching the latency curve and you see
+that it's starting to flatline which
+
+401
+00:54:27.000 --> 00:54:34.000
+means everything all your data is start
+is there on the disk so you're not
+having to wait for the latency impact of
+
+402
+00:54:34.000 --> 00:54:41.000
+a new block to come down from s3 didn't
+stop the file you're done and you can
+play with that block size to see what
+
+403
+00:54:41.000 --> 00:54:51.000
+your optimal initialisation block size
+might be for your for your volume ok
+what about automating snapshots
+
+404
+00:54:51.000 --> 00:54:59.000
+obviously customers agenor eight
+thousands and thousands of snapshots you
+know managing them life cycle of them
+
+405
+00:54:59.000 --> 00:55:09.000
+expiring them keeping track of them can
+be a hassle so here's a quick idea of
+how to take a number of AWS tools to
+
+406
+00:55:09.000 --> 00:55:17.000
+create a framework for lifecycle
+management of snapshots so it's based
+off of a few key ingredients so lambda
+
+407
+00:55:17.000 --> 00:55:25.000
+our ec2 run command which is a way to
+distribute system commands to all your
+instances to whether that's bash scripts
+
+408
+00:55:25.000 --> 00:55:33.000
+that you want to run powershell scripts
+it allows a centralized method of sin
+those commands to all your instances if
+
+409
+00:55:33.000 --> 00:55:39.000
+you haven't heard of run command as a
+link for it and then robust used of
+tagging to actually drive all the logic
+
+410
+00:55:39.000 --> 00:55:47.000
+of this workflow so we start with the
+instance and we put a couple of tag tags
+on the instance itself one back knee up
+
+411
+00:55:47.000 --> 00:55:55.000
+this is a backup where the instance and
+to any snapshots you take of my volumes
+here's the retention I would like for
+
+412
+00:55:55.000 --> 00:56:05.000
+those volumes we have a scheduled lambda
+function that's going to run every day
+it's going to search for all those
+
+413
+00:56:05.000 --> 00:56:14.000
+instances that are tagged back up it's
+going to use ec to run to send all of
+those good best practice snapshotting
+
+414
+00:56:14.000 --> 00:56:22.000
+commands that i mentioned earlier to qui
+us the filesystem make sure it's ready
+and take good snapshots and then
+
+415
+00:56:22.000 --> 00:56:28.000
+obviously snapshot all the volumes and
+in the process it's going to compute the
+expiration date of those volumes and
+
+416
+00:56:28.000 --> 00:56:35.000
+slap that tag onto the vault under the
+snapshot itself so the snapshot will now
+have a tag that says expire me on a
+
+417
+00:56:35.000 --> 00:56:45.000
+certain date now on the opposite end for
+the actual lifestyle cycle expiration we
+have a separate lambda function that's
+
+418
+00:56:45.000 --> 00:56:57.000
+going to go out and look every day for
+tags of expiration for that day and it's
+going to delete this so very simple to
+
+419
+00:56:57.000 --> 00:57:04.000
+lambda functions and a few tags to do
+some very robust house cleaning of your
+snapshots so I hope that sounds useful
+
+420
+00:57:04.000 --> 00:57:22.000
+yeah there it is we have my team put up
+a prototype check it out let us know
+what you think
+
+421
+00:57:22.000 --> 00:57:30.000
+alright last but not least a quick best
+practice around encryption so I
+mentioned encryption is checkbox very
+
+422
+00:57:30.000 --> 00:57:39.000
+easy to do on your volume there's one
+thing that I would recommend though and
+that is not going with the default which
+
+423
+00:57:39.000 --> 00:57:47.000
+is to use the default AWS EVS master key
+you always recommend to create your own
+customer managed key instead of using
+
+424
+00:57:47.000 --> 00:57:55.000
+the default he gives you a lot more
+control and why is that so this is a
+real quick how you create your own
+
+425
+00:57:55.000 --> 00:58:04.000
+customer manage key just go into I am
+console Identity and Access Management
+corruption keys create a new wait KMS
+
+426
+00:58:04.000 --> 00:58:09.000
+master key name it whatever you want I
+name this one need BS master because
+that's what I'm going to use it for and
+
+427
+00:58:09.000 --> 00:58:19.000
+by using your own key you get a lot more
+control about how the key is used so you
+get to define the rotation policy for
+
+428
+00:58:19.000 --> 00:58:27.000
+that key you get to enable cloud watch
+auditing so you can tell who is using it
+what they're using it for and you can
+
+429
+00:58:27.000 --> 00:58:33.000
+control who can use it and who can use
+it for what you know you might want one
+team to use it for encryption and one
+
+430
+00:58:33.000 --> 00:58:41.000
+team to be able to use it for decryption
+and obviously who can actually
+administer the key so these options
+
+431
+00:58:41.000 --> 00:58:48.000
+would not be possible if you went with
+just the default key so here you see a
+we're back at the checkbox encryption
+
+432
+00:58:48.000 --> 00:58:55.000
+instead I've changed the master key to
+be the one that I just created for
+myself and how does this actually work
+
+433
+00:58:55.000 --> 00:59:03.000
+so we use a process called envelope
+encryption so this is a hierarchy of
+encryption for EBS so the master key
+
+434
+00:59:03.000 --> 00:59:10.000
+that you just created is stored in our
+key management system it never leaves
+the key management system but what it
+
+435
+00:59:10.000 --> 00:59:18.000
+does do is allow you to individually
+encrypt one data key per volume so every
+volume has its own unique data key that
+
+436
+00:59:18.000 --> 00:59:28.000
+is envelope encrypted by the master key
+and then stored as metadata in the
+volume itself so that's double encrypted
+
+437
+00:59:28.000 --> 00:59:35.000
+data key and the metadata of the volume
+when you actually want to mount the
+volume and use it the KMS service is
+
+438
+00:59:35.000 --> 00:59:41.000
+call
+again to decrypt that key from metadata
+and then that decrypted key is stored in
+
+439
+00:59:41.000 --> 00:59:49.000
+the memory of the actual instance you're
+trying to mount the volume on so now
+you're actually able to access and use
+
+440
+00:59:49.000 --> 00:59:57.000
+the volume decrypt and encrypt the data
+on the volume with the key and now why
+do why would we do this obviously it
+
+441
+00:59:57.000 --> 00:60:04.000
+limits the exposure risk so if there's
+any key that's for some reason
+compromised it's it's contained the
+
+442
+00:60:04.000 --> 00:60:11.000
+blast radius is a single volume it's not
+your entire BBS inventory the
+performance is obviously a huge win
+
+443
+00:60:11.000 --> 00:60:17.000
+because the encryption is being done in
+memory and the instance itself where the
+where the data is you're not shipping
+
+444
+00:60:17.000 --> 00:60:23.000
+data across the wire back and forth 2
+kms to encrypt bulk data and it
+simplifies your key management you have
+one master key that can encrypt any
+number of data keys and that's it thank
+you very much i really appreciate time

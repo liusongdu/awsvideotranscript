@@ -1,0 +1,2355 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:08.000
+hi everyone welcome to our session today
+excited to have you all here and to be
+learning a little bit more about
+
+2
+00:00:08.000 --> 00:00:16.000
+directory service with us this is my
+first reinvent and I've really enjoyed
+the time I've got to spend here and
+
+3
+00:00:16.000 --> 00:00:24.000
+enjoyed being able to talk to all of you
+and learn more about how you're using
+AWS and how we can make the service
+
+4
+00:00:24.000 --> 00:00:35.000
+better for you so any of you who've set
+up a directory before know that this can
+be a difficult and time-consuming
+
+5
+00:00:35.000 --> 00:00:44.000
+process everything from provisioning the
+infrastructure to installing the
+directory software to getting
+
+6
+00:00:44.000 --> 00:00:53.000
+replication set up between domain
+controllers to having a good disaster
+recovery scenario with backups to
+
+7
+00:00:53.000 --> 00:01:01.000
+pushing patching to monitoring and
+recovering your domain controllers it's
+a it's a difficult process and so I'm
+
+8
+00:01:01.000 --> 00:01:08.000
+Rob mon coeur i'm the product manager
+for AWS directory service and i'm
+excited to talk to you today about how
+
+9
+00:01:08.000 --> 00:01:18.000
+we can help you to set up a new
+directory in AWS or connect your
+existing directory to AWS so just a
+
+10
+00:01:18.000 --> 00:01:25.000
+quick intro hear about what you should
+expect from our session will quickly go
+through how you can use AWS directory
+
+11
+00:01:25.000 --> 00:01:33.000
+service with what you're doing today and
+then I want to spend a lot of time
+actually diving into some demos to show
+
+12
+00:01:33.000 --> 00:01:41.000
+you exactly what it looks like to set up
+a new directory to connect your existing
+directory to domain join windows and
+
+13
+00:01:41.000 --> 00:01:51.000
+linux instances so a large part of my
+presentation here today will actually be
+in demo so hope the demo gods work out
+
+14
+00:01:51.000 --> 00:02:00.000
+for us today also I have Sonja r I heard
+here she's one of our customers and
+she's going to talk a little bit about
+
+15
+00:02:00.000 --> 00:02:08.000
+how Federation with AWS directory
+service works and how you can use that
+to manage some of your AWS accounts I'll
+
+16
+00:02:08.000 --> 00:02:13.000
+also be talking about how AWS directory
+service integrates with workspaces
+worked
+
+17
+00:02:13.000 --> 00:02:22.000
+to the work male and how you can use it
+with those AWS services we'll have a
+quick demo about how to use work docs
+
+18
+00:02:22.000 --> 00:02:32.000
+from a domain join machine I'm in this
+case it will be a workspace and finally
+I just have a few things that I'd like
+
+19
+00:02:32.000 --> 00:02:39.000
+to present to all of you just a few
+things to keep in mind to make sure that
+you have the best experience using AWS
+
+20
+00:02:39.000 --> 00:02:46.000
+directory service these are some of the
+learnings we've had over last year we
+launched this service October of last
+
+21
+00:02:46.000 --> 00:02:54.000
+year so it's been online almost a year
+now and we've learned a whole lot since
+we first launched and finally we'll save
+
+22
+00:02:54.000 --> 00:03:03.000
+Q&A for after the session and I'll be
+down in the AWS security kiosk in the
+booth on the expo floor so catch me
+
+23
+00:03:03.000 --> 00:03:08.000
+after the session or come by the booth
+if you have additional questions that
+aren't answered by the presentation
+
+24
+00:03:08.000 --> 00:03:22.000
+today alright so any of you who have
+managed servers at scale who have know
+that this can be a difficult process and
+
+25
+00:03:22.000 --> 00:03:32.000
+the more servers you have the more
+challenging it becomes keeping track of
+user logins and credentials keeping
+
+26
+00:03:32.000 --> 00:03:40.000
+track of key files to access those
+servers making sure each server is
+configured properly for security and
+
+27
+00:03:40.000 --> 00:03:47.000
+other uses on any of you've done this
+know that can be a difficult a difficult
+and challenging process and the more
+
+28
+00:03:47.000 --> 00:03:55.000
+servers you have the harder it is to do
+any of you have done this also know that
+using a directory can solve this problem
+
+29
+00:03:55.000 --> 00:04:04.000
+that it can help you managed centrally
+all of your authentications can help you
+push group policy to those servers to to
+
+30
+00:04:04.000 --> 00:04:13.000
+actually configure them and today AWS
+directory service helps you do this and
+so the question is what is AWS directory
+
+31
+00:04:13.000 --> 00:04:24.000
+service we give you two options the
+first one is called simple ad and simple
+ad is a brand new directory in AWS
+
+32
+00:04:24.000 --> 00:04:32.000
+this is based on samba for Microsoft
+Active Directory compatible server and
+simple idea is perfect for you if you
+
+33
+00:04:32.000 --> 00:04:41.000
+need a brand new directory that runs
+inside of AWS and it's it's perfect for
+simple director use cases like users
+
+34
+00:04:41.000 --> 00:04:50.000
+groups group policies domain joining
+instances any of those simple director
+use cases will work great with simple ad
+
+35
+00:04:50.000 --> 00:05:00.000
+and we manage high availability backups
+monitoring and recovery we do all of
+that for you you just need to manage the
+
+36
+00:05:00.000 --> 00:05:12.000
+actual data the users and groups that
+actually go in the directory um our
+second offering is called a t-connector
+
+37
+00:05:12.000 --> 00:05:18.000
+an ad connector is a custom Federation
+proxy that we've built to help you
+connect your existing on-premise
+
+38
+00:05:18.000 --> 00:05:26.000
+Microsoft Active Directory into AWS to
+use with some some AWS applications and
+services and some of these are
+
+39
+00:05:26.000 --> 00:05:34.000
+workspaces work Docs and work mail the
+Federation piece that Sonya will talk
+about later in the presentation as well
+
+40
+00:05:34.000 --> 00:05:45.000
+as being able to automatically domain
+join new ec2 windows instances that you
+boot up and a t-connector to get this to
+
+41
+00:05:45.000 --> 00:05:53.000
+work you'll need to set up some
+networking you'll need to connect your
+your on-premise network to AWS via VPN
+
+42
+00:05:53.000 --> 00:06:02.000
+connection to get that to connect there
+and a t-connector will actually proxy
+the Kerberos and LDAP requests back to
+
+43
+00:06:02.000 --> 00:06:12.000
+your back to your on-premise directory
+we'll get into that a little bit later
+in the presentation so to start out here
+
+44
+00:06:12.000 --> 00:06:18.000
+I'd actually like to like to switch to a
+demo and show you how quick and easy it
+is to actually set up a new simple ad
+
+45
+00:06:18.000 --> 00:06:33.000
+directory in AWS so let me get logged in
+here
+alright so we're going to start out here
+
+46
+00:06:33.000 --> 00:06:41.000
+from the AWS management console and
+under the security and identity section
+you can see here the directory service
+
+47
+00:06:41.000 --> 00:06:48.000
+portion of the console so we'll go into
+this section here and you can see here
+the first thing you'll see if you have
+
+48
+00:06:48.000 --> 00:06:53.000
+any directors at already running they'll
+be listed here so I've set up a couple
+that we're going to use for the demos
+
+49
+00:06:53.000 --> 00:07:03.000
+today and from here we're going to go
+ahead and set up a new directory and
+mind you this is this process we're
+
+50
+00:07:03.000 --> 00:07:09.000
+going to go through is going to take two
+or three minutes and this is something
+that you were to do on your own
+
+51
+00:07:09.000 --> 00:07:14.000
+provisioning the infrastructure
+installing the software setting up
+monitoring and backups this could take
+
+52
+00:07:14.000 --> 00:07:21.000
+you all day or maybe even all week and
+we're going to do this in just a couple
+of minutes so you can see how simple and
+
+53
+00:07:21.000 --> 00:07:29.000
+easy it is to set up a new directory so
+here as I mentioned before we give you
+two directory types a simple ad which is
+
+54
+00:07:29.000 --> 00:07:35.000
+the in AWS directory and an ad connector
+which connects your existing directory
+to AWS so we're going to go ahead and
+
+55
+00:07:35.000 --> 00:07:43.000
+create a simple ad directory here and
+there's a simple form here there's just
+a few pieces of information you need to
+
+56
+00:07:43.000 --> 00:07:56.000
+fill out the first one is the directory
+dns name and what this is is this is the
+actual name that is inside the dns name
+
+57
+00:07:56.000 --> 00:08:03.000
+inside your VPC that will resolve to
+your directory this doesn't need to be
+something that you can resolve
+
+58
+00:08:03.000 --> 00:08:14.000
+externally this will just resolve inside
+of your VPC we will add an BIOS name and
+when we set up a simple ad directory for
+
+59
+00:08:14.000 --> 00:08:22.000
+you we give you an administrative user
+name administrator and you can set the
+password for that administrator user
+
+60
+00:08:22.000 --> 00:08:30.000
+here so make sure that this is something
+that you remember because you'll use us
+later on to administrate your directory
+
+61
+00:08:30.000 --> 00:08:37.000
+to log into instances that are joined
+there or add additional users or groups
+from there you can also add a
+
+62
+00:08:37.000 --> 00:08:45.000
+description this is just a friendly name
+to help you wreck
+the director in the console you can pick
+
+63
+00:08:45.000 --> 00:08:54.000
+a size smaller a large we have some
+guidance in our documentation on how to
+to pick the right size but basically for
+
+64
+00:08:54.000 --> 00:09:07.000
+a small directory it can hold up to 500
+users and a large can hold up to 5,000
+users is our recommendation so as I also
+
+65
+00:09:07.000 --> 00:09:16.000
+mentioned your directory lives in a VPC
+and it is highly available and part of
+that you'll need to have a VPC set up
+
+66
+00:09:16.000 --> 00:09:22.000
+with two different subnets we will
+actually put a domain controller in each
+of those subnets and if one of your
+
+67
+00:09:22.000 --> 00:09:28.000
+domain controllers were to go down we
+would automatically fail over to the one
+and the other availability zone in the
+
+68
+00:09:28.000 --> 00:09:36.000
+other subnet and then recovered the the
+unhealthy one so you always have a fail
+over there that we've built in into our
+
+69
+00:09:36.000 --> 00:09:47.000
+architecture by default so here you can
+see you can quickly review the
+information we put in and there's a note
+
+70
+00:09:47.000 --> 00:09:56.000
+here we do have a free trial with any
+small directory so we give you either 30
+days or 750 hours of small directory
+
+71
+00:09:56.000 --> 00:010:02.000
+hours to go ahead and start up a
+directory that you'll be given at no
+cost additionally if you're using the
+
+72
+00:10:02.000 --> 00:10:09.000
+service and actively paying for
+workspaces work docks or work mail it is
+bundled with that you will not be
+
+73
+00:10:09.000 --> 00:10:17.000
+charged at all for your directory and
+that goes for both simple ad and a
+t-connector so we'll go ahead and create
+
+74
+00:10:17.000 --> 00:10:23.000
+that director you can see it's been
+requested here this will take about five
+minutes to come up it's fairly quick
+
+75
+00:10:23.000 --> 00:10:30.000
+while we're waiting there for that to
+come up I'll skip over here to the
+section with AD connector to show you
+
+76
+00:10:30.000 --> 00:10:35.000
+what it looks like to set an ad
+connector up I won't actually set one up
+because i don't have the networking set
+
+77
+00:10:35.000 --> 00:10:42.000
+up here but before you get to this point
+you'll actually as i mentioned before
+you'll need to set up your existing
+
+78
+00:10:42.000 --> 00:10:51.000
+on-premise network to be connected to
+your AWS v pc via VPN connection or a
+direct connect connection you'll also
+
+79
+00:10:51.000 --> 00:10:59.000
+need to open a couple different ports
+port for DNS the port for kerberos and
+the port for ldap for a t-connector to
+
+80
+00:10:59.000 --> 00:11:09.000
+be able to to proxy those requests back
+to your existing on-premise directory so
+the director DNS name this here is just
+
+81
+00:11:09.000 --> 00:11:16.000
+the it's the domain name of your actual
+domain so you'll want to put that in
+here same with the netbios name this is
+
+82
+00:11:16.000 --> 00:11:24.000
+of the the domain you're connecting to
+you'll also need to get a connector
+account username and password and what
+
+83
+00:11:24.000 --> 00:11:32.000
+this is it's a fairly low privileged
+account that we we store and encrypt it
+and then use those to make ldap calls
+
+84
+00:11:32.000 --> 00:11:37.000
+back to your directory so you'll
+probably need to work with your ad
+administrator to get this account
+
+85
+00:11:37.000 --> 00:11:47.000
+created for you so you can put it in
+here in this form you'll also need to
+add at least one if not two DNS
+
+86
+00:11:47.000 --> 00:11:56.000
+addresses here and we use those DNS
+addresses to look up the SRV records to
+find the best domain controllers to
+
+87
+00:11:56.000 --> 00:12:07.000
+connect to to proxy those authentication
+requests to similarly a t-connector has
+a small in a large size this is just the
+
+88
+00:12:07.000 --> 00:12:13.000
+difference here is the actual
+infrastructure that it sits on their
+different instant sizes we have
+
+89
+00:12:13.000 --> 00:12:20.000
+information in our documentation to help
+you decide based on how many users
+you're supporting what size you should
+
+90
+00:12:20.000 --> 00:12:29.000
+pick there and similar to simple ID
+you'll need a pic of epc and two subnets
+for those proxy instances to go in so
+
+91
+00:12:29.000 --> 00:12:36.000
+that's that's how to set up an ad
+connector there so we'll go ahead and
+look at this Tuesday directory and I'm
+
+92
+00:12:36.000 --> 00:12:41.000
+going to use this director for a few
+other demos and this is the director
+details page shows you all the
+
+93
+00:12:41.000 --> 00:12:50.000
+information about your directory what
+type it is what the idea is what the
+domain name is and a few other pieces of
+
+94
+00:12:50.000 --> 00:12:58.000
+information these DNS addresses are the
+actual IP addresses in your VPC of your
+domain controllers so you can use those
+
+95
+00:12:58.000 --> 00:13:07.000
+to communicate with the domain
+controllers additionally from the screen
+you'll be able to create an access URL
+
+96
+00:13:07.000 --> 00:13:12.000
+later in the priest and presentation
+will show you how to use the access URL
+but essentially this allows you to
+
+97
+00:13:12.000 --> 00:13:20.000
+connect to work dachshund work mail as
+well as the Federation into the AWS
+management console you can also see
+
+98
+00:13:20.000 --> 00:13:25.000
+which applications and services are
+enabled for your directory workspaces
+work docks work mail and AWS management
+
+99
+00:13:25.000 --> 00:13:33.000
+console it's an easy way to see how the
+directory is being used here so that's
+just a little bit about how to get
+
+100
+00:13:33.000 --> 00:13:42.000
+started setting up your directory so
+jumping back here my slides we're
+actually going to go through a second
+
+101
+00:13:42.000 --> 00:13:50.000
+demo of how to join domain join
+instances to your directory and I'm
+going to start out by doing a domain
+
+102
+00:13:50.000 --> 00:14:00.000
+joining a Linux instance i'm going to
+use an amazon linux instance but we also
+support centos bun to and rel and those
+
+103
+00:14:00.000 --> 00:14:07.000
+are the versions we support under
+documentation and we actually have a
+full tutorial on how to do this in our
+
+104
+00:14:07.000 --> 00:14:15.000
+documentation as well how to demain join
+a linux and a Windows instance so I have
+up here this is my cheat sheet this
+
+105
+00:14:15.000 --> 00:14:23.000
+informations in our documentation as
+well but I'm going to jump back over
+here to my laptop to show you how this
+
+106
+00:14:23.000 --> 00:14:33.000
+works so let's go ahead and I guess one
+other thing I'll mention real quick so
+here's the the documentation for how to
+
+107
+00:14:33.000 --> 00:14:41.000
+domain join a Linux instance to a simple
+ad directory we do support like I
+mentioned for different types of Linux
+
+108
+00:14:41.000 --> 00:14:49.000
+another thing you want to do before you
+do any domain joining you want to go set
+up your DHCP option set for your bpc to
+
+109
+00:14:49.000 --> 00:15:00.000
+point to your directory so here in the
+VPC management console I've got my
+Tuesday VPC here that I've set up that
+
+110
+00:15:00.000 --> 00:15:09.000
+has my Tuesday directory in it and I
+have a DHCP option set assigned to it as
+well and you can see here I'll click on
+
+111
+00:15:09.000 --> 00:15:17.000
+this you can see it on the domain name
+is set to Tuesday my director calm and
+the domain name servers are set to those
+
+112
+00:15:17.000 --> 00:15:21.000
+IP addresses that i got from the
+directory details page and this will
+allow
+
+113
+00:15:21.000 --> 00:15:30.000
+any instance running in your VPC to
+discover those automatically if that
+instance is dhcp enabled so this makes a
+
+114
+00:15:30.000 --> 00:15:40.000
+domain joint process really simple so
+with that I will bring up my command
+prompt in my cheat sheet here and I'm
+
+115
+00:15:40.000 --> 00:15:52.000
+going to SSH into a brand new Amazon
+Linux instance that I've just set up so
+you can see here that we are we're
+
+116
+00:15:52.000 --> 00:15:59.000
+logged into the Amazon Linux instance so
+I'm just going to do a couple of quick
+commands a yum update to make sure all
+
+117
+00:15:59.000 --> 00:16:10.000
+of our packages are up to date and then
+next I will install a package called
+sssd and that is the system security
+
+118
+00:16:10.000 --> 00:16:22.000
+services demon and that will be the
+actual package that does the domain join
+for the Linux instance so we'll get that
+
+119
+00:16:22.000 --> 00:16:30.000
+installed here that should take just a
+second and while that's running the next
+command I'm going to run here is the
+
+120
+00:16:30.000 --> 00:16:38.000
+realm joint command and you can see that
+i'm using me see if i can zoom in here
+on this so i'm using the user
+
+121
+00:16:38.000 --> 00:16:47.000
+administrator at tuesday my directory
+calm and it's joining to the domain
+tuesday my directory com it'll be able
+
+122
+00:16:47.000 --> 00:16:55.000
+to automatically discover where that
+domain is because I've set up the the
+dhcp option set ahead of time so we'll
+
+123
+00:16:55.000 --> 00:17:10.000
+go ahead and grab this command and we'll
+stick it in here whoops I forgot the s
+there on the sudo ok so you can see also
+
+124
+00:17:10.000 --> 00:17:16.000
+asked me for the password here to
+actually perform this domain join this
+is the same password you put in when you
+
+125
+00:17:16.000 --> 00:17:22.000
+created the directory or the password
+for the user that you're using to the
+main join in this case it is the
+
+126
+00:17:22.000 --> 00:17:36.000
+administrative user so what mean
+okay so it looks like that works the
+next thing I'm going to do here is edit
+
+127
+00:17:36.000 --> 00:17:48.000
+the sshd config file to enable password
+authentication on this Linux instance so
+let me grab this here and I'll just
+
+128
+00:17:48.000 --> 00:18:02.000
+stick that in here the top and we'll
+save this file and then we will actually
+need to start the sssd service to make
+
+129
+00:18:02.000 --> 00:18:09.000
+sure it's up and going and then we will
+reboot this instance domain joins
+require reboot both on the linux and
+
+130
+00:18:09.000 --> 00:18:16.000
+windows instances so this instance is
+going to rebe rebooting it's going to
+take a couple minutes to come up so
+
+131
+00:18:16.000 --> 00:18:27.000
+while we're waiting for that I'm going
+to jump back into the the console here
+to show you how to domain join a Windows
+
+132
+00:18:27.000 --> 00:18:38.000
+instance so this is here in the ec2
+console and I'm going to go ahead and
+launch a new instance this will be a
+
+133
+00:18:38.000 --> 00:18:50.000
+Windows Server 2008 r2 instance and a t2
+micro will work fine so you can see here
+in the configure instance details page
+
+134
+00:18:50.000 --> 00:18:58.000
+I'm given a couple options and once I
+select the Tuesday VPC or my Tuesday
+directory is I'll be able to also select
+
+135
+00:18:58.000 --> 00:19:06.000
+a domain join directory so we'll pick
+that Tuesday directory in addition to
+that I'll also need to assign an IM role
+
+136
+00:19:06.000 --> 00:19:14.000
+to it to make this domain domain join
+process work so this what we're doing
+here is actually called seamless domain
+
+137
+00:19:14.000 --> 00:19:23.000
+join and we have an instance running on
+we have an agent running on the ec2
+instance it's called ec2 config and it
+
+138
+00:19:23.000 --> 00:19:32.000
+will actually retrieve a configuration
+document from the service called SSM
+simple systems manager and this wizard
+
+139
+00:19:32.000 --> 00:19:36.000
+he'll will actually do all that
+configuration for you will create the
+configuration document and pass it to
+
+140
+00:19:36.000 --> 00:19:42.000
+the instance but the ec2 config agent
+will will call the SSM service it will
+retreat
+
+141
+00:19:42.000 --> 00:19:47.000
+that configuration document and then it
+will actually perform the domain joint
+command and then reboot the instance so
+
+142
+00:19:47.000 --> 00:19:56.000
+really all you need to do to get it set
+up here is a sign in IM role that gives
+that instance permissions to make those
+
+143
+00:19:56.000 --> 00:20:05.000
+calls to the SSM and directory service
+portions that also will we have
+documentation on what that what that
+
+144
+00:20:05.000 --> 00:20:15.000
+role looks like that you can look up so
+you can configure this IM roll ahead of
+time from here we'll go ahead and launch
+
+145
+00:20:15.000 --> 00:20:29.000
+this instance we'll call it test and add
+a security group give it the right key
+pair and will launch dancin so when this
+
+146
+00:20:29.000 --> 00:20:38.000
+instance boots up it will automatically
+be domain joined to this Tuesday
+directory and you can see here there
+
+147
+00:20:38.000 --> 00:20:45.000
+wasn't an option here in the actual
+console to pick which oh you did this
+instance the computer obstacle end up in
+
+148
+00:20:45.000 --> 00:20:53.000
+but if you do use the the API you will
+be able to specify an o you to actually
+put the computer object when its domain
+
+149
+00:20:53.000 --> 00:21:03.000
+joined in to the right the o you of your
+choosing so also show you what it looks
+like to log in to a domain joint
+
+150
+00:21:03.000 --> 00:21:10.000
+instance so this instance I've I've
+already booted it up and I've got a
+demain joined ahead of time so we'll be
+
+151
+00:21:10.000 --> 00:21:19.000
+able to use the Tuesday domain whoops
+and the user administrator and we'll
+type in the same password you use to
+
+152
+00:21:19.000 --> 00:21:29.000
+domain join the Linux instance and that
+should give us a remote desktop session
+I've installed the tool Active Directory
+
+153
+00:21:29.000 --> 00:21:36.000
+users and computers so I can actually
+add users and groups to this domain so
+you can see here these are some of the
+
+154
+00:21:36.000 --> 00:21:41.000
+computers I've joined to this domain
+here are some of the users I've set up
+ahead of time here's the administrator
+
+155
+00:21:41.000 --> 00:21:47.000
+user we've been using ahead of time
+here's another user Casey that we're
+going to use I'm to finish the Linux
+
+156
+00:21:47.000 --> 00:21:54.000
+domain join additionally you can see the
+two domain controllers they're part of
+this domain that are in this oh you as
+
+157
+00:21:54.000 --> 00:22:04.000
+well and these are the ones that
+in each of those separate availability
+zones so at this point our Linux
+
+158
+00:22:04.000 --> 00:22:15.000
+instance should have rebooted and we
+should be able to log back in there so
+we're back in the instance here so it's
+
+159
+00:22:15.000 --> 00:22:22.000
+a couple last steps we need to do to
+finish the domain join for the Linux
+instance the first thing I'm going to do
+
+160
+00:22:22.000 --> 00:22:33.000
+is edit the pseudo errs file and add the
+admins group to it to make sure that
+admins you users in the admins group can
+
+161
+00:22:33.000 --> 00:22:42.000
+make pseudo commands so we'll add that
+there and then after you domain join a
+Linux instance by default it allows any
+
+162
+00:22:42.000 --> 00:22:49.000
+users from your domain to be able to log
+into it and you actually have to
+explicitly tell it which users or groups
+
+163
+00:22:49.000 --> 00:22:55.000
+you'd like to lock it down to so I'm
+going to go ahead and lock down this
+instance to allow only the administrator
+
+164
+00:22:55.000 --> 00:23:11.000
+user and the user Casey to be able to
+log in to this instance here and there's
+a command realm list and you'll see here
+
+165
+00:23:11.000 --> 00:23:17.000
+that the permitted logins are the
+administrator and Casey those thing only
+to their allowed you can similarly ad
+
+166
+00:23:17.000 --> 00:23:27.000
+groups I'm to be permitted ad groups
+here and so let's go ahead and log out
+of this instance and then we'll actually
+
+167
+00:23:27.000 --> 00:23:44.000
+try and log in with this user Casey here
+this will add him and you can see now
+we're prompted for his password and I'm
+
+168
+00:23:44.000 --> 00:23:50.000
+now logged into the instance using a
+username and password from Active
+Directory so it's a fairly
+
+169
+00:23:50.000 --> 00:24:01.000
+straightforward process to set that up
+onto domain join Linux instance alright
+well that concludes the demo for domain
+
+170
+00:24:01.000 --> 00:24:11.000
+join so I'm actually going to switch
+back here to my slides
+so the next thing I'd like to talk about
+
+171
+00:24:11.000 --> 00:24:20.000
+is managing Federation to AWS you can
+you can do this today I'm in a couple
+different ways you can naturally use
+
+172
+00:24:20.000 --> 00:24:28.000
+sam'l to federate your Active Directory
+users to be able to log in to AWS but
+that requires you to set up and manage
+
+173
+00:24:28.000 --> 00:24:37.000
+sam'l infrastructure and to maintain
+that ongoing in additionally to assign
+roles to users is a manual process and
+
+174
+00:24:37.000 --> 00:24:44.000
+we've really done here with AWS
+directory server which who made a little
+easier way to get you up and going to
+
+175
+00:24:44.000 --> 00:24:53.000
+federate your Active Directory users to
+AWS i'm going to have them be able to
+easily log in to database management
+
+176
+00:24:53.000 --> 00:25:00.000
+console to manage resources so with that
+I'm going to actually have Sonja r I
+heard here from cox auto she's going to
+
+177
+00:25:00.000 --> 00:25:12.000
+come and talk about how her company is
+using this Federation to manage their
+AWS accounts so here you go Sonja in
+
+178
+00:25:12.000 --> 00:25:19.000
+your systems engineer at cox automotive
+i work on our cloud and automation team
+and our group is responsible for some
+
+179
+00:25:19.000 --> 00:25:26.000
+several of the private and public cloud
+initiatives within our company many of
+you may not have heard of cox automotive
+
+180
+00:25:26.000 --> 00:25:33.000
+but i'm sure you're familiar with our
+consumer brands like Kelley Blue Book
+autotrader Manheim and several others we
+
+181
+00:25:33.000 --> 00:25:40.000
+are a global organization of over 20
+different brands we have 24,000
+employees and / 121 locations worldwide
+
+182
+00:25:40.000 --> 00:25:47.000
+and we have 24 thousand or 40,000
+customers that we support our goal as a
+company is to transform the way the
+
+183
+00:25:47.000 --> 00:25:56.000
+world buys sells and owns cars so over
+the last several years several of our
+business units have been moving their
+
+184
+00:25:56.000 --> 00:26:04.000
+applications to AWS and in order to find
+a way to manage and monitor all these
+different resources our architects came
+
+185
+00:26:04.000 --> 00:26:09.000
+up with the account hierarchy that you
+are seeing here so the way that we're
+set up in AWS is we have a single built
+
+186
+00:26:09.000 --> 00:26:16.000
+master billing account in all charges
+for all of our other AWS accounts are
+set up with consolidated billing to be
+
+187
+00:26:16.000 --> 00:26:20.000
+charged back to the master billing
+account
+underneath that we have two shared
+
+188
+00:26:20.000 --> 00:26:26.000
+services accounts one for production and
+one for non-production these are what we
+refer to as our management accounts and
+
+189
+00:26:26.000 --> 00:26:33.000
+then every single application that we
+deploy to AWS gets two accounts assigned
+to it one for production and one for
+
+190
+00:26:33.000 --> 00:26:39.000
+non-production and the VPC within those
+accounts are set up according to the
+needs of the application so this account
+
+191
+00:26:39.000 --> 00:26:44.000
+hierarchy has solved a lot of problems
+for us the first thing that has done is
+it has made chargeback really really
+
+192
+00:26:44.000 --> 00:26:51.000
+simple we don't have to rely on people
+to tag their resources with billing
+codes we simply chargeback everything
+
+193
+00:26:51.000 --> 00:26:57.000
+that you deploy to your account to your
+billing code or your business unit at
+the end of the month it's also isolated
+
+194
+00:26:57.000 --> 00:27:04.000
+the AWS service limits to individual
+applications in the past when we ran
+several applications within a single AWS
+
+195
+00:27:04.000 --> 00:27:10.000
+account we were hitting AWS service
+limits on a weekly and sometimes daily
+basis and the final thing that is done
+
+196
+00:27:10.000 --> 00:27:16.000
+for us is an isolated users so they can
+only access the accounts with the
+applications that they are running and
+
+197
+00:27:16.000 --> 00:27:26.000
+managing so this is great but at cox
+automotive we have a cloud team and our
+cloud team needs to be able to access
+
+198
+00:27:26.000 --> 00:27:32.000
+every single AWS account that we set up
+so we started down this path what we
+were doing was we were creating
+
+199
+00:27:32.000 --> 00:27:40.000
+individual I am users for every member
+of our cloud team on all of these
+different AWS accounts and over time the
+
+200
+00:27:40.000 --> 00:27:46.000
+number of accounts that we deploy just
+continue to grow right now we're up to
+about 50 for AWS accounts and what this
+
+201
+00:27:46.000 --> 00:27:53.000
+did for us is it just created an IAM
+access management nightmare we had I am
+users all over the place we had no
+
+202
+00:27:53.000 --> 00:28:00.000
+centralized access management and it was
+very confusing for the different users
+so we needed to come up with a solution
+
+203
+00:28:00.000 --> 00:28:07.000
+to this problem what we decided to do
+was to get rid of the local I am users
+and use directory services with cross
+
+204
+00:28:07.000 --> 00:28:13.000
+account access to solve this problem and
+before I get into that I'm going to
+briefly walk you through the two
+
+205
+00:28:13.000 --> 00:28:21.000
+solutions independently and then we'll
+show you how we combine the two to work
+within our organization so earlier Rob
+
+206
+00:28:21.000 --> 00:28:30.000
+showed you how to set up an ad connector
+once you have an HD connector set up you
+can enable it for AWS directory services
+
+207
+00:28:30.000 --> 00:28:36.000
+for console access
+with into your within your AWS account
+and in order to do this all you have to
+
+208
+00:28:36.000 --> 00:28:44.000
+do is set up a series of roles and then
+you can map users and groups from ad to
+those roles that you have created once
+
+209
+00:28:44.000 --> 00:28:52.000
+you have this in place you give your
+users and access URL they can go to this
+access URL and they log in with their
+
+210
+00:28:52.000 --> 00:29:03.000
+active directory credentials using the
+active direct using the ad connector the
+user is authenticated with kerberos with
+
+211
+00:29:03.000 --> 00:29:11.000
+your on prem ad and then the user can
+access the management console with the
+roles that you configured in step one so
+
+212
+00:29:11.000 --> 00:29:17.000
+now that you know about how the active
+directory in Federation works let me
+talk to you a little bit about cross
+
+213
+00:29:17.000 --> 00:29:23.000
+account access so cross account access
+is a way to establish a trusted
+relationship between two different AWS
+
+214
+00:29:23.000 --> 00:29:29.000
+accounts that you own and once you've
+established this trusted relationship a
+user can log into one account and from
+
+215
+00:29:29.000 --> 00:29:35.000
+that account they can switch roles into
+another AWS account without having to
+re-authenticate I'm going to show you a
+
+216
+00:29:35.000 --> 00:29:42.000
+quick video demonstration on how this
+works just between to AWS accounts and
+then after this is over we'll dive into
+
+217
+00:29:42.000 --> 00:29:53.000
+combining these two solutions
+so what we're doing in this video is I'm
+logging into one of our labs accounts
+
+218
+00:29:53.000 --> 00:30:00.000
+and from this lab account we're going to
+establish a trusted relationship with
+another lab account in order to do this
+
+219
+00:30:00.000 --> 00:30:17.000
+we need to create a role so we're
+creating a new role give you a role a
+name here and then this is a role that's
+
+220
+00:30:17.000 --> 00:30:26.000
+going to be used for cross account
+access in this part right here this
+account ID is the account that we are
+
+221
+00:30:26.000 --> 00:30:33.000
+establishing the trusted relationship
+with and then we're just assigning a
+policy to this role so you can see here
+
+222
+00:30:33.000 --> 00:30:39.000
+we have this new role we have a trusted
+entity associated with this role and at
+the bottom we have a link that you can
+
+223
+00:30:39.000 --> 00:30:46.000
+give to your end users one thing to note
+is if you create this role with cloud
+formations which we do you will not see
+
+224
+00:30:46.000 --> 00:30:52.000
+this link in the console but you can
+still generate it and give it to your
+end users just know that you won't you
+
+225
+00:30:52.000 --> 00:30:59.000
+will not see it here if you scroll to
+the bottom this is the important part
+this is what makes cross account access
+
+226
+00:30:59.000 --> 00:31:07.000
+work and it is the trusted relationship
+with the other accounts ID so that
+account ID that we added for the trust
+
+227
+00:31:07.000 --> 00:31:27.000
+relationship is another labs account
+that we own so I'm going to switch over
+to that count now
+
+228
+00:31:27.000 --> 00:31:35.000
+and from here once i have indicated i
+can easily switch over to the lab 7
+account that we establish the trusted
+
+229
+00:31:35.000 --> 00:31:55.000
+relationship with
+and if I want to from here I can
+actually go back to the original account
+
+230
+00:31:55.000 --> 00:32:10.000
+that we logged into as well
+alright now that we've talked about
+directory services and federated users
+
+231
+00:32:10.000 --> 00:32:17.000
+and cross account access let's talk
+about how at cox automotive we combine
+these two features to enable our cloud
+
+232
+00:32:17.000 --> 00:32:22.000
+team to easily manage all of the
+different AWS accounts within our
+environment so what we did is we did not
+
+233
+00:32:22.000 --> 00:32:28.000
+want to enable directory services on
+every account so we enabled directory
+services only on our management accounts
+
+234
+00:32:28.000 --> 00:32:34.000
+so an end user will log into the
+management account like we showed before
+authenticate with ad and then they're
+
+235
+00:32:34.000 --> 00:32:41.000
+logged into the AWS console the roles
+that we use for directory services have
+very limited permissions within the
+
+236
+00:32:41.000 --> 00:32:47.000
+management account in fact if you take a
+look at this network access role the
+only thing that this role can do is
+
+237
+00:32:47.000 --> 00:32:53.000
+assume another role and the roles that
+it can assume are the network access
+roles that we deploy on every other
+
+238
+00:32:53.000 --> 00:33:00.000
+account within our environment on our
+application accounts we have a standard
+cloud formations template that we set up
+
+239
+00:33:00.000 --> 00:33:06.000
+on every single application account and
+this CloudFormation template sets up a
+number of things but one thing that it
+
+240
+00:33:06.000 --> 00:33:15.000
+creates is these roles that are used for
+cross account access these roles are
+locked down and they have a trusted
+
+241
+00:33:15.000 --> 00:33:20.000
+entity associated with them but one
+thing I want you to notice is unlike in
+the video that I showed you before where
+
+242
+00:33:20.000 --> 00:33:27.000
+we trusted the entire account ID we take
+it a step farther and we we have a
+principal statement in here that only
+
+243
+00:33:27.000 --> 00:33:36.000
+trusts specific roles so the network
+engineer in this case only trust the
+management account ID and the network
+
+244
+00:33:36.000 --> 00:33:42.000
+role this forces the user to log on with
+the role on the management account that
+we associated with the directory
+
+245
+00:33:42.000 --> 00:33:49.000
+services they can't just log on with the
+standard I am user and by doing this we
+have got rid of our local I am users
+
+246
+00:33:49.000 --> 00:33:55.000
+entirely we use the federated user to
+log in to the management account and
+then we use cross account access to
+
+247
+00:33:55.000 --> 00:34:00.000
+access every single account in our
+environment so now i'm going to show you
+another video demonstration and this
+
+248
+00:34:00.000 --> 00:34:06.000
+will show you what this looks like for
+one of our end users and then at the end
+of this demonstration we'll also take a
+
+249
+00:34:06.000 --> 00:34:13.000
+look at one of the application roles and
+then we'll take a look at the management
+account
+
+250
+00:34:13.000 --> 00:34:22.000
+so what we have created here is a cross
+account access page and the link you see
+at the top is just taking you to the
+
+251
+00:34:22.000 --> 00:34:38.000
+access URL for directory services and a
+user can log in here with their Active
+Directory user name and password now I'm
+
+252
+00:34:38.000 --> 00:34:44.000
+on the management console and I am
+prompted for which role I want to log
+into if I was only associated with one
+
+253
+00:34:44.000 --> 00:34:51.000
+role I wouldn't see that prompt I would
+just be automatically logged in from
+here like we showed in the other video
+
+254
+00:34:51.000 --> 00:34:58.000
+you can click the drop down and switch
+role to switch to another account but we
+have so many accounts in so many roles
+
+255
+00:34:58.000 --> 00:35:04.000
+that expecting users to remember this
+would be near impossible so this is
+where the link comes in handy that I
+
+256
+00:35:04.000 --> 00:35:18.000
+showed you before so we're going to go
+back to the switch roles page that I
+initially logged into and this page
+
+257
+00:35:18.000 --> 00:35:24.000
+contains all the switch roles links that
+are used by our engineers since I logged
+on as administrator I want to use the
+
+258
+00:35:24.000 --> 00:35:29.000
+link in the admin column and what this
+link does for me is it automatically
+populates the account name in the role
+
+259
+00:35:29.000 --> 00:35:35.000
+name so i don't have to remember that
+information or type it in now you can
+see how easily I switch from my
+
+260
+00:35:35.000 --> 00:35:40.000
+management account over to my labs eight
+account and I can do anything that I
+need to do with in this account will
+
+261
+00:35:40.000 --> 00:35:51.000
+switch to another link here and you'll
+notice that as we're going between
+accounts this is beginning to generate a
+
+262
+00:35:51.000 --> 00:35:58.000
+roll history in the upper right hand
+corner you can see who your log n s you
+can go back and forth between accounts
+
+263
+00:35:58.000 --> 00:36:07.000
+that you've previously logged in to from
+here you can also hover over it to see
+the information you can sign out you can
+
+264
+00:36:07.000 --> 00:36:11.000
+see who you're currently active as and
+the account you are currently logged
+into and then you can also switch back
+
+265
+00:36:11.000 --> 00:36:18.000
+to the original role that you logged
+into
+as we access more and more accounts like
+
+266
+00:36:18.000 --> 00:36:23.000
+I said you'll see this role history that
+is being established but one thing to
+know about this world history is it is
+
+267
+00:36:23.000 --> 00:36:29.000
+based on your cookies so if you access
+this from a different browser from a
+different computer your roll history
+
+268
+00:36:29.000 --> 00:36:40.000
+will be erased and you'll have to
+recreate it the last thing that I wanted
+to note here is you can type in a
+
+269
+00:36:40.000 --> 00:36:46.000
+display name if you don't like to see
+the role name and the account name in
+the upper right hand corner and by doing
+
+270
+00:36:46.000 --> 00:36:52.000
+this the display name that you selected
+will be displayed so now that you've
+seen what this looks like for our end
+
+271
+00:36:52.000 --> 00:37:08.000
+users let's take a look at the role that
+is making this all happen
+so the administrator role is the one in
+
+272
+00:37:08.000 --> 00:37:18.000
+this demonstration that we have been
+switching over to and this role like I
+said was created by cloud formations so
+
+273
+00:37:18.000 --> 00:37:23.000
+you don't see that link that we saw in
+the previous video but you can still
+generate that link yourself and use it
+
+274
+00:37:23.000 --> 00:37:30.000
+if you scroll down to the bottom this is
+the important part this is the trust at
+a relationship and in this trusted
+
+275
+00:37:30.000 --> 00:37:37.000
+relationship like I said we don't just
+trust the entire account we actually
+lock it down to a specific role on our
+
+276
+00:37:37.000 --> 00:37:42.000
+management account because we only want
+the users that are federated users who
+have logged on with their active
+
+277
+00:37:42.000 --> 00:37:52.000
+directory credentials to be able to
+assume this role the final thing that
+we're going to do is switch over and
+
+278
+00:37:52.000 --> 00:38:00.000
+take a look at our management account
+and the Active Directory credentials and
+what i have done prior to this
+
+279
+00:38:00.000 --> 00:38:06.000
+demonstration is i deleted the read-only
+access role so i'm going to show you how
+easy it is to associate this role with
+
+280
+00:38:06.000 --> 00:38:18.000
+directory services and add an end user
+to that role so here you can see we have
+a single ad connector setup and on this
+
+281
+00:38:18.000 --> 00:38:31.000
+AV connector we have AWS management
+console and abled
+right here we have three roles
+
+282
+00:38:31.000 --> 00:38:36.000
+associated what we're going to do is add
+a new role we're going to add the
+read-only access role and this excess
+
+283
+00:38:36.000 --> 00:38:44.000
+role was already created and it already
+has a trusted relationship with all of
+the other application accounts so I
+
+284
+00:38:44.000 --> 00:38:51.000
+simply add the role within directory
+services and then from here I can switch
+search for users and groups within
+
+285
+00:38:51.000 --> 00:39:03.000
+Active Directory to add them to this
+role this has made it so much easier for
+us to add new users and to give them
+
+286
+00:39:03.000 --> 00:39:10.000
+access to every every account that we
+manage and like I said before we have no
+more local I am users it's all done
+
+287
+00:39:10.000 --> 00:39:26.000
+through a federated user and cross
+account access
+okay that concludes our demonstration on
+
+288
+00:39:26.000 --> 00:39:40.000
+directory services and cross account
+access and what happened okay that
+solved the problem of console access for
+
+289
+00:39:40.000 --> 00:39:46.000
+us but the one thing that it did not
+take care of was API access so one of
+the developers on our team created this
+
+290
+00:39:46.000 --> 00:39:53.000
+application called al que es al que es
+stands for air like airlift key services
+and how this works is an end user can
+
+291
+00:39:53.000 --> 00:40:03.000
+log on to a browser interface and they
+authenticate with a lks al KS will reach
+out to active directory and look at the
+
+292
+00:40:03.000 --> 00:40:12.000
+ad groups that that user is a member of
+from there it returns a list of eight
+specific AWS accounts and roll
+
+293
+00:40:12.000 --> 00:40:18.000
+combinations that that end user has
+access to and the user can select the
+accountant role that they want to
+
+294
+00:40:18.000 --> 00:40:26.000
+connect to and click a button which will
+reach out to AWS get federated tokens
+for that user and return those to the
+
+295
+00:40:26.000 --> 00:40:34.000
+user in a pop-up within that pop-up they
+have a secret key and access key and a
+session token that allows them to
+
+296
+00:40:34.000 --> 00:40:42.000
+temporarily access the AWS account with
+the API and they also have a link to
+redirect to the AWS management console
+
+297
+00:40:42.000 --> 00:40:54.000
+if they need to so I have another quick
+video demonstration showing you a lks
+and how it works
+
+298
+00:40:54.000 --> 00:41:04.000
+once again logging on with Active
+Directory credentials and if I was an
+end user I would see the view that you
+
+299
+00:41:04.000 --> 00:41:10.000
+see here since I am an administrator I
+also have this drop down where I can go
+in and add new accounts to the
+
+300
+00:41:10.000 --> 00:41:17.000
+application in order to add an account
+to the application all you need is a
+user with long-term tokens that has the
+
+301
+00:41:17.000 --> 00:41:31.000
+access configured now that we've had the
+account the next thing that we want to
+do is rotate the keys once we rotate the
+
+302
+00:41:31.000 --> 00:41:37.000
+keys the new keys are encrypted within
+the database and nobody knows the keys I
+don't know them the long-term keys are
+
+303
+00:41:37.000 --> 00:41:48.000
+not available for anyone at this point
+now we want to map that AWS account to a
+specific role and as part of this we
+
+304
+00:41:48.000 --> 00:42:03.000
+also have to pass a policy document to
+AWS in the final step is to map that
+user or I'm sorry the final step is to
+
+305
+00:42:03.000 --> 00:42:30.000
+map that ad account and that role to a
+group within active directory
+now back on the home page you can see
+
+306
+00:42:30.000 --> 00:42:38.000
+that I have access to the account that
+we just added and I can select a session
+time for how long I need credentials to
+
+307
+00:42:38.000 --> 00:42:44.000
+access this account and then I can click
+on the button to the right to generate
+keys here I have an access key and a
+
+308
+00:42:44.000 --> 00:42:52.000
+secret key and a session token' so I can
+access the API for this account and also
+at the bottom we have the access AWS
+
+309
+00:42:52.000 --> 00:43:08.000
+console link that the end user can click
+on to be redirected to the console
+if you're interested in this application
+
+310
+00:43:08.000 --> 00:43:15.000
+we have open sourced it it is available
+on github we encourage you to go out
+there download it and use it in your
+
+311
+00:43:15.000 --> 00:43:21.000
+environment if it's something that could
+help you out with that I'm going to hand
+back over to rob so he can talk to you a
+
+312
+00:43:21.000 --> 00:43:37.000
+little bit more about directory services
+and best practices
+alright thank you so much Sonia that was
+
+313
+00:43:37.000 --> 00:43:46.000
+incredible it's great to see how your
+company is using directory service to
+manage your accounts so like I mentioned
+
+314
+00:43:46.000 --> 00:43:53.000
+I want to talk a little bit about how
+director service integrates with the ad
+OBS applications and those are
+
+315
+00:43:53.000 --> 00:43:59.000
+workspaces work docks and work mail so
+if you're using one of these
+applications today you're already using
+
+316
+00:43:59.000 --> 00:44:09.000
+directory service either a simple ad or
+a t-connector directory and directory
+service acts as identity services for
+
+317
+00:44:09.000 --> 00:44:17.000
+when you're logging into your workspace
+your work Doc's site or your work mail
+organization if you're using ad
+
+318
+00:44:17.000 --> 00:44:26.000
+connector it also works you can
+integrate radius MFA into it so you can
+actually provide an additional factor of
+
+319
+00:44:26.000 --> 00:44:35.000
+authentication if you are using a
+t-connector similar to the access URL
+that we provide for console access we
+
+320
+00:44:35.000 --> 00:44:44.000
+also provide one to access AWS
+applications and it's it can be set up
+to be whatever you'd like as long as the
+
+321
+00:44:44.000 --> 00:44:51.000
+access URL alias in this case here the
+my company isn't being used by someone
+else and you can configure that from the
+
+322
+00:44:51.000 --> 00:44:58.000
+directory service console and when users
+log in here they'll use it the log in
+with their directory username and
+
+323
+00:44:58.000 --> 00:45:04.000
+password and be logged in right to the
+the actual application so I'm gonna go
+ahead and show you a demo of how you log
+
+324
+00:45:04.000 --> 00:45:18.000
+into a workspace and then how you'd
+enable the work Doc's single sign-on
+feature with that
+
+325
+00:45:18.000 --> 00:45:31.000
+and after
+alright so we'll go over here to the AWS
+management console i'm going to show you
+
+326
+00:45:31.000 --> 00:45:39.000
+here from the workspace a section of the
+console I've already gone ahead and I
+set up a new workspace and I've assigned
+
+327
+00:45:39.000 --> 00:45:49.000
+it to that user Casey the same user we
+use to login to the Linux instance and
+additionally i have set up a work doc
+
+328
+00:45:49.000 --> 00:45:58.000
+site here and connected to that tuesday
+directory as well so those those pieces
+are already set up so let's go ahead
+
+329
+00:45:58.000 --> 00:46:05.000
+here and i'm going to launch the amazon
+workspaces client and i'll be able to
+log into this workspace here using those
+
+330
+00:46:05.000 --> 00:46:19.000
+credentials for Casey at Tuesday not my
+directory.com use his original password
+the same one we used to log into the
+
+331
+00:46:19.000 --> 00:46:31.000
+Linux instance that will also work here
+to log into this workspace so while this
+is coming up here we provide a feature
+
+332
+00:46:31.000 --> 00:46:40.000
+called work doc single sign-on that lets
+you if you're on an instance that's the
+main joined to your directory that's
+
+333
+00:46:40.000 --> 00:46:46.000
+also connected to the work doc site
+you'll be logged in automatically to
+work docks it's a simple click to enable
+
+334
+00:46:46.000 --> 00:46:59.000
+that feature from our console but you'll
+see here if I go to the access URL which
+is tuesday AWS apps com I will be
+
+335
+00:46:59.000 --> 00:47:06.000
+automatically logged into my work doc
+site without having to type in my
+username and password again and that is
+
+336
+00:47:06.000 --> 00:47:13.000
+that is because we've plumbed everything
+to know that you are on a domain join
+machine because this workspace is
+
+337
+00:47:13.000 --> 00:47:19.000
+actually domain join to that directory I
+mean it will log you in automatically
+the other piece of configuration that
+
+338
+00:47:19.000 --> 00:47:28.000
+you'll need to do you'll need to add
+your access URL this Tuesday AWS apps
+com or whatever you configure it to to
+
+339
+00:47:28.000 --> 00:47:34.000
+your trusted your trusted you our eyes
+here on in your browser and we have
+information in our documentation on how
+
+340
+00:47:34.000 --> 00:47:44.000
+to do that
+alright so just a few things to keep in
+mind is you're getting started using AWS
+
+341
+00:47:44.000 --> 00:47:53.000
+directory service or as you continue to
+use it if you're already using it first
+of all samba for compatibility so simple
+
+342
+00:47:53.000 --> 00:48:02.000
+ad today runs on the samba for engine
+and there's a few little quirks to keep
+in mind and the first one there is that
+
+343
+00:48:02.000 --> 00:48:11.000
+you are limited in users 502 a small or
+5000 for a large this is a soft limit
+you can put additional users in your
+
+344
+00:48:11.000 --> 00:48:19.000
+directory but you will see performance
+degrade if you put additional users past
+these recommended limits second of all
+
+345
+00:48:19.000 --> 00:48:27.000
+if you're using the Active Directory
+users and computers tool to add users or
+groups to your directory you'll want to
+
+346
+00:48:27.000 --> 00:48:35.000
+use that on a Windows Server 2008 r2
+version we've just found that this
+version works the best and that you may
+
+347
+00:48:35.000 --> 00:48:42.000
+see issues using other versions of
+Windows Server with the Active Directory
+users and computers tool so keep that as
+
+348
+00:48:42.000 --> 00:48:50.000
+mine in mind as you're administrating
+your directory so next Windows
+PowerShell command let's are not
+
+349
+00:48:50.000 --> 00:48:59.000
+supported this is just a part of Samba
+they don't have the actual piece in
+Samba to communicate with this schema
+
+350
+00:48:59.000 --> 00:49:09.000
+extensions and Samba are not supported
+domain forests and trusts also ssam bar
+not supported and using simple ad you
+
+351
+00:49:09.000 --> 00:49:16.000
+can only use two domain controllers and
+those are the domain controllers that we
+actually provision for you you won't be
+
+352
+00:49:16.000 --> 00:49:25.000
+able to domain join an instance and then
+promote it to be a domain controller for
+example so keep that in mind there is no
+
+353
+00:49:25.000 --> 00:49:33.000
+ldap s integration with simple ad today
+this is something we're looking at doing
+for the future but today this moment
+
+354
+00:49:33.000 --> 00:49:42.000
+does not is not enabled and mfa also
+does not work with simple ad while it
+doesn't work with ad connector and works
+
+355
+00:49:42.000 --> 00:49:49.000
+great there this is not available for
+the simple a deed directory engine so a
+couple things to keep in mind with a
+
+356
+00:49:49.000 --> 00:49:57.000
+t-connector as well
+first of all a t-connector is just a
+federation mechanism to AWS it simply
+
+357
+00:49:57.000 --> 00:50:03.000
+federates Kerberos and LDAP requests
+back to your Active Directory for
+integration with some of these
+
+358
+00:50:03.000 --> 00:50:12.000
+applications and services and it's just
+a proxy no information is cached at all
+no information is stored with those
+
+359
+00:50:12.000 --> 00:50:23.000
+those logins in AWS is proxied over the
+network tier on premise Active Directory
+um an ad connector is not a secret way
+
+360
+00:50:23.000 --> 00:50:29.000
+around your firewall to get it working
+you'll still need to setup a VPN
+connection you'll need to open the ports
+
+361
+00:50:29.000 --> 00:50:42.000
+for DNS and kerberos and LDAP so there's
+no like secret way around your firewall
+um additionally the availability of a
+
+362
+00:50:42.000 --> 00:50:51.000
+t-connector is highly tied to the
+availability of your networking it's
+that includes your VPN connection as
+
+363
+00:50:51.000 --> 00:50:58.000
+well as your network in your on-premise
+environment so if your VPN connection
+were to go down or you did have
+
+364
+00:50:58.000 --> 00:51:06.000
+networking issues a t-connector would
+not be able to continue to proxy those
+authentication requests one way that we
+
+365
+00:51:06.000 --> 00:51:13.000
+recommend that could mitigate this if
+you're able to setup a domain controller
+inside of your VPC in that way if there
+
+366
+00:51:13.000 --> 00:51:20.000
+are networking issues your VPN goes down
+a t-connector will continue to
+authenticate against that local domain
+
+367
+00:51:20.000 --> 00:51:33.000
+controller there so a few other things
+here directory service is enabled in the
+AWS sdk and CLI tools so you can create
+
+368
+00:51:33.000 --> 00:51:42.000
+and configure a directory via API all
+those API calls you make are logged and
+cloud trail and we just announced this
+
+369
+00:51:42.000 --> 00:51:48.000
+last week you can also use cloud
+formation templates to launch a simple
+ad directory it doesn't work for a
+
+370
+00:51:48.000 --> 00:51:56.000
+t-connector directories yet but it does
+work for simple ad and so this is an
+easy way to get setup I'm creating a new
+
+371
+00:51:56.000 --> 00:52:03.000
+directory and configuring it if you want
+to add users or groups are actually
+administrate the directory data you want
+
+372
+00:52:03.000 --> 00:52:09.000
+to demain join an instant
+use a tool like Active Directory users
+and computers we also have a blog post
+
+373
+00:52:09.000 --> 00:52:16.000
+we've written about how to use some
+other command line tools to use with
+simple ad and that's on the AWS security
+
+374
+00:52:16.000 --> 00:52:23.000
+blog and you can look that up there so
+i'm going to show you real quick how
+easy it is to create a directory with
+
+375
+00:52:23.000 --> 00:52:33.000
+AWS CLI so let me get my cheat sheet up
+here i'm going to launch a normal
+windows command prompt i've gone ahead
+
+376
+00:52:33.000 --> 00:52:41.000
+of time and i've installed the AWS CLI
+tools and i've added my access keys here
+so i have set this up ahead of time but
+
+377
+00:52:41.000 --> 00:52:49.000
+i'll make a quick command here aw SDS
+help and so this will show the actual
+api's that are available for directory
+
+378
+00:52:49.000 --> 00:52:56.000
+service there's a list here and i'm
+going to go ahead and run this create
+directory command and we'll look at what
+
+379
+00:52:56.000 --> 00:53:05.000
+this looks like real quick so we'll just
+give it a name will call it sunday doubt
+my directory will give it a password a
+
+380
+00:53:05.000 --> 00:53:10.000
+size and the region and the VPC and
+subnets you want to set it into that
+these are the same properties that we
+
+381
+00:53:10.000 --> 00:53:21.000
+entered into the console earlier so i
+will go ahead and i will pop this in
+here and it will take just a second and
+
+382
+00:53:21.000 --> 00:53:32.000
+you can see it just took one second to
+create a new directory and if we pop
+back over here into the console you'll
+
+383
+00:53:32.000 --> 00:53:40.000
+be able to see that our sunday directory
+is now creating so super easy to use
+this with the CLI tools or SDKs to set
+
+384
+00:53:40.000 --> 00:53:47.000
+up a new directory this could be a great
+case to use for example with Deb test
+scenarios where you need a directory as
+
+385
+00:53:47.000 --> 00:53:57.000
+part of your automated testing so no
+matter where you're at in the world
+today you can use AWS directory service
+
+386
+00:53:57.000 --> 00:54:07.000
+we're operating in six different AWS
+regions us west u.s. East the EU Dublin
+and then Singapore Sydney in Tokyo we
+
+387
+00:54:07.000 --> 00:54:15.000
+have plans to expand to additional
+regions so keep an eye on the directory
+service information online as we expand
+
+388
+00:54:15.000 --> 00:54:25.000
+to those additional regions
+as well finally go ahead and get started
+today you can visit our website to learn
+
+389
+00:54:25.000 --> 00:54:31.000
+more information about directory service
+I've covered a lot of it here but
+there's even more information online we
+
+390
+00:54:31.000 --> 00:54:43.000
+do offer a 30 day free trial for small
+directories so you should be able to get
+started quickly and easily so thank you
+
+391
+00:54:43.000 --> 00:54:48.000
+very much that's all we have today so
+please remember to complete your
+evaluations we'd love any feedback you'd
+
+392
+00:54:48.000 --> 00:54:56.000
+have about the session and I'll be here
+to take questions off the stage where
+you can meet me in the security booth
+later on today if you have additional
+questions so thank you very much

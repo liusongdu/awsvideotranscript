@@ -1,0 +1,1371 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:05.000
+hope you everyone had a great conference
+I hope there ended on a good note for
+you so we're going to talk about
+
+2
+00:00:05.000 --> 00:00:12.000
+consolidating DNS data in the cloud with
+amazon route 53 I'm Li Zhen I'm a dev
+manager for the service part of edge
+
+3
+00:00:12.000 --> 00:00:21.000
+services great so let's jump right in
+we're going to talk about why you should
+do this initially and why it's the right
+
+4
+00:00:21.000 --> 00:00:28.000
+time so really comes down to a lot of
+the same things about moving into the
+cloud cost cost is a big reason to
+
+5
+00:00:28.000 --> 00:00:35.000
+consolidate your DNS in the cloud
+running your own DNS servers could be
+expensive you have to operate them and
+
+6
+00:00:35.000 --> 00:00:41.000
+you have to run lots of them when you
+use route 53 we operate dozens of edge
+locations around the world and we charge
+
+7
+00:00:41.000 --> 00:00:48.000
+by the query and so you only pay for
+what you use it not going to have to pay
+a whole lot we're talk about forty cents
+
+8
+00:00:48.000 --> 00:00:57.000
+for every million queries simplicity you
+can manage all your stuff in route 53
+consolidating everything makes life a
+
+9
+00:00:57.000 --> 00:01:04.000
+whole lot easier you have a single view
+of all of your DNS you can have all your
+hosted zones in route 53 you can manage
+
+10
+00:01:04.000 --> 00:01:13.000
+all your DNS data in one place and you
+can manage it all via our easy-to-use
+API hopefully most of the people in this
+
+11
+00:01:13.000 --> 00:01:20.000
+room or in the most of this so I'm going
+to keep going pretty quickly today we'll
+be covering basic DNS use cases so
+
+12
+00:01:20.000 --> 00:01:28.000
+really how to migrate the more simple
+stuff and how to consolidate all of that
+within route 53 and the ration talk a
+
+13
+00:01:28.000 --> 00:01:35.000
+little bit a lot about advanced use
+cases with private DNS and some of the
+cool things you can do in combining your
+
+14
+00:01:35.000 --> 00:01:43.000
+existing architectures with private DNS
+so the diagram we're really going to be
+looking at is something like this where
+
+15
+00:01:43.000 --> 00:01:52.000
+you may have example.com whatever domain
+you or set of domains you currently own
+you may run a public dns server and that
+
+16
+00:01:52.000 --> 00:02:01.000
+public dns server may be serving your
+dns on behalf of your domains out to the
+general internet you might have some
+
+17
+00:02:01.000 --> 00:02:07.000
+third-party monitoring you might have
+some things looking at whether your
+servers are healthy or not checking to
+
+18
+00:02:07.000 --> 00:02:13.000
+see if Layton sees are good whether or
+not things are actually running in your
+own data centers you might have your own
+
+19
+00:02:13.000 --> 00:02:19.000
+just monitoring as well Plus maybe even
+some more internal dns servers to serve
+dns within your corporate network for
+
+20
+00:02:19.000 --> 00:02:27.000
+example we're going to talk about moving
+all of that into the cloud and so we'll
+be doing that with route 53 public zones
+
+21
+00:02:27.000 --> 00:02:37.000
+route 53 health checks and route 50 free
+private zones so where do we start well
+we can start by bulk transferring all
+
+22
+00:02:37.000 --> 00:02:44.000
+the domains that you currently manage
+into route 53 and that might seem like a
+pretty daunting task so we're going to
+
+23
+00:02:44.000 --> 00:02:55.000
+do it step-by-step the first step is to
+export DNS into route 53 what this means
+is taking the DNS that you currently
+
+24
+00:02:55.000 --> 00:03:04.000
+manage and having the way that those
+records are served and actually having
+route 53 serve them on your behalf the
+
+25
+00:03:04.000 --> 00:03:11.000
+next step is to actually delegate
+authority to route 53 and what that
+means is by delegating authority when
+
+26
+00:03:11.000 --> 00:03:17.000
+other resolvers on the internet are
+attempting to do dns resolution they
+will contact route 53 instead of the
+
+27
+00:03:17.000 --> 00:03:25.000
+existing DNS servers that you use and
+the last step is the transfer domains to
+wrap up mp3 so in case you didn't know
+
+28
+00:03:25.000 --> 00:03:32.000
+route 53 actually offers domain name
+registration you can go and buy or
+transfer domains into route 53 so you
+
+29
+00:03:32.000 --> 00:03:38.000
+can go to route 53 and you can search
+for you know my new domain com and buy
+it or you can transfer an existing
+
+30
+00:03:38.000 --> 00:03:43.000
+domain into route 53 and here we're
+going to talk about both transferring
+all your domains into R alpha p3 and
+
+31
+00:03:43.000 --> 00:03:51.000
+actually you'll notice that the order
+here really matters it really matters
+for availability so you could do it the
+
+32
+00:03:51.000 --> 00:03:58.000
+other way you could first transfer the
+domains and then export and delegate the
+authority to route 53 we don't recommend
+
+33
+00:03:58.000 --> 00:04:05.000
+doing that the reason for doing this in
+this order is this guarantees that you
+first have route 53 serving your records
+
+34
+00:04:05.000 --> 00:04:12.000
+before you actually transfer in some
+cases if you transfer first the
+transferring registrar may decide to if
+
+35
+00:04:12.000 --> 00:04:21.000
+you for example have your DNS coupled
+with your registration you may actually
+lose dns resolution as part of the
+
+36
+00:04:21.000 --> 00:04:26.000
+transfer process if you transfer first
+depending on the registrar you're using
+so some registrar's actually when you
+
+37
+00:04:26.000 --> 00:04:32.000
+hansford domain out decide to stop
+serving the DNS records on your behalf
+once you do that so we highly recommend
+
+38
+00:04:32.000 --> 00:04:37.000
+going in this order by making sure your
+DNS records are being served by ralphs
+it would be first before you transfer
+
+39
+00:04:37.000 --> 00:04:45.000
+the domains over so how do we export the
+DNS this is highly dependent on your
+existing DNS provider will talk through
+
+40
+00:04:45.000 --> 00:04:54.000
+two examples first one is if you use
+someone like go den for your DMS godaddy
+if you go to the website and you log
+
+41
+00:04:54.000 --> 00:05:01.000
+into your management console there's
+actually a DNS zone file tab and there's
+an export option you will select that
+
+42
+00:05:01.000 --> 00:05:07.000
+and then actually download the zone file
+and then you would download a zone file
+for each of the zones or each of the
+
+43
+00:05:07.000 --> 00:05:14.000
+domains that you want to transfer or if
+you're running your own bind server for
+example typically you would find this in
+
+44
+00:05:14.000 --> 00:05:21.000
+wherever you have your name D
+configuration so if you're using like a
+shuru jail or something like that you
+
+45
+00:05:21.000 --> 00:05:29.000
+might find it in VAR name d and you
+would have your zone files hosted in
+there you then use CLI 53 it's an open
+
+46
+00:05:29.000 --> 00:05:40.000
+source command lines skip tool to import
+the zone into route 53 so here's a
+pretty uneasy example you can see we
+
+47
+00:05:40.000 --> 00:05:48.000
+really just iterate through each zone
+file and you can really just with two
+commands create the zone and then import
+
+48
+00:05:48.000 --> 00:05:54.000
+that zone file into relative to three
+and so what this will do is it will
+create a hosted zone in route 53 and
+
+49
+00:05:54.000 --> 00:06:01.000
+then shove all the records from that
+zone file into that hosted zone and then
+now that zone is ready to serve the
+
+50
+00:06:01.000 --> 00:06:09.000
+records on your behalf at that point
+you'll want to delegate the authority to
+route 53 so this is the step I mentioned
+
+51
+00:06:09.000 --> 00:06:16.000
+we're now name servers or resolvers
+rather on the internet will be able to
+contact route 53 in order to do domain
+
+52
+00:06:16.000 --> 00:06:22.000
+name resolution for you so this step is
+registrar dependent here's an example if
+you use namecheap for example as your
+
+53
+00:06:22.000 --> 00:06:31.000
+registrar they have an API you would be
+able to go to the API provide your API
+details and then you would issue this
+
+54
+00:06:31.000 --> 00:06:39.000
+command to set the dns servers to the
+delegation set so you can see here we
+have four name servers listed NS 425 NS
+
+55
+00:06:39.000 --> 00:06:44.000
+790
+3 etc those nameservers come with each
+hosted zones so when you create a hosted
+
+56
+00:06:44.000 --> 00:06:50.000
+zone in route 53 you get a unique set of
+name servers and so you would do this
+for each of the domains you were
+
+57
+00:06:50.000 --> 00:06:58.000
+transferring again you can imagine how
+you could easily script something like
+this you will want to check that you're
+
+58
+00:06:58.000 --> 00:07:06.000
+actually delegated so simple example
+would be to do a dig trace so we have an
+example up here showing how you can this
+
+59
+00:07:06.000 --> 00:07:13.000
+is a concatenated output so you can see
+remove some of the less interesting
+details but first we have the roots name
+
+60
+00:07:13.000 --> 00:07:19.000
+servers followed by the dot-com name
+servers then finally followed by the
+name servers for AWS architecture blog
+
+61
+00:07:19.000 --> 00:07:28.000
+com and you can see that for those
+nameservers those are actually delegated
+to ralphs 53s name servers after you've
+
+62
+00:07:28.000 --> 00:07:33.000
+done that you'll want to wait for the
+TTLs the time to live on those records
+to expire so here you can see that the
+
+63
+00:07:33.000 --> 00:07:44.000
+time to live is 170 2,800 seconds which
+is two days and so will want to wait for
+those two days before we continue doing
+
+64
+00:07:44.000 --> 00:07:51.000
+anything else so after those two days
+all the resolvers around the world
+should hopefully have by that point
+
+65
+00:07:51.000 --> 00:07:59.000
+expire their caches and now see that
+route 53 is authoritative for this
+domain and at that point we can transfer
+
+66
+00:07:59.000 --> 00:08:06.000
+the domains again depending on who your
+domain name registrar is this is going
+to be depended on the Registrar you'll
+
+67
+00:08:06.000 --> 00:08:13.000
+want to unlock the domain so that it can
+be transferred here's another namecheap
+API example and then you'll want to
+
+68
+00:08:13.000 --> 00:08:19.000
+obtain the authorization codes for those
+domains so for example GoDaddy actually
+has a bulk download option you would go
+
+69
+00:08:19.000 --> 00:08:28.000
+into the console you can get all your
+domain codes of the authorization codes
+in bulk and then again we can script
+
+70
+00:08:28.000 --> 00:08:36.000
+this I have a ruby example up here using
+the AWS sdk you would use the WC SDK
+with the route 53 domains client and
+
+71
+00:08:36.000 --> 00:08:43.000
+here you can see we go through each of
+the off codes for each of the domains
+you can imagine having this auth code
+
+72
+00:08:43.000 --> 00:08:49.000
+CSV which might have your domain names
+and and the actual authorization codes
+and then here I've actually not shown
+
+73
+00:08:49.000 --> 00:08:55.000
+the full arguments as what you will need
+to do is you will actually include
+name plus the authorization code plus
+
+74
+00:08:55.000 --> 00:09:06.000
+all of your contact information /
+typical domain transfer configuration so
+that that takes care of the public zones
+
+75
+00:09:06.000 --> 00:09:13.000
+that's pretty simple so now you can
+imagine if we've done something along
+the lines of what I've dis outlined will
+
+76
+00:09:13.000 --> 00:09:21.000
+have transferred all the authority that
+route 53 route 53 will be serving all of
+our public dns records for example calm
+
+77
+00:09:21.000 --> 00:09:29.000
+and will have transferred all the domain
+name registration into route 53 days of
+service what about the the monitoring
+
+78
+00:09:29.000 --> 00:09:34.000
+part though so let's let's talk briefly
+about that so you can take advantage of
+AWS integration once you've actually
+
+79
+00:09:34.000 --> 00:09:41.000
+done this transfer one of the cool
+things you can take advantage of is
+alias alias is a specific record type
+
+80
+00:09:41.000 --> 00:09:50.000
+within route 53 that allows you to point
+your domain name apex at an elastic load
+balancer or cloud front distribution or
+
+81
+00:09:50.000 --> 00:09:57.000
+s3 website and so in a very simple way
+you can actually point the apex which
+you normally would have the cname which
+
+82
+00:09:57.000 --> 00:10:02.000
+you can't do but using taking advantage
+of alias you can actually you can
+actually do that and point that at those
+
+83
+00:10:02.000 --> 00:10:10.000
+resources you can also take advantage of
+route 53 s health checks in DNS failover
+recently in case you didn't know last
+
+84
+00:10:10.000 --> 00:10:15.000
+month we launched calculated health
+checks calculated health checks allow
+you to combine multiple health checks
+
+85
+00:10:15.000 --> 00:10:24.000
+into a single health check using and or
+or rules and you can actually also
+manually failover health checks using
+
+86
+00:10:24.000 --> 00:10:30.000
+calculated health checks as well so it's
+a very powerful tool both for DNS
+failover so in my previous top last year
+
+87
+00:10:30.000 --> 00:10:37.000
+I talked a lot about how you can take
+advantage of route 53 DNS failover to do
+all sorts of conditional flows and
+
+88
+00:10:37.000 --> 00:10:45.000
+things like that basically treating
+alias trees as a way of having a
+decision tree essentially or logic tree
+
+89
+00:10:45.000 --> 00:10:50.000
+within route 53 recordsets I encourage
+you to check out that talk from last
+year if you if you didn't catch it so
+
+90
+00:10:50.000 --> 00:10:57.000
+weak you can use DNS failover to really
+have really powerful ways to decide how
+to dynamically return different answers
+
+91
+00:10:57.000 --> 00:11:03.000
+based on the condition of your system
+and calculated health checks adds a
+whole new dimension to be able to do
+
+92
+00:11:03.000 --> 00:11:10.000
+that in addition it really helps provide
+replacement for any kind of monitoring
+solutions you might have in place today
+
+93
+00:11:10.000 --> 00:11:17.000
+so in addition to in addition to
+calculated health checks we also
+announced latency measurements as part
+
+94
+00:11:17.000 --> 00:11:23.000
+of health checks last month as well and
+so when you create a health check you
+can also get back latency measurements
+
+95
+00:11:23.000 --> 00:11:29.000
+against wherever and when you're
+checking and so those two things
+combined can really help you with with
+
+96
+00:11:29.000 --> 00:11:40.000
+all the monitoring for for an end point
+so now we've gotten the third-party
+external monitoring moved over I should
+
+97
+00:11:40.000 --> 00:11:45.000
+have mentioned also that rapid three
+actually checks your endpoint from
+multiple locations around the globe and
+
+98
+00:11:45.000 --> 00:11:52.000
+we've also been able to move the
+internal system monitoring over since we
+actually are able to monitor your
+
+99
+00:11:52.000 --> 00:11:59.000
+instances within the easy to as well so
+now let's talk about this last piece
+moving internal dns over that's actually
+
+100
+00:11:59.000 --> 00:12:09.000
+pretty simple too we can set a private
+dns so what private dns is is it's a way
+to create a private zone within your
+
+101
+00:12:09.000 --> 00:12:17.000
+virtual private cloud so within your VPC
+you can actually have a hosted zone that
+is only visible within that VPC this was
+
+102
+00:12:17.000 --> 00:12:24.000
+a future we announced last November and
+so you can see here I have a simple
+console example that shows creating a
+
+103
+00:12:24.000 --> 00:12:34.000
+domain name example.com tech and
+associating it with a specific VPC ID so
+from within that VPC example that integ
+
+104
+00:12:34.000 --> 00:12:42.000
+is now resolvable but only from within
+that VPC you can actually associate
+multiple V pcs to a zone and multiple
+
+105
+00:12:42.000 --> 00:12:52.000
+zones to a VPC and again if we want it
+to script this and make this really easy
+we can simply use Clive 53 to import all
+
+106
+00:12:52.000 --> 00:13:02.000
+our zone data from our existing internal
+dns systems into route 53 private dns
+alright so we're done right we moved
+
+107
+00:13:02.000 --> 00:13:10.000
+everything into route 53 and into the
+cloud we have our public zone being
+managed in route 53 we've managed to
+
+108
+00:13:10.000 --> 00:13:17.000
+move all of our monitoring solutions
+into the cloud and we also have even our
+private DNS data in the cloud as well
+
+109
+00:13:17.000 --> 00:13:26.000
+but not quite
+it's very possible in fact lots of
+customers we talked to have laptops or
+
+110
+00:13:26.000 --> 00:13:32.000
+clients sitting in their corporate
+networks or they still have various
+reasons to keep an on-premise data
+
+111
+00:13:32.000 --> 00:13:39.000
+center around so what do we do about
+that so let's talk about how you can
+actually take advantage of private DNS
+
+112
+00:13:39.000 --> 00:13:49.000
+in conjunction with an existing data
+center so in order to do that we have to
+talk a little bit about what it means to
+
+113
+00:13:49.000 --> 00:13:56.000
+use the with it the resolver within the
+VPC so within the VPC typically the
+resolver is going to sit at what we call
+
+114
+00:13:56.000 --> 00:14:05.000
+the gateway plus to address so for
+example if your VPC sub that is a 10 /
+16 then the 1000 to address is going to
+
+115
+00:14:05.000 --> 00:14:15.000
+be where all your DNS resolution happens
+by default the way private DNS works is
+you query that 1000 to address again in
+
+116
+00:14:15.000 --> 00:14:22.000
+the 10 / 16 example and private DNS
+combines both the resolver and the
+authority into one so this is kind of a
+
+117
+00:14:22.000 --> 00:14:30.000
+limitation where it means you can't use
+the 1000 to address as an authoritative
+server so some customers have wanted to
+
+118
+00:14:30.000 --> 00:14:37.000
+for example delegate to 1000 to that
+doesn't quite work because it actually
+acts as a resolver not as an
+
+119
+00:14:37.000 --> 00:14:45.000
+authoritative name server similarly the
+1000 to address is actually not
+addressable from outside of the VPC it's
+
+120
+00:14:45.000 --> 00:14:52.000
+kind of a magic address and so we'll
+talk about various ways in which you can
+work around that and finally delegation
+
+121
+00:14:52.000 --> 00:14:59.000
+back to other name servers via NS
+records within private DNS doesn't work
+either again because of the fact that
+
+122
+00:14:59.000 --> 00:15:06.000
+we've combined the resolver and
+authority in the way private DNS works
+so these are some limitations of the way
+
+123
+00:15:06.000 --> 00:15:12.000
+private DNS works within VPC today we're
+definitely aware of these limitations
+and are working toward making them
+
+124
+00:15:12.000 --> 00:15:19.000
+better but if you're not there are
+actually really cool things you can do
+to make everything work so we talked
+
+125
+00:15:19.000 --> 00:15:29.000
+about that so here of a diagram showing
+kind of an on-premise network again
+could be an existing data center or your
+
+126
+00:15:29.000 --> 00:15:37.000
+corporate network we have a query
+we have a resolver that the query is
+going to go to and then we would like
+
+127
+00:15:37.000 --> 00:15:43.000
+that query to be able to go through to
+route 53 private DNS in order to get
+some kind of answer so for example you
+
+128
+00:15:43.000 --> 00:15:50.000
+might imagine you might be running
+something in VPC that you want to be
+able to address and you want to be able
+
+129
+00:15:50.000 --> 00:15:57.000
+to actually get the answer for that it
+could be some kind of internal
+application server or whatever it is but
+
+130
+00:15:57.000 --> 00:16:03.000
+you need to be able to get to that
+address so what you want to happen have
+happened is you want this query for that
+
+131
+00:16:03.000 --> 00:16:11.000
+name to go to the resolver and from that
+resolver to go to the plus two resolver
+sitting in the VPC and for that to
+
+132
+00:16:11.000 --> 00:16:19.000
+actually ask route 53 is Authority okay
+well what's the answer to this name and
+for that query answer to travel all the
+
+133
+00:16:19.000 --> 00:16:26.000
+way back to the original client who want
+to know but as I mentioned that doesn't
+work because the path from the resolver
+
+134
+00:16:26.000 --> 00:16:38.000
+to the plus two isn't going to exactly
+fly how do we fix this let's take a
+forwarder in between and this actually
+
+135
+00:16:38.000 --> 00:16:44.000
+makes everything work so we can actually
+have the query go to the resolver which
+goes to the floor der sitting in your
+
+136
+00:16:44.000 --> 00:16:51.000
+VPC this DNS border will then for the
+query on to the plus to address which is
+now visible since the border is sitting
+
+137
+00:16:51.000 --> 00:17:05.000
+within the VPC and then the query will
+then go on to query the private zone and
+then the answer will flow back
+
+138
+00:17:05.000 --> 00:17:10.000
+we'll talk about how to set up this
+border now so a super easy way to get
+this forward or set up is to just run
+
+139
+00:17:10.000 --> 00:17:18.000
+unbound as the border so you could
+imagine spinning up an easy to instance
+installing unbound and then configuring
+
+140
+00:17:18.000 --> 00:17:24.000
+unbalanced so here we have a sample
+unbound configuration this sample
+configuration essentially tells unbound
+
+141
+00:17:24.000 --> 00:17:34.000
+to listen on everything and answer all
+queries in the local subnet we reload
+the on back configuration and voila you
+
+142
+00:17:34.000 --> 00:17:42.000
+have a forwarder in your VPC that is
+able to allow your your on-premises
+network to to be able to create route 53
+
+143
+00:17:42.000 --> 00:17:52.000
+VP private DNS answers oh yeah one last
+configuration you have to actually add
+the forward zone so the here we actually
+
+144
+00:17:52.000 --> 00:18:01.000
+have named as the route and this Ford's
+the the this is setting it up to forward
+all the queries to the the plus to
+
+145
+00:18:01.000 --> 00:18:08.000
+address that i mentioned earlier you
+could also imagine changing the name
+here from the root to some other domain
+
+146
+00:18:08.000 --> 00:18:15.000
+so for example if you only want to Ford
+certain certain queries to to the to the
+plus to address you could do that as
+
+147
+00:18:15.000 --> 00:18:23.000
+well another option is actually to set
+up AWS directory service as the
+forwarder and this is actually the
+
+148
+00:18:23.000 --> 00:18:30.000
+recommended method because it's a fully
+managed on your behalf and be if you
+want to utilize active directory within
+
+149
+00:18:30.000 --> 00:18:36.000
+your virtual private cloud you actually
+get to take advantage of that as well
+and this is actually really easy to do
+
+150
+00:18:36.000 --> 00:18:45.000
+so if you've never played with ablest
+directory service you can go into the
+console and if you pop open the AWS
+
+151
+00:18:45.000 --> 00:18:53.000
+directory service part of the console
+there's a button that says create simple
+ad and so we will create a simple active
+
+152
+00:18:53.000 --> 00:19:00.000
+directory within our VPC typically the
+way this gets configured is you will be
+asked to have two subnets within your BP
+
+153
+00:19:00.000 --> 00:19:07.000
+see those subnets are where the active
+directory controllers will be placed and
+so here you can see we have to DNS
+
+154
+00:19:07.000 --> 00:19:18.000
+addresses for our directory in this
+example the 1001 114 and 1002 135
+and if we hop on to a host within that
+
+155
+00:19:18.000 --> 00:19:26.000
+BBC you'd see something like this for
+the resolve calm so for people who
+aren't as familiar resolv.conf specifies
+
+156
+00:19:26.000 --> 00:19:31.000
+how a host is going to do its dns
+resolution and so here you can actually
+see that the nameservers is pointing to
+
+157
+00:19:31.000 --> 00:19:42.000
+are those two name servers that were
+configured as part of creating our
+symbol directory so just to show a quick
+
+158
+00:19:42.000 --> 00:19:53.000
+example if we this is this is this is a
+example of a private hosted zone in
+route 53 called cloud da Zhen and we
+
+159
+00:19:53.000 --> 00:20:02.000
+have an example record here example that
+clouds and it's a txt record says hello
+world and so if we go to the instance
+
+160
+00:20:02.000 --> 00:20:09.000
+running in that VPC and we were to dig
+for example cloud odds n we would
+actually get back that answer and you
+
+161
+00:20:09.000 --> 00:20:15.000
+can see if you look if you take note of
+the server replying on on our behalf
+it's actually the Active Directory
+
+162
+00:20:15.000 --> 00:20:23.000
+server so it's it's the it's the 0 1
+1001 114 dress which is the active
+directory name server that's actually
+
+163
+00:20:23.000 --> 00:20:35.000
+answering on behalf so the way we
+recommend customers configure this is so
+you have active directory running within
+
+164
+00:20:35.000 --> 00:20:42.000
+your VPC and we actually may actually
+suggest managing all non active
+directory names in private DNS so when
+
+165
+00:20:42.000 --> 00:20:46.000
+you were an active directory you
+actually get a DNS server as part of
+active directory as well and you could
+
+166
+00:20:46.000 --> 00:20:54.000
+manage a lot of DNS with an active
+directory however we recommend managing
+all the non hostnames everything that's
+
+167
+00:20:54.000 --> 00:20:59.000
+not part of your Active Directory
+installation in private DNS for two
+reasons one it's going to fall through
+
+168
+00:20:59.000 --> 00:21:07.000
+so for example if if the name isn't in
+Active Directory it's going to continue
+to go to route 53 so the reason so what
+
+169
+00:21:07.000 --> 00:21:14.000
+what you can then do is use the API
+endpoint in route 53 as opposed to
+having to figure out how to script
+
+170
+00:21:14.000 --> 00:21:21.000
+against active directory within your VPC
+and having a less accessible endpoint
+the other reason is zones can cross
+
+171
+00:21:21.000 --> 00:21:27.000
+regions with private DNS so as I
+mentioned earlier you can actually have
+a single zone associated with multiple
+
+172
+00:21:27.000 --> 00:21:32.000
+VP sees those v pcs don't even need to
+be in the same where you
+and so this allows you to have a single
+
+173
+00:21:32.000 --> 00:21:39.000
+view across all your availability zones
+all your regions all your BBC's and
+manage your all in one place whereas if
+
+174
+00:21:39.000 --> 00:21:45.000
+you were to do this in Active Directory
+that would it be a regional view
+specific to that VPC where the Active
+
+175
+00:21:45.000 --> 00:21:56.000
+Directory lives so going back to the
+diagram we have something that looks
+like this right we have a query going to
+
+176
+00:21:56.000 --> 00:22:03.000
+a resolver going to the forwarder to the
+plus two and then the answer coming all
+the way back through and so so far we've
+
+177
+00:22:03.000 --> 00:22:12.000
+configured this four-door orange box how
+do we configure the box that's the
+resolver to make sure that it talks to
+
+178
+00:22:12.000 --> 00:22:20.000
+the forwarder that is also very easy
+I'll show two examples one for bind and
+one for unbound so assuming you run
+
+179
+00:22:20.000 --> 00:22:30.000
+binder unbound in your corporate data
+center or in your office or wherever it
+is for bind you would simply have those
+
+180
+00:22:30.000 --> 00:22:38.000
+too forward or set up and that's the
+first example on the top of the slide so
+there you would have all the queries
+
+181
+00:22:38.000 --> 00:22:44.000
+from your on-premise data center go
+through and and hit those two name
+servers that are in the VPC so this this
+
+182
+00:22:44.000 --> 00:22:51.000
+is assuming by the way that your vbc and
+your on-premise or corporate data center
+or whatever it is is VPN together and
+
+183
+00:22:51.000 --> 00:22:58.000
+possibly direct connected the second
+example on the bottom half the slide
+shows an example where you have a single
+
+184
+00:22:58.000 --> 00:23:05.000
+zone that you were going to afford so
+here maybe you have you only want to
+forward craze for that specific zone
+
+185
+00:23:05.000 --> 00:23:17.000
+into the DPC to get resolved
+similarly you can do the same thing with
+unbound the the top half of the slide is
+
+186
+00:23:17.000 --> 00:23:24.000
+also if you wanted to Ford everything
+through and the bottom half of the slide
+is if you only want the Ford that that
+
+187
+00:23:24.000 --> 00:23:36.000
+one single zone another thing I
+mentioned earlier is that it's not
+really possible to sub delegate a zone
+
+188
+00:23:36.000 --> 00:23:42.000
+or it's not possible to have NS records
+within your private zone that end up
+being respected and this is as I
+
+189
+00:23:42.000 --> 00:23:48.000
+mentioned due to the reason to the fact
+that we have the resolver and the
+authority combined so kind of that
+
+190
+00:23:48.000 --> 00:23:56.000
+right-hand side of the diagram those
+really are one unit in the way that it
+looks within the bpc and so what we
+
+191
+00:23:56.000 --> 00:24:02.000
+recommend here is to flatten your zone
+instead of sub delegating what this
+means is if you have a sub domain say
+
+192
+00:24:02.000 --> 00:24:09.000
+sub Club does that in this example
+instead of creating another private
+hosted zone called sub clouds n simply
+
+193
+00:24:09.000 --> 00:24:17.000
+manage all the sub domains as part of
+the existing zone instead of creating
+additional zones so this this is this is
+
+194
+00:24:17.000 --> 00:24:28.000
+a simple technique to ensure that
+everything gets result cleanly and
+easily
+
+195
+00:24:28.000 --> 00:24:35.000
+another use case that customers often
+run into is that the on-premise the
+on-premises resolver or DNS
+
+196
+00:24:35.000 --> 00:24:42.000
+infrastructure contains data that's not
+in private DNS there's actually multiple
+ways to deal with this one way would be
+
+197
+00:24:42.000 --> 00:24:50.000
+to loop the query through the
+on-premises system another way we would
+be to copy the data into private DNS in
+
+198
+00:24:50.000 --> 00:24:55.000
+a third way which we won't really cover
+today is to set up conditional
+forwarding in Active Directory this last
+
+199
+00:24:55.000 --> 00:25:00.000
+method is assuming you're running your
+own Active Directory server and you have
+the ability to actually set of
+
+200
+00:25:00.000 --> 00:25:10.000
+conditional forwarding so we'll talk
+about the first two so this is going to
+be a little convoluted looking but I'm
+
+201
+00:25:10.000 --> 00:25:13.000
+sorry this this first slide we're going
+to talk about this is kind of what it
+would look like from this is the
+
+202
+00:25:13.000 --> 00:25:21.000
+existing view so this is if the query is
+coming from on-premise this is this this
+all works and here what what if the data
+
+203
+00:25:21.000 --> 00:25:29.000
+is actually in on the other side so you
+have a query originating within the VPC
+but the data is sitting and the
+
+204
+00:25:29.000 --> 00:25:34.000
+on-premise network how do we get how do
+we get that data back and so we're gonna
+do something a little bit round about
+
+205
+00:25:34.000 --> 00:25:40.000
+when we by looping the query through the
+on-premise so we actually what we would
+do is have the query go back into the
+
+206
+00:25:40.000 --> 00:25:50.000
+on-premise infrastructure instead of
+asking the be local DNS and then having
+that continue through to the forwarder
+
+207
+00:25:50.000 --> 00:25:58.000
+to the plus 2 and to route 53 so here in
+this case if the local resolver already
+has the answer it's just going to answer
+
+208
+00:25:58.000 --> 00:26:10.000
+and return back to the query if not it's
+going to continue forwarding through and
+forward into the VPC and just as before
+
+209
+00:26:10.000 --> 00:26:28.000
+clicker is not working just as before
+the query will come back through so in
+the first thing in the first case that I
+
+210
+00:26:28.000 --> 00:26:33.000
+mentioned here if the query is
+originating from within the VPC and the
+data is in the on-premise network by
+
+211
+00:26:33.000 --> 00:26:39.000
+routing it kind of back through we would
+be able to ensure that anything that's
+already in the on-premise network will
+
+212
+00:26:39.000 --> 00:26:46.000
+get answered and if it's not it's going
+to continue all the way through the way
+you would configure this is to as we
+
+213
+00:26:46.000 --> 00:26:52.000
+talked about in the result com have have
+the hosts actually searched the name
+server for the on-premise resolver first
+
+214
+00:26:52.000 --> 00:27:01.000
+before it searches the forwarders within
+within the VPC the other option would be
+to copy the data into private DNS and so
+
+215
+00:27:01.000 --> 00:27:11.000
+pretty easy way to do this is to use a
+tool called route 53 d or you could use
+high 53 so we talked about Clyde 53 as
+
+216
+00:27:11.000 --> 00:27:18.000
+an import mechanism earlier route 53 d
+if you go online it's an open source
+tool that allows you to essentially
+
+217
+00:27:18.000 --> 00:27:27.000
+transfer zones into route 53 and I have
+a sample configuration here out of route
+53 d it's fairly simple you would you
+
+218
+00:27:27.000 --> 00:27:33.000
+would essentially specify the domain
+name that you care about and the
+corresponding zone ID and route 53 run
+
+219
+00:27:33.000 --> 00:27:41.000
+the route 53 demon on your on your DNS
+servers and that will keep the data
+synced between your DNS server and route
+
+220
+00:27:41.000 --> 00:27:50.000
+53 and so by doing this you'll actually
+just simply have the data sitting in the
+route 53 Authority and you can have the
+
+221
+00:27:50.000 --> 00:27:57.000
+query go directly to the plus 2 resolver
+from from your client query the
+authority and have the day to come right
+
+222
+00:27:57.000 --> 00:28:04.000
+back and here we build it you would get
+back the answer for whatever on-premise
+data that you you actually care about
+
+223
+00:28:04.000 --> 00:28:14.000
+right actually zip through this pretty
+quickly so in summary consolidating your
+DNS infrastructure in the cloud is is
+
+224
+00:28:14.000 --> 00:28:22.000
+easy and it simplifies management all
+that infrastructure we're able to manage
+both your private data and public data
+
+225
+00:28:22.000 --> 00:28:30.000
+all in one place
+there are a number of ways to combine
+private DNS with an on-premise or
+
+226
+00:28:30.000 --> 00:28:36.000
+existing solution we talk through how
+you might be able to copy data back and
+forth or how you label the route queries
+
+227
+00:28:36.000 --> 00:28:44.000
+throughout the data center architectures
+and where some of the limitations around
+the plus to address and are actively
+
+228
+00:28:44.000 --> 00:28:54.000
+working toward making that situation a
+whole lot better please complete your
+evaluations if you have a chance thanks
+for your time I hope everyone had a
+great reinvent

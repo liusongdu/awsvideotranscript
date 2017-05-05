@@ -1,0 +1,2145 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:06.000
+thank you very much everybody for coming
+today my name is Dougal Ballentine I'm a
+solutions architect with amazon web
+
+2
+00:00:06.000 --> 00:00:11.000
+services I work in our high-performance
+computing group means we focus on you
+know customers are trying to build
+
+3
+00:00:11.000 --> 00:00:16.000
+really cool interesting projects that
+have a lot of high performance computing
+each storage needs and network needs EBS
+
+4
+00:00:16.000 --> 00:00:20.000
+is one of my favorite products I spent a
+lot of time playing with EBS trying to
+get the most performance out of it for
+
+5
+00:00:20.000 --> 00:00:29.000
+our customers and so it's my pleasure
+today to do the EBS deep dive we're
+going to be covering an overview of EBS
+
+6
+00:00:29.000 --> 00:00:35.000
+we're going to go into all of the
+components of EBS and how they relate to
+you as customers using them we're going
+
+7
+00:00:35.000 --> 00:00:41.000
+to cover volumes snapshots best
+practices around volumes and snapshots
+we'll talk about encryption one of the
+
+8
+00:00:41.000 --> 00:00:46.000
+great capabilities of EBS and then we'll
+make time for Q&A we'll hopefully try
+and make time for five to ten minutes of
+
+9
+00:00:46.000 --> 00:00:59.000
+Q&A at the end so let's start with the
+overview of VBS 0 for most builders AWS
+is getting and go and that applies to
+
+10
+00:00:59.000 --> 00:01:07.000
+EBS as well you can typically just
+launched an instance attach an EBS
+volume maybe 20 gigabytes 50 gigabytes
+
+11
+00:01:07.000 --> 00:01:12.000
+store your data on that volume and
+you'll never need to worry about what
+you're doing with it you'll typically
+
+12
+00:01:12.000 --> 00:01:18.000
+get the most performance out of it due
+to things like general-purpose volumes
+where we have burst capability and you
+
+13
+00:01:18.000 --> 00:01:23.000
+don't need to worry about any other
+settings around you know queue depth or
+the capabilities of the volume itself
+
+14
+00:01:23.000 --> 00:01:29.000
+but there are times where you need to
+know more about EBS it helps when you're
+building something when you're truly
+
+15
+00:01:29.000 --> 00:01:35.000
+architecting a solution on top of AWS
+but you understand some of the reasons
+you might choose one volume type over
+
+16
+00:01:35.000 --> 00:01:40.000
+another or understanding how to make
+sure snapshots are the right components
+you're using or how to make sure
+
+17
+00:01:40.000 --> 00:01:48.000
+snapshots are being taken in the correct
+way so you get the most out of the
+service so a normal hard drive i sadly
+
+18
+00:01:48.000 --> 00:01:53.000
+have committed most of these things to
+memory over the years because i used to
+build storage arrays and you need to
+
+19
+00:01:53.000 --> 00:02:00.000
+work out the rotational speed or the
+throughput volumes or the I ops of a
+volume if you get it wrong a raid5 array
+
+20
+00:02:00.000 --> 00:02:04.000
+is very poor performing and next thing
+you know your people asking you why
+their application doesn't perform
+
+21
+00:02:04.000 --> 00:02:12.000
+fortunately the EBS team knows an awful
+lot about hard drives in fact they take
+away all of the undifferentiated heavy
+
+22
+00:02:12.000 --> 00:02:16.000
+lifting
+hang out the hardware and making sure
+the hardware is looked after and they
+
+23
+00:02:16.000 --> 00:02:21.000
+expose that as a service something you
+can then consumed with some very simple
+parameters to make it possible to have
+
+24
+00:02:21.000 --> 00:02:29.000
+some different configurations on top of
+your systems that being said it's very
+important to understand EBS is not just
+
+25
+00:02:29.000 --> 00:02:37.000
+hard drives EBS is a service it's
+fundamentally more than just a drive
+attached to your ec2 instance so it's
+
+26
+00:02:37.000 --> 00:02:44.000
+network block storage as a service and
+I'm going to reiterate this several
+times as a service this enables us to do
+
+27
+00:02:44.000 --> 00:02:51.000
+things with EBS you just can't do with a
+block device attached to a server
+attached to your instance it's designed
+
+28
+00:02:51.000 --> 00:02:58.000
+for five nines of availability so it's
+designed to be available a lot of the
+time that's a really high availability
+
+29
+00:02:58.000 --> 00:03:06.000
+number EBS volumes attached directly to
+ec2 instances in the same availability
+zone so when you launch an instance into
+
+30
+00:03:06.000 --> 00:03:14.000
+let's say for example Us East 1a you
+would create an EBS volume in the same
+availability zone or AZ and then you can
+
+31
+00:03:14.000 --> 00:03:21.000
+attach it to the same instance that you
+just launched it also has the capability
+to do snapshots point in time copy and
+
+32
+00:03:21.000 --> 00:03:29.000
+also incremental copies thereafter of
+your data which is stored in s3 and that
+data once it's stored in s3 gets the
+
+33
+00:03:29.000 --> 00:03:36.000
+same durability benefits the s3 provides
+customers so 11-9 to durability and then
+you can do things with the snapshots
+
+34
+00:03:36.000 --> 00:03:42.000
+like create new volumes in another
+availability zone or even copy volumes
+across to another region or share the
+
+35
+00:03:42.000 --> 00:03:49.000
+snapshot with another account if you
+want to move data between one account in
+another account a little bit more about
+
+36
+00:03:49.000 --> 00:03:58.000
+EBS too just to reiterate it's a service
+it's not easy to its independent of ec2
+its service that you attach to an ec2
+
+37
+00:03:58.000 --> 00:04:05.000
+instance it operates inside the ec2
+world if you will but it's not easy to
+it's a service team on its own and their
+
+38
+00:04:05.000 --> 00:04:13.000
+goals are set for the EBS service so we
+talked about goals it has regional and
+AZ availability goals all EBS volumes
+
+39
+00:04:13.000 --> 00:04:20.000
+and that means all the volume types
+magnetic and SSD based are designed for
+five nines of availability and just to
+
+40
+00:04:20.000 --> 00:04:25.000
+give some numbers around the scale of
+the platform today there's over two
+million volumes create
+
+41
+00:04:25.000 --> 00:04:31.000
+per day and that that's a staggering
+amount of volume create and when you
+realize what you can do with that you
+
+42
+00:04:31.000 --> 00:04:37.000
+could just create a one terabyte volume
+or a 16 tire by volume and within a
+couple of seconds have it attached it's
+
+43
+00:04:37.000 --> 00:04:44.000
+pretty phenomenal so a few definitions
+before we get too far into the
+presentation I think it's important that
+
+44
+00:04:44.000 --> 00:04:49.000
+we set some definitions everyone knows
+we're talking about the same thing for
+the EBS service so I ops input and
+
+45
+00:04:49.000 --> 00:04:54.000
+output operations per second it's
+typically a number and this is more
+associated with things like provisioned
+
+46
+00:04:54.000 --> 00:05:01.000
+I ops where you might choose to have a
+number of provision I ops for your
+volume 8,000 for example throughput the
+
+47
+00:05:01.000 --> 00:05:06.000
+read and write rate to storage and this
+is something that's typically discussed
+when we talk about what a volume is
+
+48
+00:05:06.000 --> 00:05:13.000
+capable of providing so for example 320
+megabytes a second for a provision
+tie-ups volume or what the instance is
+
+49
+00:05:13.000 --> 00:05:19.000
+capable of achieving instances have
+different capabilities latency the
+amount of time it takes for a request to
+
+50
+00:05:19.000 --> 00:05:24.000
+be completed and this is important to
+understand we share these metrics with
+you in cloud watch so you could take a
+
+51
+00:05:24.000 --> 00:05:29.000
+look at the performance of your storage
+system and make decisions around whether
+you're using it effectively or if you've
+
+52
+00:05:29.000 --> 00:05:36.000
+got the volumes appropriately sized
+capacity pretty easy one the volume of
+data that's stored in gigabytes and we
+
+53
+00:05:36.000 --> 00:05:42.000
+announced last year and launched since
+the last time we did the evf stock you
+can add you up to 16 terabytes in one
+
+54
+00:05:42.000 --> 00:05:47.000
+volume so it's very easy to create a
+large amount of storage and quickly
+attach it to an ec2 instance and then
+
+55
+00:05:47.000 --> 00:05:55.000
+the block size and the size of i/o that
+you're sending to the device or the size
+of I oh that's being measured by EBS now
+
+56
+00:05:55.000 --> 00:06:01.000
+EBS measures I ops that's the primary
+measure it uses when it's looking at the
+performance of the volume and those I
+
+57
+00:06:01.000 --> 00:06:07.000
+ops are typically measured in 256
+kilobytes and we actually do something
+called io merging to make it possible
+
+58
+00:06:07.000 --> 00:06:14.000
+for you to get more iOS even if you're
+not doing 256 and there's a future talk
+the one actually future talk talk right
+
+59
+00:06:14.000 --> 00:06:20.000
+after this so folks are interested going
+even deeper and EBS but we'll do
+performance on EBS at an even lower
+
+60
+00:06:20.000 --> 00:06:28.000
+level so before we get into the actual
+volumes how the volume types operate the
+different types of volumes are available
+
+61
+00:06:28.000 --> 00:06:35.000
+I think it's important to take a moment
+to talk about volume management now
+because volumes are resources like
+
+62
+00:06:35.000 --> 00:06:40.000
+everything else in AWS it's actually
+worth taking a moment to think about
+how am I going to manage my volumes what
+
+63
+00:06:40.000 --> 00:06:47.000
+will I do with the volumes as I'm
+creating them so the first thing is
+tagging so for folks who are not tagging
+
+64
+00:06:47.000 --> 00:06:53.000
+instances I'm not tagging volumes today
+this is my first to ask of you if you
+will please tag you should tag
+
+65
+00:06:53.000 --> 00:06:58.000
+everything you could do today I think 10
+tags that doesn't count the ones that
+are automatically added if they've been
+
+66
+00:06:58.000 --> 00:07:04.000
+created by cloud information that
+they've been created by auto scaling add
+tags everywhere tags enable you to them
+
+67
+00:07:04.000 --> 00:07:12.000
+very easily find sort keep track of the
+purpose of a volume why it was created
+possibly what application stack its
+
+68
+00:07:12.000 --> 00:07:19.000
+associated with is it production data or
+is it dev test data is it a scratch
+volume so it's very important to tag
+
+69
+00:07:19.000 --> 00:07:24.000
+volumes that were Mabel you in the
+future to go through the worst thing you
+can have in your in CC to console from
+
+70
+00:07:24.000 --> 00:07:29.000
+my perspective is a whole bunch of
+unattached volumes they just sit there
+with a little blue icon you're not sure
+
+71
+00:07:29.000 --> 00:07:34.000
+what they are and the really hard thing
+is the only way to work out what they
+are is to go and find an ec2 instance
+
+72
+00:07:34.000 --> 00:07:39.000
+attach the volume look at the volume
+you're like up scratch data delete
+volume and then that's kind of a lengthy
+
+73
+00:07:39.000 --> 00:07:46.000
+process if you have a lot of volumes the
+Delete on termination flag so this is a
+rather interesting thing that I wanted
+
+74
+00:07:46.000 --> 00:07:53.000
+to highlight so try and try and catch
+our customers who don't realize this
+typically when you have an ec2 instance
+
+75
+00:07:53.000 --> 00:08:00.000
+and you have EBS backed instance so it's
+using an EBS route volume the Delete on
+terminate flag is set to yes for that
+
+76
+00:08:00.000 --> 00:08:05.000
+volume that means that when the instance
+is deleted the volume is automatically
+deleted so relationship between the two
+
+77
+00:08:05.000 --> 00:08:12.000
+so that when something changes that they
+keep track of it for you if you've got a
+data volume attached to that ec2
+
+78
+00:08:12.000 --> 00:08:17.000
+instance you've added an extra volume
+maybe for some more data and you don't
+have the Delete on terminate on that and
+
+79
+00:08:17.000 --> 00:08:22.000
+maybe you have it in an auto scaling
+group or you're launching a lot of these
+instances those volumes will stay there
+
+80
+00:08:22.000 --> 00:08:28.000
+when the instance is terminated you'll
+very quickly discover you may be about
+20 30 or more volume sitting there
+
+81
+00:08:28.000 --> 00:08:34.000
+unattached instances and this persisted
+story so it stays there it's designed to
+stay there like we built it so that when
+
+82
+00:08:34.000 --> 00:08:40.000
+you want it to stay there it stays so it
+will stay around unless you look after
+it so we go back to volume management
+
+83
+00:08:40.000 --> 00:08:45.000
+please please do that and you should
+really have an approach on this so i
+mentioned scratch volumes tag things
+
+84
+00:08:45.000 --> 00:08:53.000
+that you know in the future what you
+want to do with the volume
+so volume initialization what happens or
+
+85
+00:08:53.000 --> 00:09:01.000
+what is the state of a volume once you
+create it so in previous years I would
+talk about pre warming at some point in
+
+86
+00:09:01.000 --> 00:09:07.000
+the presentation what I want to talk
+about now is the fact that we don't
+recommend pre warming for our volumes
+
+87
+00:09:07.000 --> 00:09:12.000
+there's been a lot of work done in the
+service and that's the important thing
+it's a service so you don't notice these
+
+88
+00:09:12.000 --> 00:09:17.000
+things until we tell you but you now
+create a volume and you should just be
+able to use that volume straightaway
+
+89
+00:09:17.000 --> 00:09:26.000
+that volume is ready to go volumes are
+stored from snapshots there's a lazy
+load of data from s3 so in some cases
+
+90
+00:09:26.000 --> 00:09:31.000
+although I will say it's quite rare you
+may want to read ahead on the volume to
+get that data in a little bit quicker
+
+91
+00:09:31.000 --> 00:09:36.000
+but you know it's typically not
+recommended either because you're going
+to spend time reading into a volume that
+
+92
+00:09:36.000 --> 00:09:46.000
+you don't really need to read into so
+the different volume types today we have
+three volume types on on EBS we have
+
+93
+00:09:46.000 --> 00:09:52.000
+magnetic volumes which are the original
+volumes when the service launched we
+have general-purpose SSD which we
+
+94
+00:09:52.000 --> 00:09:57.000
+consider our default volume type and
+I'll talk a little bit around why we
+consider our default and why you should
+
+95
+00:09:57.000 --> 00:10:03.000
+hopefully be using it as well and then
+we have provisioned I ops which is the
+volume type focused a name and enabling
+
+96
+00:10:03.000 --> 00:10:09.000
+you to give a very precise definition of
+performance you expect from the volume
+you can dial in the I ops in the size
+
+97
+00:10:09.000 --> 00:10:16.000
+for things like tier 1 databases and
+mission-critical applications you want
+to run on top of the system so let's
+
+98
+00:10:16.000 --> 00:10:24.000
+start with the general purpose SSD
+volumes so general purpose SSD I think
+is a really unique piece of technology
+
+99
+00:10:24.000 --> 00:10:30.000
+that if you've spent time working on
+storage subsystems if you've actually
+had to rack and stack arrays this is
+
+100
+00:10:30.000 --> 00:10:38.000
+really cool it's a volume that has a
+baseline performance so you know what
+the volume will deliver along with the
+
+101
+00:10:38.000 --> 00:10:45.000
+capability to burst substantially higher
+on smaller volume sizes so this means
+you don't need to over provision your
+
+102
+00:10:45.000 --> 00:10:50.000
+storage capacity to get the performance
+you're looking for because it's rare
+that someone has an application that
+
+103
+00:10:50.000 --> 00:10:56.000
+runs 24 7 flat out if it does then
+there's probably a different volume type
+you want to configure and here you get
+
+104
+00:10:56.000 --> 00:11:03.000
+access to a significant a significant
+amount of I ops and throughput when the
+volume is still quite small so every
+
+105
+00:11:03.000 --> 00:11:08.000
+p to volume starts out with a hundred I
+ops baseline and I'm going to talk about
+something called a credit bucket and how
+
+106
+00:11:08.000 --> 00:11:15.000
+the burst works in a little bit more
+detail and you get three I ops per
+gigabyte so you should be able to
+
+107
+00:11:15.000 --> 00:11:23.000
+provision up to 10,000 I ops on seven
+hundred gigabytes if memory serves me
+correct through food is up to 160
+
+108
+00:11:23.000 --> 00:11:29.000
+megabytes a second and we'll talk about
+that a little bit around the fact that
+through Putin I ops although related are
+
+109
+00:11:29.000 --> 00:11:36.000
+two different properties of the volume
+latency is designed for single digit
+millisecond latency and it has a
+
+110
+00:11:36.000 --> 00:11:43.000
+performance target of ninety-nine
+percent such performance of I ops so 99
+percent of the time were striving to
+
+111
+00:11:43.000 --> 00:11:53.000
+provide all of the IELTS and we consider
+it the volume that most workloads will
+default to on AWS so a little bit to
+
+112
+00:11:53.000 --> 00:11:59.000
+understand how the burst and baseline
+works so when we launched the GP two
+volumes they were up to one terabyte in
+
+113
+00:11:59.000 --> 00:12:09.000
+size and up to one terabyte would give
+you 1000 I alt sorry three thousand
+items and once you've created that that
+
+114
+00:12:09.000 --> 00:12:15.000
+volume that that was as large you go
+when we launch 16 terabytes it's now
+possible to have a volume larger than
+
+115
+00:12:15.000 --> 00:12:20.000
+our burst bucket was providing and so
+what we're trying to do here is
+illustrate and some of the EBS engineers
+
+116
+00:12:20.000 --> 00:12:25.000
+always get annoyed because the graph is
+not to scale but what we're trying to
+illustrate here is the fact that as you
+
+117
+00:12:25.000 --> 00:12:32.000
+increase your volume size from 0 to 1
+that increases the size of baseline
+IELTS or increases the amount of
+
+118
+00:12:32.000 --> 00:12:38.000
+baseline I ops you have available but
+you still have access to the yellow area
+which is the burst ions so you're always
+
+119
+00:12:38.000 --> 00:12:45.000
+gonna be able to burst up to 3,000 ions
+and you're going to be accumulating at
+your baseline ions if you go above 1
+
+120
+00:12:45.000 --> 00:12:51.000
+terabyte in size the baseline
+performance of the volume exceeds the
+burst capability so that is the
+
+121
+00:12:51.000 --> 00:12:58.000
+performance of the volume so if you were
+to create for example a 3 terabyte
+volume you will get 10,000 ions there is
+
+122
+00:12:58.000 --> 00:13:04.000
+no burst at that point because you've
+already exceeded what the burst
+capability would be so let me try and
+
+123
+00:13:04.000 --> 00:13:12.000
+take a moment to explain how the gp2
+bursting works I think it's really cool
+I will say that it's a little hard to
+
+124
+00:13:12.000 --> 00:13:16.000
+understand the first time but once you
+understand it you realize it's a very
+powerful capability
+
+125
+00:13:16.000 --> 00:13:22.000
+will enable you to size volumes for the
+data you're storing rather than trying
+to achieve a certain level of IELTS so
+
+126
+00:13:22.000 --> 00:13:32.000
+the first thing is every single volume
+created in gp2 is given a burst bucket
+allocation of 5.4 million ions and once
+
+127
+00:13:32.000 --> 00:13:38.000
+you've got that burst bucket you start
+accumulating because the volume has been
+initialized or created so if we had a
+
+128
+00:13:38.000 --> 00:13:45.000
+volume that was a hundred gigabytes we'd
+be accumulating at three hundred I ops
+every second as well and then you can
+
+129
+00:13:45.000 --> 00:13:53.000
+spend at whatever your baseline up to
+3,000 or higher on your baseline I opted
+out of that volume so in this example
+
+130
+00:13:53.000 --> 00:13:59.000
+with we use a one terabyte for the size
+we can spend at three thousand I ops out
+of that volume and it'll still be
+
+131
+00:13:59.000 --> 00:14:07.000
+accumulating as it comes in now a lot of
+people associate the term burst was
+something that is very quick very
+
+132
+00:14:07.000 --> 00:14:15.000
+instantaneous a firework going off or
+something like that it's actually not
+the case with gp2 so we have a very very
+
+133
+00:14:15.000 --> 00:14:21.000
+low percentage of volumes they're
+actually exceeding or emptying their
+burst bucket and in general what that
+
+134
+00:14:21.000 --> 00:14:26.000
+when that happens it's typically people
+who are testing for that scenario
+they're testing to see how long it takes
+
+135
+00:14:26.000 --> 00:14:32.000
+for them to empty the gp2 verse bucket
+rather than actually production use of
+the volume and just to highlight this
+
+136
+00:14:32.000 --> 00:14:39.000
+this is a graph of the size of a
+general-purpose volume gp2 and the time
+it would take to fully empty the I
+
+137
+00:14:39.000 --> 00:14:47.000
+oberst bucket if you were running at
+3,000 I ops all of the time so flat out
+and that's actually pretty hard to do
+
+138
+00:14:47.000 --> 00:14:53.000
+that's a lot of I ops to be running
+through a volume just to give you an
+example or highlight one here so if you
+
+139
+00:14:53.000 --> 00:15:02.000
+had a 500 gigabyte volume it would take
+you 60 minutes so a full hour of flat
+out not once dropping below 3000 IELTS
+
+140
+00:15:02.000 --> 00:15:08.000
+to actually empty the burst bucket in
+that volume and the reality is when you
+take a look at how systems actually
+
+141
+00:15:08.000 --> 00:15:14.000
+operated practice there's no way it runs
+flat out for 60 minutes it's going to
+drop down a couple of times and when it
+
+142
+00:15:14.000 --> 00:15:23.000
+drops down it's accumulating more than
+its using so that burst buckets not
+emptying so a little bit of an example
+
+143
+00:15:23.000 --> 00:15:27.000
+of how general-purpose volumes work or
+at least what the difference they're
+making for
+
+144
+00:15:27.000 --> 00:15:34.000
+workloads and applications so if I take
+an example of a Windows boot volume
+they're typically about 30 gigabytes in
+
+145
+00:15:34.000 --> 00:15:40.000
+size so the burst bucket is
+automatically 5.4 million I ups at the
+beginning it's going to get a baseline
+
+146
+00:15:40.000 --> 00:15:48.000
+performance of 100 I ups because we said
+there's a 100 I ops floor on the volumes
+but it will be accumulating at 90 IELTS
+
+147
+00:15:48.000 --> 00:15:56.000
+per second because it's a 32 gigabyte
+volume 3 cups per gigabyte this volume
+could burst for 30 minutes at 3,000 I
+
+148
+00:15:56.000 --> 00:16:02.000
+ops now windows typically boots a little
+bit slower than Linux but it definitely
+doesn't take 30 minutes to boot a volume
+
+149
+00:16:02.000 --> 00:16:09.000
+and so what this means is the big time
+of Windows is substantially accelerated
+and so we did some testing to try and
+
+150
+00:16:09.000 --> 00:16:15.000
+highlight this and there's two specific
+OSS I wanted to highlight so the first
+one is windows so if we take a magnetic
+
+151
+00:16:15.000 --> 00:16:20.000
+volume for the boot volume we're
+typically seeing an access time so
+that's the time where you could get in
+
+152
+00:16:20.000 --> 00:16:27.000
+and start using that instance of seven
+minutes and 16 seconds when we move the
+volume to gp2 and when I say move the
+
+153
+00:16:27.000 --> 00:16:33.000
+volume to gp2 that means literally if
+you're in the console choosing gp2 you
+don't need to do anything else if you're
+
+154
+00:16:33.000 --> 00:16:39.000
+working in an altar scaling group
+updating the block device mapping so it
+picks up gp2 you don't need to change
+
+155
+00:16:39.000 --> 00:16:46.000
+anything fundamental in your application
+nothing in Windows has changed to make
+this happen it's almost 40% quicker to
+
+156
+00:16:46.000 --> 00:16:51.000
+boot that Windows instance the second
+one I want to highlight is the fact it
+does also help speed up the Linux
+
+157
+00:16:51.000 --> 00:16:58.000
+instance the reason I call out sent OS
+specifically here is the scent OS 6 in
+the marketplace actually defaults to
+
+158
+00:16:58.000 --> 00:17:04.000
+magnetic so if you're launching sent OS
+from the marketplace and you're not
+changing the boot device as it launches
+
+159
+00:17:04.000 --> 00:17:09.000
+in an ultra scaling group or from the
+console if it hasn't popped up to tell
+you then you're actually putting on two
+
+160
+00:17:09.000 --> 00:17:15.000
+magnetic rather than gp2 and you can see
+it also makes a substantial speed up in
+boot time for the linux instance a
+
+161
+00:17:15.000 --> 00:17:23.000
+second example I want to give is going
+to highlight the fact that you can
+achieve substantial performance from a
+
+162
+00:17:23.000 --> 00:17:30.000
+GP to volume in fact similar if not more
+from a burst perspective than you would
+with provisioned ions however it's a
+
+163
+00:17:30.000 --> 00:17:36.000
+much lower cost in the environment now
+if in the past you'd been building a
+solution and you looked at magnetic and
+
+164
+00:17:36.000 --> 00:17:39.000
+thought that wasn't the right one for my
+date
+bass I should probably go news provision
+
+165
+00:17:39.000 --> 00:17:46.000
+I ops so you created a provision die ops
+volume maybe a terabyte once you've
+created that volume you're working on it
+
+166
+00:17:46.000 --> 00:17:51.000
+no problem at all gp2 launches so now
+you have a system where you have an
+option to maybe use a different volume
+
+167
+00:17:51.000 --> 00:17:57.000
+type what would that mean for the
+environment what I want to highlight
+here is that if we were to go from a
+
+168
+00:17:57.000 --> 00:18:04.000
+4,000 IELTS vol.2 just a 3,000 I ops one
+terabyte volume with gp2 which
+substantially reduce our costs and now
+
+169
+00:18:04.000 --> 00:18:09.000
+what I would typically be doing here is
+looking at something like a test dev
+database it's not likely our production
+
+170
+00:18:09.000 --> 00:18:15.000
+database we're going to move on to gp2
+that's what provision I ox is targeted
+for but if it's a dev test environment
+
+171
+00:18:15.000 --> 00:18:21.000
+gp2 is probably a good fit for this and
+it's going to substantially reduce our
+costs you could also if you wanted to be
+
+172
+00:18:21.000 --> 00:18:26.000
+a little creative and this is one of the
+capabilities you always have is to build
+the volume configuration how you want
+
+173
+00:18:26.000 --> 00:18:34.000
+you could take 2 500 gigabyte volumes
+each volume has a burst bucket of 3,000
+so now our baseline performance would be
+
+174
+00:18:34.000 --> 00:18:41.000
+3,000 I ups and our burst bucket would
+be 6,000 so we actually be able to burst
+in IELTS much higher than we would have
+
+175
+00:18:41.000 --> 00:18:46.000
+been able to use with provision dials
+his provision gives us exactly what
+we're looking for so we would actually
+
+176
+00:18:46.000 --> 00:18:54.000
+get a boost in performance for a dev
+test database so some guidelines for
+sizing how should you go about sizing or
+
+177
+00:18:54.000 --> 00:19:01.000
+how should you go about building and
+setting up gp2 volumes so for generic
+boot volumes you know developer volumes
+
+178
+00:19:01.000 --> 00:19:06.000
+or just data volumes that you want to
+attach two instances provision the
+number of gigabytes your application
+
+179
+00:19:06.000 --> 00:19:12.000
+requires we don't expect and I hope you
+don't have to over provision a volume
+you should just be creating the size of
+
+180
+00:19:12.000 --> 00:19:17.000
+volume you want and I'll talk a little
+bit around how you can move and migrate
+from volumes so you can easily get to
+
+181
+00:19:17.000 --> 00:19:23.000
+another volume if you want for database
+apps typically you want to calculate
+what you think the baseline I ops for
+
+182
+00:19:23.000 --> 00:19:30.000
+your application is probably easier said
+than done but worth the effort I think
+if you calculate the baseline ions you
+
+183
+00:19:30.000 --> 00:19:35.000
+then should be able to take those IELTS
+divided by three and it should tell you
+roughly the number of gigabytes you want
+
+184
+00:19:35.000 --> 00:19:41.000
+to provision for that volume the beauty
+of gp2 for a database application like
+this is it's going to handle things like
+
+185
+00:19:41.000 --> 00:19:48.000
+rebuilding indexes loading tables with
+the burst bucket so you're not going to
+be sizing the volume for the peak
+
+186
+00:19:48.000 --> 00:19:56.000
+you're going to be sizing the volume for
+your baselines your steady state on that
+database so digging into our second
+
+187
+00:19:56.000 --> 00:20:03.000
+volume type is provisioned ions
+provisioned I ops or P I opsys we turn
+tend to call it internally is really
+
+188
+00:20:03.000 --> 00:20:10.000
+focused at tier 1 databases
+mission-critical applications
+applications where you have a certain
+
+189
+00:20:10.000 --> 00:20:15.000
+level of performance you need to be able
+to deliver in your application and you
+want to know exactly what that
+
+190
+00:20:15.000 --> 00:20:21.000
+performers will be and have a certain
+level of consistency that goes with it
+so you can go up to 20,000 I ups on a
+
+191
+00:20:21.000 --> 00:20:28.000
+provision I ups volume so it's twice the
+number of I ups you can do with an EBS
+GP to the throughput is also twice so it
+
+192
+00:20:28.000 --> 00:20:34.000
+goes up to 320 megabytes a second so
+it's a very substantial amount of threw
+poop again the latency because all of
+
+193
+00:20:34.000 --> 00:20:42.000
+our volumes the gp2 and NPI ops our SSD
+back single digit millisecond latency
+performance consistency is three nines
+
+194
+00:20:42.000 --> 00:20:49.000
+of performance consistency so three
+nines is what we're attempting to
+deliver of the IELTS consistency and we
+
+195
+00:20:49.000 --> 00:20:53.000
+target like I said mission critical
+workloads with this this is when you
+think about having a database
+
+196
+00:20:53.000 --> 00:21:00.000
+architecture then you go to do a select
+on the table and if it stalls for any
+moments at all and that's not acceptable
+
+197
+00:21:00.000 --> 00:21:07.000
+to your architecture provision I ops is
+the volume type that you should be
+looking at for that little bit of how we
+
+198
+00:21:07.000 --> 00:21:13.000
+understand or how you can size the
+volume so obviously volumes go up to 16
+terabytes both for gp2 and also for
+
+199
+00:21:13.000 --> 00:21:21.000
+provisioned I ops again I don't believe
+this is the scale so an EBS engineer
+will be confused by we don't do it to
+
+200
+00:21:21.000 --> 00:21:29.000
+scale but what you can do here is with a
+very small amount of storage go to a
+huge amount of I ops so one of the big
+
+201
+00:21:29.000 --> 00:21:37.000
+fundamental differences between gp2 and
+provisioned I ops is the ratio of I ops
+2 gigabytes so in gp2 is 3i ops per
+
+202
+00:21:37.000 --> 00:21:46.000
+gigabyte on provision I ops it's 3030 I
+ops per gigabyte so you can see here
+they easily within I think it's 677 if I
+
+203
+00:21:46.000 --> 00:21:51.000
+remember off the top of my head you'll
+be able to provision 20,000 I ops into a
+volume so it's very easy to have a lot
+
+204
+00:21:51.000 --> 00:22:00.000
+of performance in a small amount of
+storage space
+last but by no means least EVs magnetic
+
+205
+00:22:00.000 --> 00:22:07.000
+volumes so EBS magnetic volumes are
+typically used for data that's in
+frequently accessed if you have a need
+
+206
+00:22:07.000 --> 00:22:13.000
+to have something that's online so you
+you have a system where it must have
+data on a file system you can't archive
+
+207
+00:22:13.000 --> 00:22:19.000
+it off because no one's willing to agree
+to the archives you know changes in the
+application but you need to have it
+
+208
+00:22:19.000 --> 00:22:26.000
+online we typically think magnetic is a
+great fit for this so it's a lot cheaper
+because if you're not using it it's only
+
+209
+00:22:26.000 --> 00:22:32.000
+five cents per gigabyte per month today
+and so it's a very low cost solution to
+making sure you have online data access
+
+210
+00:22:32.000 --> 00:22:40.000
+slightly different performance
+characteristics than our SSD based
+volumes so about 40 to 90 megabytes a
+
+211
+00:22:40.000 --> 00:22:50.000
+second and the latency varies for
+reading rights based on the media type
+so a bit of a summary of all the
+
+212
+00:22:50.000 --> 00:22:55.000
+different volumes and the capabilities
+these are obligatory slides so that
+everyone can get a picture of them when
+
+213
+00:22:55.000 --> 00:23:01.000
+take them home everything goes on
+SlideShare folks you can get it
+afterwards the big things I'd like to
+
+214
+00:23:01.000 --> 00:23:08.000
+call out here is the fact that the
+latency for SSD based volumes is
+consistent so designed for single digit
+
+215
+00:23:08.000 --> 00:23:14.000
+millisecond latency one to two
+milliseconds our general purpose volumes
+are very very easy to price and very
+
+216
+00:23:14.000 --> 00:23:23.000
+easy to understand it's 10 gigabyte ten
+cents per gigabyte per month and all of
+our GPS you are all of our SSD volumes
+
+217
+00:23:23.000 --> 00:23:34.000
+go up to 16 terabytes now so why have we
+made general-purpose SSD the default why
+did we do that and so if you haven't
+
+218
+00:23:34.000 --> 00:23:40.000
+noticed or if you're a new user on the
+platform and you grabbed an ec2 instance
+and dry and launched an ami has magnetic
+
+219
+00:23:40.000 --> 00:23:46.000
+as the boot volume we actually pop a
+little dialogue up on the on the console
+and say hey we notice you're not using
+
+220
+00:23:46.000 --> 00:23:52.000
+gp2 would you like to make this the
+default and we've worked very hard to
+make GP to the default on all of the
+
+221
+00:23:52.000 --> 00:24:01.000
+Amazon Linux armies and worked very hard
+with the windows team to get windows as
+using GP to the high baseline level of
+
+222
+00:24:01.000 --> 00:24:06.000
+performance is the first aspect so we
+can deliver a really high level of
+baseline performance for our customers
+
+223
+00:24:06.000 --> 00:24:10.000
+and
+environment at a consistent cost the
+bursting capability we think is very
+
+224
+00:24:10.000 --> 00:24:16.000
+important it enables your applications
+to not be bound by a baseline of
+performance and get a lot more
+
+225
+00:24:16.000 --> 00:24:24.000
+capability out of it the single the
+single capacity based pricing dimension
+so the ability for you to no longer have
+
+226
+00:24:24.000 --> 00:24:30.000
+to calculate how many I up Sam I going
+to be doing vs how long is the volume
+going to be created and we've managed to
+
+227
+00:24:30.000 --> 00:24:39.000
+in our opinion get an attractive price
+gigabyte price I ops density ratio so a
+little bit of a takeaway here always use
+
+228
+00:24:39.000 --> 00:24:47.000
+GPU or general-purpose SSD volumes or
+volumes for boot if you have a mis that
+you've built up if you're a longer-term
+
+229
+00:24:47.000 --> 00:24:53.000
+user on AWS and you have a catalog of
+armies which are designed for all the
+different application stacks that you
+
+230
+00:24:53.000 --> 00:24:59.000
+run you should take a moment in check to
+see whether those am is are actually
+using gp2 by default on those volumes if
+
+231
+00:24:59.000 --> 00:25:04.000
+it's in an auto scaling group you can
+just change the block device mapping you
+don't need to go in and change the am I
+
+232
+00:25:04.000 --> 00:25:10.000
+specifically but if it's an ami and it's
+EBS backs it's very easy to reregister
+that just take the same snapshot and
+
+233
+00:25:10.000 --> 00:25:19.000
+reregister choosing gp2 this time to
+launch it so how do you migrate on to GP
+two volumes how do you get on to
+
+234
+00:25:19.000 --> 00:25:24.000
+general-purpose volumes so you can
+change the volume type at launch so if
+you're launching something and you want
+
+235
+00:25:24.000 --> 00:25:30.000
+to use a different type of volume the
+next time you can just change that to
+launch you can use EBS snapshots to
+
+236
+00:25:30.000 --> 00:25:36.000
+easily get from one volume type to
+another and it's not just GP to you can
+go from provisioned I ops 2 gp2 or
+
+237
+00:25:36.000 --> 00:25:43.000
+magnetic to GP too it's very easy to do
+that so when you create an EBS snapshot
+DBS snapshot doesn't have any
+
+238
+00:25:43.000 --> 00:25:48.000
+relationship with the volume type
+underneath so you can then take that
+snapshot and create a new volume with
+
+239
+00:25:48.000 --> 00:25:54.000
+the new volume type that you want to use
+you might be able to resize your file
+system so if you've over provisioned in
+
+240
+00:25:54.000 --> 00:25:58.000
+the past maybe you had a volume that was
+larger because you felt that that would
+give you the performance you were
+
+241
+00:25:58.000 --> 00:26:03.000
+looking for you might be able to resize
+that when you go to a new volume type
+and when you're trying to work out what
+
+242
+00:26:03.000 --> 00:26:12.000
+size is you're looking at use our
+general purpose sizing guide so
+snapshots snapshots are really important
+
+243
+00:26:12.000 --> 00:26:18.000
+snapshots are an aspect of the platform
+that enable you to introduce the concept
+of backups to your volume but also
+
+244
+00:26:18.000 --> 00:26:23.000
+introduced the
+sets of disaster recovery by having
+volume data in another region or easily
+
+245
+00:26:23.000 --> 00:26:29.000
+sharing volume data through the form of
+a snapshot with other accounts or other
+teams so you can have a dev test
+
+246
+00:26:29.000 --> 00:26:34.000
+environment and once you're done you can
+take a snapshot from that dev test
+environment share it with the production
+
+247
+00:26:34.000 --> 00:26:39.000
+team and they can use that to move into
+their environment so they're more
+durable than an EBS volume and that's
+
+248
+00:26:39.000 --> 00:26:45.000
+because they're stored in Amazon s3
+that's eleven nines of durability and
+I'm going to talk a little bit around
+
+249
+00:26:45.000 --> 00:26:51.000
+what happens how do we make a snap shots
+you can get a feel for what we're doing
+their incremental meaning their space
+
+250
+00:26:51.000 --> 00:26:58.000
+efficient so the fact the first snapshot
+is a copier clone of the whole volume
+and so we copy that volume as is and
+
+251
+00:26:58.000 --> 00:27:05.000
+then you only pay for what you actually
+use in snapshots so if you create a
+second snapshot so you created a first
+
+252
+00:27:05.000 --> 00:27:12.000
+snapshot on say 100 gigabyte volume and
+then you change 5 gigabytes of data on
+that volume and create a second snapshot
+
+253
+00:27:12.000 --> 00:27:18.000
+we only snapshot 5 gigabytes of data so
+it's very very efficient to make your
+snapshots and also very very
+
+254
+00:27:18.000 --> 00:27:25.000
+cost-effective they're completely
+independent of availability zones so
+they live in the EBS snapshot service so
+
+255
+00:27:25.000 --> 00:27:33.000
+it's part of the EBS service overall and
+they can be recreated as volumes in any
+AZ or any region and they can be copied
+
+256
+00:27:33.000 --> 00:27:41.000
+across regions so I wanted to take a
+moment and explain what happens when we
+make an EBS snapshot it's not really
+
+257
+00:27:41.000 --> 00:27:49.000
+black magic it's just worth while
+understanding how we do this so an EBS
+volume because block storage is made up
+
+258
+00:27:49.000 --> 00:27:58.000
+of blocks ok only blocks written to our
+marked as updated so we keep track of a
+volume and we go hey you wrote to this
+
+259
+00:27:58.000 --> 00:28:04.000
+block you wrote to this block we keep
+track of that that's part of the EBS
+service that enables us to also not back
+
+260
+00:28:04.000 --> 00:28:11.000
+up blocks that haven't been been written
+to at the point of snapshot we make a
+list of all of the blocks to copy to s3
+
+261
+00:28:11.000 --> 00:28:21.000
+or to back up to s3 that's the first
+thing we do then we copy the snapshot
+blocks up to s3 the minute we've made a
+
+262
+00:28:21.000 --> 00:28:27.000
+list of the blocks that we want to copy
+that's when the API returns and says
+snapshot creating at that point you can
+
+263
+00:28:27.000 --> 00:28:34.000
+start using your application again there
+is no need to wait for a snapshot to
+complete we've already tracked exactly
+
+264
+00:28:34.000 --> 00:28:39.000
+what walks we need to copy back up the
+s3 to make the snapshot so that means
+that you can do snapshots in a matter of
+
+265
+00:28:39.000 --> 00:28:47.000
+seconds you can cue ask your volume if
+required call the easy to create
+snapshot call and when that snapshot
+
+266
+00:28:47.000 --> 00:28:54.000
+comes back as that the API call returns
+and the status will be creating that's
+it you don't need to wait for it to be
+
+267
+00:28:54.000 --> 00:28:58.000
+completed and I wanted to highlight that
+because I've actually come across
+customers who were concerned that they
+
+268
+00:28:58.000 --> 00:29:05.000
+had to wait for the completed status
+before the volume snapshot was actually
+ready to to move forward and so when you
+
+269
+00:29:05.000 --> 00:29:11.000
+create a future snapshot we just keep
+track of the blocks that have been
+updated since the last snapshot so
+
+270
+00:29:11.000 --> 00:29:16.000
+that's the magic part of it we always
+know at what point blocks were updated
+in whether they were updated before or
+
+271
+00:29:16.000 --> 00:29:27.000
+after the last snapshot and then we only
+copy those blocks up into s3 so the
+tagging of snapshots tagging please tag
+
+272
+00:29:27.000 --> 00:29:33.000
+tag tag so snapshots are even worse if
+you don't tag them because then they're
+just sitting there and you don't notice
+
+273
+00:29:33.000 --> 00:29:38.000
+them in at all because they don't turn
+up in your volume list for attaching so
+snapshot should be tagged as much as
+
+274
+00:29:38.000 --> 00:29:44.000
+possible with data that will help you do
+management of snapshots so we'll give
+you some examples here you can choose
+
+275
+00:29:44.000 --> 00:29:50.000
+any snapshot tag you want and it can be
+relative irrelevant to your application
+rather than than what we're suggesting
+
+276
+00:29:50.000 --> 00:29:56.000
+um some of them will actually
+automatically happen so volume ID i
+believe automatically appears as a tag
+
+277
+00:29:56.000 --> 00:30:01.000
+in there so we keep track of what volume
+it came from so you can do that but you
+should track things like whether their
+
+278
+00:30:01.000 --> 00:30:07.000
+daily or weekly zor whether they belong
+to a particular application stack it's
+the web stack or the database component
+
+279
+00:30:07.000 --> 00:30:12.000
+and definitely want to tag as much as
+possible because once you've done
+tagging you can go into the AWS console
+
+280
+00:30:12.000 --> 00:30:18.000
+and if you haven't noticed the AWS
+console has got a really improved search
+capability now where you can start
+
+281
+00:30:18.000 --> 00:30:26.000
+typing in tags you can do ands and ORS
+and build up a whole list so you can do
+snapshots of tag application web stack
+
+282
+00:30:26.000 --> 00:30:35.000
+type daily and it will bring back all of
+those snapshots so a couple of tools I
+want to recommend so customers we talk
+
+283
+00:30:35.000 --> 00:30:40.000
+to our customers as much as possible and
+these are the two tools that I thought
+so stood out the most
+
+284
+00:30:40.000 --> 00:30:46.000
+of tools that customers are using to
+manage snapshots and these are tools
+they're using to manage the making of a
+
+285
+00:30:46.000 --> 00:30:53.000
+snapshot on a schedule so scared Lee and
+then also easy to consistent snapshot
+it's a github project or an open-source
+
+286
+00:30:53.000 --> 00:30:59.000
+projects enroute to do qsu of a volume
+and so when you want to make database
+snapshots you truly want to make sure
+
+287
+00:30:59.000 --> 00:31:04.000
+that the volume is got all of the i/o
+written down before you make the
+snapshot these tools just make it
+
+288
+00:31:04.000 --> 00:31:09.000
+substantially easier for you to make
+snapshots they're going to add tags
+appropriately if that's one of the
+
+289
+00:31:09.000 --> 00:31:14.000
+things they do and they're going to
+enable you to do things like schedule a
+snapshot to happen every day or every
+
+290
+00:31:14.000 --> 00:31:26.000
+week so a little bit more about EBS
+optimized a little bit about EBS
+optimized instances so everything I've
+
+291
+00:31:26.000 --> 00:31:34.000
+covered so far is about the EBS volumes
+about the EBS snapshots but because we
+run inside ec2 there's some properties
+
+292
+00:31:34.000 --> 00:31:41.000
+of ec2 which are quite important to
+understand as well and so an EBS
+optimized instance is an instance that
+
+293
+00:31:41.000 --> 00:31:48.000
+has dedicated network bandwidth
+allocated to EBS traffic so because its
+network block storage we have a network
+
+294
+00:31:48.000 --> 00:31:56.000
+component between us and the EBS servers
+from an easy to perspective and with EBS
+optimized you're able to get a dedicated
+
+295
+00:31:56.000 --> 00:32:02.000
+amount of bandwidth allocated to your
+instance so that if you've got a heavy
+application stack you're running the
+
+296
+00:32:02.000 --> 00:32:10.000
+traffic to the application stack is not
+contending for data on the EBS traffic
+our instances things like the eight
+
+297
+00:32:10.000 --> 00:32:16.000
+extra large instances actually support
+all the way up to 10 gigabits per second
+of network traffic and there's a maximum
+
+298
+00:32:16.000 --> 00:32:23.000
+number of I opsin and throughput on each
+instance and so this number is much
+larger than what you can do with a
+
+299
+00:32:23.000 --> 00:32:28.000
+single volume but when you start to put
+lots more volumes on there you're going
+to you find it the instance itself is
+
+300
+00:32:28.000 --> 00:32:34.000
+got some challenges and i'll make a
+shout out to the next session on the
+performance we'll talk a little bit more
+
+301
+00:32:34.000 --> 00:32:40.000
+in that session around how to understand
+whether it's your instance which is the
+bottleneck or if it's the volume which
+
+302
+00:32:40.000 --> 00:32:52.000
+is maxed out on the threw poop so EBS
+encryption
+so EBS encryption is a great addition to
+
+303
+00:32:52.000 --> 00:32:59.000
+the EBS service it's for most customers
+the ability to tick a box and have
+volumes encrypted so they can then move
+
+304
+00:32:59.000 --> 00:33:04.000
+forward without having to worry about
+how it's done and what happens to the
+volumes so why are customers encrypting
+
+305
+00:33:04.000 --> 00:33:11.000
+data volumes some of the primary reasons
+we see is protection of data so
+protecting against you know unauthorized
+
+306
+00:33:11.000 --> 00:33:17.000
+access of a physical volume it could
+also help with your compliance efforts
+so you may have some workloads that
+
+307
+00:33:17.000 --> 00:33:24.000
+require encrypted data and it's very
+easy to use EBS encryption for that why
+we're seeing customers move towards EBS
+
+308
+00:33:24.000 --> 00:33:29.000
+based encryption is ease of use in the
+operating cost reductions so there's
+plenty of open source tools you can use
+
+309
+00:33:29.000 --> 00:33:35.000
+things like DM crypt and build your own
+encryption on top of it or third-party
+tools like Trend Micro but they
+
+310
+00:33:35.000 --> 00:33:40.000
+typically come from an open source
+perspective with quite a lot of
+operational overhead you don't want to
+
+311
+00:33:40.000 --> 00:33:45.000
+be building your own key management
+infrastructure or dealing with key
+rotation in that and in the third party
+
+312
+00:33:45.000 --> 00:33:53.000
+aspect again that they can add an
+additional layer of costs that might be
+prohibitive for certain applications so
+
+313
+00:33:53.000 --> 00:34:02.000
+how does EBS encryption work so the
+first thing is EBS encryption is maximum
+mated with or paired with the AWS key
+
+314
+00:34:02.000 --> 00:34:09.000
+management service so it's a managed
+service that simplifies creation control
+rotation of encryption keys in your
+
+315
+00:34:09.000 --> 00:34:16.000
+applications and when we say in your
+applications that means your own
+applications or you can have kms provide
+
+316
+00:34:16.000 --> 00:34:26.000
+keys to other parts of the AWS services
+such as EBS so it's integrated with AWS
+server-side encryption and EBS should be
+
+317
+00:34:26.000 --> 00:34:33.000
+listed as second in there server-side
+encryption means that the data is being
+encrypted on the server sides are not on
+
+318
+00:34:33.000 --> 00:34:37.000
+the client side when you're connecting
+to although there's one really unique
+capability of EBS I want to highlight
+
+319
+00:34:37.000 --> 00:34:44.000
+here and I probably should have a slide
+so we can dive into a little bit deeper
+but EBS encryption incurs on the ec2
+
+320
+00:34:44.000 --> 00:34:50.000
+host so if we we think a little bit
+around how the architecture of the the
+environment looks we have an ec2
+
+321
+00:34:50.000 --> 00:34:57.000
+instance that runs on an ec2 host and
+then we have an EBS volume which is
+exposed to the ec2 instance and it's
+
+322
+00:34:57.000 --> 00:35:01.000
+coming from the EBS
+service which is sitting somewhere else
+inside AWS separate from the ec2
+
+323
+00:35:01.000 --> 00:35:09.000
+instance that encryption occurs at the
+host level what that means is that
+encrypted data goes all the way across
+
+324
+00:35:09.000 --> 00:35:15.000
+the network and it's in the volume as
+well so we have encryption on the wire
+and encryption at rest with with AWS
+
+325
+00:35:15.000 --> 00:35:24.000
+encryption now it's also integrated with
+our client-side encryption so folks who
+want to dive deeper into the encryption
+
+326
+00:35:24.000 --> 00:35:29.000
+that you can integrate it with the SDKs
+or with the dynamic line and it's
+integrated with cloud trail and this is
+
+327
+00:35:29.000 --> 00:35:36.000
+very important for people who are
+working on compliance so cloud trail is
+going to track all of the use of the KMS
+
+328
+00:35:36.000 --> 00:35:43.000
+api's so when people are accessing a
+volume where people are creating a key
+or people are sharing a key with another
+
+329
+00:35:43.000 --> 00:35:49.000
+part of the application stack so people
+can access the data this is being logged
+in cloud trails so you can keep track of
+
+330
+00:35:49.000 --> 00:35:59.000
+who's used it and where and it's
+available in all commercial regions
+except China today so a little bit about
+
+331
+00:35:59.000 --> 00:36:07.000
+encryption keys and how they relate to
+EBS and so you should be able to see in
+here the second key from the bottom is
+
+332
+00:36:07.000 --> 00:36:16.000
+AWS EBS and it's got the little orange
+or yellow AWS icon beside it what this
+is is what we would refer to as the
+
+333
+00:36:16.000 --> 00:36:23.000
+default customer master key and so
+there's also in here a couple of other
+keys highly confidential critical data
+
+334
+00:36:23.000 --> 00:36:30.000
+so when you create keys you can have
+keys for your own application stack and
+then you can use them or services that
+
+335
+00:36:30.000 --> 00:36:37.000
+support kms will automatically create
+what we call a default customer master
+key now with a default customer master
+
+336
+00:36:37.000 --> 00:36:41.000
+key this is typically for people who
+just need encryption and they're not too
+worried about where the keys are going
+
+337
+00:36:41.000 --> 00:36:47.000
+to be managed and what's going to be
+what's going to be the policies around
+those keys a default customer master key
+
+338
+00:36:47.000 --> 00:36:53.000
+is only in your account it's only
+accessible for your resources but you
+don't need to specifically select that
+
+339
+00:36:53.000 --> 00:37:03.000
+the key name when you're going to do
+corruption so give you an example here
+how easy it is to encrypt with EBS if
+
+340
+00:37:03.000 --> 00:37:09.000
+you're going to be launching a new
+volume or creating a new volume it's a
+checkbox encrypt volume so once you've
+
+341
+00:37:09.000 --> 00:37:13.000
+checked that you're ready to go and then
+you can choose a key and so in this
+example we're actually using the
+
+342
+00:37:13.000 --> 00:37:20.000
+critical data key now what this means is
+that key is going to be associated with
+that volume and also any future
+
+343
+00:37:20.000 --> 00:37:26.000
+snapshots of snapshots are going to be
+encrypted by default because it's a copy
+of the volume data and the volume is
+
+344
+00:37:26.000 --> 00:37:33.000
+encrypted and then we can actually do
+custom things like he rotation on this
+and we can manage what instances or what
+
+345
+00:37:33.000 --> 00:37:38.000
+users are what groups have access to the
+critical data key and that will actually
+control who has access to that volume
+
+346
+00:37:38.000 --> 00:37:48.000
+within your environment so a little bit
+of summary of what we've covered in the
+session so far so start out with
+
+347
+00:37:48.000 --> 00:37:53.000
+selecting the right volumes for your
+workloads okay I think it's really
+important to understand we have three
+
+348
+00:37:53.000 --> 00:38:00.000
+volume types we think gp2 is the default
+for almost all applications if you've
+got a mission-critical workload you know
+
+349
+00:38:00.000 --> 00:38:07.000
+tier one database and application is
+very very dependent on consistent I oh
+it's provisioned I ops and magnetic is
+
+350
+00:38:07.000 --> 00:38:14.000
+still a really good choice for volumes
+that are in frequently accessed or data
+that's in frequently accessed select the
+
+351
+00:38:14.000 --> 00:38:19.000
+right instance for your workload so when
+I mentioned EBS optimize make sure
+you're choosing the right instance
+
+352
+00:38:19.000 --> 00:38:26.000
+something I didn't touch upon which I'll
+dive and a little bit is if you grab a
+two terabyte provisioned I ops volume
+
+353
+00:38:26.000 --> 00:38:33.000
+with 20,000 I outside and you attach it
+to a t2 micro it will not do 20,000 I
+ops and it will not do 320 megabytes a
+
+354
+00:38:33.000 --> 00:38:40.000
+second the t2 micro instance is a very
+very small instance it's a micro
+instance and so it's sized appropriately
+
+355
+00:38:40.000 --> 00:38:48.000
+and the resources of that instance means
+it's can't drive a really large volume
+like that take snapshots take snapshots
+
+356
+00:38:48.000 --> 00:38:56.000
+as often and as much as you can that
+would be really great and then use
+encryption if needed it's very very easy
+
+357
+00:38:56.000 --> 00:39:06.000
+it's a checkbox you ticket encryption
+turned on and you're ready to go and
+with that I'd like to thank you very
+much for our overview of EBS or deep
+dive in EBS

@@ -1,0 +1,2950 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:07.000
+so good afternoon in this session you're
+going to learn how to enable
+connectivity with VPNs and direct
+
+2
+00:00:07.000 --> 00:00:14.000
+connect into your AWS resources my goal
+is that in an hour's time whether you're
+a network engineer a cloud architect
+
+3
+00:00:14.000 --> 00:00:21.000
+needs the platform or experienced with
+the platform that you'll have all of the
+skills you need to get a connection up
+
+4
+00:00:21.000 --> 00:00:28.000
+and running with AWS my name is Steve
+see more I'm a solutions architect I'm
+based in the UK there's going to be no
+
+5
+00:00:28.000 --> 00:00:41.000
+use of the word router in this session
+will be routing everything ok so what
+should you expect from this session well
+
+6
+00:00:41.000 --> 00:00:47.000
+I'm going to be talking about various
+scenarios that I see with customers that
+I work with regularly so there's a bit
+
+7
+00:00:47.000 --> 00:00:53.000
+of a story to to this session with in it
+there's always going to be some
+characters to that story so we have our
+
+8
+00:00:53.000 --> 00:01:00.000
+network engineers for example some
+locations obviously the cloud is one of
+those a corporate data center or a
+
+9
+00:01:00.000 --> 00:01:06.000
+corporate network is the other component
+that I'm going to be talking about a lot
+during this session and i hope to give
+
+10
+00:01:06.000 --> 00:01:12.000
+you a toolbox a set of things that you
+can use in the future when you're
+deploying connectivity projects relating
+
+11
+00:01:12.000 --> 00:01:21.000
+to AWS i'm finally hopefully a form of
+checklist and a set of methods that you
+can go through so let's talk about the
+
+12
+00:01:21.000 --> 00:01:27.000
+characters the team that's involved in
+this lee examples we're going to be
+using this afternoon first of all we've
+
+13
+00:01:27.000 --> 00:01:33.000
+got the network engineering team key
+very important team in terms of a
+connectivity project usually working
+
+14
+00:01:33.000 --> 00:01:38.000
+very closely with a cloud architect team
+perhaps the application developers as
+well and the first thing I would say
+
+15
+00:01:38.000 --> 00:01:43.000
+about establishing connectivity to
+radius is it's key that those teams work
+together there used to be an
+
+16
+00:01:43.000 --> 00:01:48.000
+understanding of what are the
+requirements from the network team and
+what is it that the application owners
+
+17
+00:01:48.000 --> 00:01:54.000
+the architects need from the solution
+and then finally I can't encourage you
+more to use the AWS solutions
+
+18
+00:01:54.000 --> 00:01:59.000
+architecture team the team that I'm part
+of and our support team to help you with
+these projects you can raise support
+
+19
+00:01:59.000 --> 00:02:06.000
+cases to ask questions about how do I do
+this it doesn't have to be because
+you're having a problem with something
+
+20
+00:02:06.000 --> 00:02:13.000
+so this is going to be the the basis of
+the discussion we're having an Amazon
+VPC you've probably
+
+21
+00:02:13.000 --> 00:02:18.000
+all got something deployed that's very
+similar to this public subnets private
+subnets requirements for connectivity
+
+22
+00:02:18.000 --> 00:02:24.000
+out to the internet but we don't need to
+get into the detail of what's inside
+this particular VPC so for this session
+
+23
+00:02:24.000 --> 00:02:31.000
+we're going to simplify that down to
+this this is our VPC for the purpose of
+this discussion on the corporate side
+
+24
+00:02:31.000 --> 00:02:35.000
+you've probably all seen network
+diagrams that looks something like this
+this is representative of the corporate
+
+25
+00:02:35.000 --> 00:02:40.000
+infrastructure that we're going to be
+connecting into again let's simplify
+that down for the purpose of this
+
+26
+00:02:40.000 --> 00:02:47.000
+session so this is our corporate
+infrastructure on the right of the
+screen so that makes up our environment
+
+27
+00:02:47.000 --> 00:02:53.000
+we're going to be connecting these two
+together using VPNs direct connect and a
+few other topics that I'll touch on so
+
+28
+00:02:53.000 --> 00:03:02.000
+let's give ourselves a bit of room to
+work with and we're going to fill in the
+gaps in the middle okay so what have we
+
+29
+00:03:02.000 --> 00:03:07.000
+got in the toolbox that we're working
+with now this is a 400 level session so
+I'm going to assume that you all know
+
+30
+00:03:07.000 --> 00:03:11.000
+what all these components are and in
+fact we're going to go one step further
+we're not going to refer to them
+
+31
+00:03:11.000 --> 00:03:18.000
+necessarily by their their full names
+there let's use the the short names that
+we use in the console we don't tend to
+
+32
+00:03:18.000 --> 00:03:22.000
+see em root tables those short and so
+I'm going to leave that one as it is but
+we're going to be referring to V pcs v
+
+33
+00:03:22.000 --> 00:03:31.000
+gws cgw DX is the abbreviation we use
+for direct connect so these components
+make up the elements you need to
+
+34
+00:03:31.000 --> 00:03:38.000
+establish connectivity into your VPC the
+root tables send the traffic out of the
+VPC the igw is the way to get in and out
+
+35
+00:03:38.000 --> 00:03:45.000
+to the internet the bgw the virtual
+gateway gives you access to VPNs and
+direct connect endpoints the VPN is the
+
+36
+00:03:45.000 --> 00:03:51.000
+connectivity that you then use to
+connect to the customer gateway and DX
+direct connect is the final part of the
+
+37
+00:03:51.000 --> 00:03:59.000
+solution so these are the four specific
+topics we're going to cover the hardware
+VPN solution that we have direct connect
+
+38
+00:03:59.000 --> 00:04:06.000
+itself and virtual interface is how you
+deploy those on AWS VPN cloud hub which
+is something you may not have heard of
+
+39
+00:04:06.000 --> 00:04:11.000
+but there's been around since we
+launched VPN and then finally I'm going
+to touch on some software VPN examples
+
+40
+00:04:11.000 --> 00:04:19.000
+as well so first of all let's let's get
+straight into the hardware VPN solution
+that we have this is a pretty commonly
+
+41
+00:04:19.000 --> 00:04:26.000
+accepted description of what ipsec is
+taken straight from Wikipedia but the
+things I want to focus on are the fact
+
+42
+00:04:26.000 --> 00:04:32.000
+that
+provides secure IP connectivity and
+communications it authenticates it
+
+43
+00:04:32.000 --> 00:04:39.000
+encrypts each and every IP packet using
+mutual authentication in our case using
+a pre-shared key and enables the
+
+44
+00:04:39.000 --> 00:04:44.000
+negotiation of cryptographic keys for
+exchanging the rest of the traffic over
+our VPN connection so that's what we're
+
+45
+00:04:44.000 --> 00:04:52.000
+going to be working but that's the basis
+of the AWS hardware VPN solution we have
+to select variations of our VPN solution
+
+46
+00:04:52.000 --> 00:04:58.000
+we support both static or dynamic VPNs
+and when we say dynamic we mean bgp
+based that's going to be the focus of
+
+47
+00:04:58.000 --> 00:05:04.000
+most of the discussion here but I am
+going to talk a little bit about static
+VPNs first in a static VPN situation you
+
+48
+00:05:04.000 --> 00:05:10.000
+need to specify the IP prefixes the
+routes that you want to be routing
+traffic to you put those into your route
+
+49
+00:05:10.000 --> 00:05:16.000
+tables and they're configured you have
+to go in and manually change them
+manatee maintain them however a dynamic
+
+50
+00:05:16.000 --> 00:05:24.000
+VPN uses BGP or the gateway protocol and
+we support a hundred prefixes that you
+can announce to us over bgp so that's
+
+51
+00:05:24.000 --> 00:05:31.000
+dynamic if you change them they update
+inside AWS automatically and then
+finally BGP running over a VPN
+
+52
+00:05:31.000 --> 00:05:41.000
+connection supports to buy a s numbers
+so what we mean by that is we go from
+one through to 65535 the AWS ppm
+
+53
+00:05:41.000 --> 00:05:45.000
+requirements so these are these are all
+captured in the documentation there's a
+few important things I want to call out
+
+54
+00:05:45.000 --> 00:05:51.000
+here first of all VPN connections to AWS
+are always initiated from the customer
+side so your router needs to see
+
+55
+00:05:51.000 --> 00:05:59.000
+interesting traffic and initiate the
+session to us secondly we use pre-shared
+keys for authentication when you create
+
+56
+00:05:59.000 --> 00:06:07.000
+a VPN connection in the AWS console or
+via the api's we generate a pre-shared
+key that's used for the connection we
+
+57
+00:06:07.000 --> 00:06:13.000
+use IPSec essays in tunnel mode and
+that's important I'll cover that in a
+little bit more detail in a moment and
+
+58
+00:06:13.000 --> 00:06:25.000
+so we don't do policy based VPNs we use
+aes-128 bit encryption and sha-1 we
+support d hpfs group two and dead peer
+
+59
+00:06:25.000 --> 00:06:31.000
+detection and it's important to note
+that we require you to fragment IP
+packets before encryption so even if
+
+60
+00:06:31.000 --> 00:06:38.000
+they have the don't fragment header on
+them okay so this is our static VPN
+example so back to the two environments
+
+61
+00:06:38.000 --> 00:06:43.000
+that we have on the left-hand side we
+have our
+DC and I've just increased the size of
+
+62
+00:06:43.000 --> 00:06:47.000
+the virtual private gateway there cuz
+that's what we're focusing on on the
+right hand side we have the corporate
+
+63
+00:06:47.000 --> 00:06:54.000
+network in a static VPN situation here
+you have to specify which networks you
+want to route traffic to and we support
+
+64
+00:06:54.000 --> 00:07:02.000
+one unique sa / tunnel so that's one
+inbound one outbound to unique pairs 42
+tunnels so where did the two tunnels
+
+65
+00:07:02.000 --> 00:07:08.000
+come from you might ask well when you
+configure a VPN with AWS we actually
+configure two different endpoints on the
+
+66
+00:07:08.000 --> 00:07:14.000
+AWS end in two different availability
+zones so when you create that VPN we
+actually give you the configuration
+
+67
+00:07:14.000 --> 00:07:22.000
+details for two tunnels and they come
+back to a single customer gateway on
+your side of that connection we
+
+68
+00:07:22.000 --> 00:07:28.000
+sometimes see customers with issues
+where they have certain types of
+hardware VPN device that every time they
+
+69
+00:07:28.000 --> 00:07:33.000
+want to establish a new sa over their
+VPN it's every time they want to route a
+different block of IP addresses over
+
+70
+00:07:33.000 --> 00:07:39.000
+their VPN it establishes a new si that's
+not going to work because as I said on
+the previous slide we only support one
+
+71
+00:07:39.000 --> 00:07:46.000
+in each direction so it's really
+important that you consolidate your ACLs
+to cover all of the traffic that you
+
+72
+00:07:46.000 --> 00:07:53.000
+might want to root over this connection
+actually just announce it as a zero and
+any connection so at that point you now
+
+73
+00:07:53.000 --> 00:08:00.000
+control what traffic routes over this
+particular VPN using an access control
+list so static VPN slightly different
+
+74
+00:08:00.000 --> 00:08:06.000
+you do have to specify the IP addresses
+you want to route and just remember that
+we only support that pair of essays
+
+75
+00:08:06.000 --> 00:08:15.000
+pirtle so let's move on to dynamic VPNs
+so a little bit of level setting here
+some of you might have some experience
+
+76
+00:08:15.000 --> 00:08:23.000
+with BGP but I just want to recap
+quickly on that so what is BGP it's a
+TCP protocol runs on port 179 sport a
+
+77
+00:08:23.000 --> 00:08:30.000
+gateway protocol within a BGP
+environment you have BGP neighbors they
+pair with each other and they exchange
+
+78
+00:08:30.000 --> 00:08:40.000
+routing information exchange prefixes
+now a prefix is a combination of a cider
+block set of IP addresses and an AS path
+
+79
+00:08:40.000 --> 00:08:47.000
+so what is an AS and is is an autonomous
+system and it identifies different
+network environments it's not individual
+
+80
+00:08:47.000 --> 00:08:54.000
+via devices so for example amazon has a
+single large a s number that covers the
+whole of the amazon network
+
+81
+00:08:54.000 --> 00:09:03.000
+you'll hear the terms ibgp and ebgp so I
+BGP is where we establish appearing
+relationship between two neighbors that
+
+82
+00:09:03.000 --> 00:09:11.000
+are in the same AS number so used within
+usually the same network ebgp is
+external bgp as it says between peers
+
+83
+00:09:11.000 --> 00:09:18.000
+that are in different AS numbers finally
+you're going to see some examples in the
+upcoming slides of an AAS pass so this
+
+84
+00:09:18.000 --> 00:09:24.000
+is a measure of network distance every
+time traffic passes from one network to
+the other the a s number for that
+
+85
+00:09:24.000 --> 00:09:30.000
+network is added to the a s path and it
+gradually gets longer which means when
+you're on the receiving end of a BGP
+
+86
+00:09:30.000 --> 00:09:36.000
+announcement you can see where did it
+come from what path did it take and if
+you have multiple announcements for
+
+87
+00:09:36.000 --> 00:09:42.000
+multiple prefixes you can see which one
+took a different path and perhaps make
+some decisions on which one is better so
+
+88
+00:09:42.000 --> 00:09:47.000
+that brings me finally to local
+preference now you might have received
+two announcements for a particular
+
+89
+00:09:47.000 --> 00:09:53.000
+prefix and one of them looks a lot
+shorter and a lot more efficient to get
+to in terms of network but actually you
+
+90
+00:09:53.000 --> 00:09:58.000
+may have much more bandwidth on another
+connection or perhaps it's more cost
+effective so what local preference lets
+
+91
+00:09:58.000 --> 00:10:04.000
+you do is enforce a choice at your end
+of the connection that no matter what
+the path length says or or any of the
+
+92
+00:10:04.000 --> 00:10:09.000
+other influencing factors or path
+decision elements I'm going to choose
+this particular path it's my local
+
+93
+00:10:09.000 --> 00:10:17.000
+preference for sending traffic so there
+the components you're going to hear
+about in terms of BGP so what does a
+
+94
+00:10:17.000 --> 00:10:23.000
+dynamic VPN look like well again you'll
+recognize that it's pretty similar it's
+still got two tunnels so again when you
+
+95
+00:10:23.000 --> 00:10:30.000
+create the VPN configuration and choose
+that this is a dynamic PGP based VPN
+will configure two tunnels for you you
+
+96
+00:10:30.000 --> 00:10:36.000
+need to specify an IP address for each
+end of that tunnel now when you're doing
+this over a VPN we automatically
+
+97
+00:10:36.000 --> 00:10:44.000
+generate those IP addresses for you in
+the configuration on the AWS end we have
+a fixed a slumber generally at seven to
+
+98
+00:10:44.000 --> 00:10:51.000
+24 but it can vary by region however for
+your end when you're configuring the VPN
+you get to choose what is number you
+
+99
+00:10:51.000 --> 00:11:00.000
+want to use now the thing about BGP as I
+said is it's dynamic so as you announced
+routes over bgp into AWS we need to do
+
+100
+00:11:00.000 --> 00:11:07.000
+something with them so we need to update
+the route table inside the VPC to
+specify how do we get to that remote
+
+101
+00:11:07.000 --> 00:11:10.000
+network
+so in this particular example I'm
+actually just going to put an entry in
+
+102
+00:11:10.000 --> 00:11:16.000
+there that specifies the corporate
+network on the right and to go via the
+virtual gateway the virtual gateway then
+
+103
+00:11:16.000 --> 00:11:22.000
+receives all of the BGP announcements
+from the corporate network we'd always
+have an option called route propagation
+
+104
+00:11:22.000 --> 00:11:29.000
+as well what this does is it says
+anything I receive at the virtual
+gateway via bgp automatic and put it
+
+105
+00:11:29.000 --> 00:11:37.000
+into the route table for me so now we
+don't have to maintain that route table
+manually so bgp peer address is
+
+106
+00:11:37.000 --> 00:11:42.000
+automatically generated you're a s
+number when you get to choose it you can
+choose anything so if you happen to have
+
+107
+00:11:42.000 --> 00:11:48.000
+a public a s number for your network and
+you want to use that that's fine
+otherwise there's a block of a s numbers
+
+108
+00:11:48.000 --> 00:11:55.000
+reserved for private use the amazon
+alias number as I say 7224 generally
+used in a couple of regions we have 90
+
+109
+00:11:55.000 --> 00:12:01.000
+59 and one or two others so always
+download the configuration that we
+generate and check what a s number we're
+
+110
+00:12:01.000 --> 00:12:09.000
+using on the AWS side so how does path
+selection work the virtual gateway has
+now received its BGP announcements how
+
+111
+00:12:09.000 --> 00:12:14.000
+does it decide where it's sending its
+traffic well first of all we look for
+the most specific Network announcement
+
+112
+00:12:14.000 --> 00:12:21.000
+so a / 24 network is more preferable
+than a / 16 so if we have the two of
+those in the route table will pick the /
+
+113
+00:12:21.000 --> 00:12:28.000
+24 within the virtual gateway we then
+have a look and see what have we got in
+terms of connections to a customer
+
+114
+00:12:28.000 --> 00:12:34.000
+Network because they all come into the
+virtual gateway if we see a static VPN
+connection actually we prefer that first
+
+115
+00:12:34.000 --> 00:12:42.000
+because static routes come above any of
+the other routes elections next we
+choose direct connect and then finally
+
+116
+00:12:42.000 --> 00:12:48.000
+we choose the shortest a s path and it's
+actually down here that the dynamic VPN
+fits in that's very relevant because
+
+117
+00:12:48.000 --> 00:12:52.000
+later on if you have a direct connect in
+place you're probably going to want to
+be using that for all of your traffic
+
+118
+00:12:52.000 --> 00:13:02.000
+except in a failover situation so direct
+connect comes above dynamic VPN so you
+might have noticed in the previous
+
+119
+00:13:02.000 --> 00:13:08.000
+slides that we had two tunnels but it
+came down to a single customer gateway
+on the corporate side obviously a
+
+120
+00:13:08.000 --> 00:13:14.000
+potential single point of failure there
+so it's quite easy to just build to VPN
+connections which in AWS terms means
+
+121
+00:13:14.000 --> 00:13:21.000
+that you've just created four tunnels so
+now you have four resilient tunnels
+going into AWS
+
+122
+00:13:21.000 --> 00:13:26.000
+terminating in two different
+availability zones and on the customer
+side you have to customer gateway
+
+123
+00:13:26.000 --> 00:13:32.000
+devices these could be in the same data
+center the same location or they could
+be separate on your network and you're
+
+124
+00:13:32.000 --> 00:13:37.000
+probably going to have to run some sort
+of internal routing protocol between
+them to decide how do I route traffic to
+
+125
+00:13:37.000 --> 00:13:47.000
+AWS so that could be ibgp to use the
+example from earlier or ospf or whatever
+it is you deploy internally this also
+
+126
+00:13:47.000 --> 00:13:54.000
+then can extend on to connecting to
+multiple V pcs so a single VPN
+connection only connects to a single v
+
+127
+00:13:54.000 --> 00:14:01.000
+pc so taking our resilient model where
+we had to customer gateways for tunnels
+we now have two V pcs on the left hand
+
+128
+00:14:01.000 --> 00:14:08.000
+side and therefore we have eight tunnels
+connected to them all of these are
+dynamically routing to each other all
+
+129
+00:14:08.000 --> 00:14:16.000
+announcing their available prefixes back
+to the customer gateways so this is what
+I just wanted to mention a recent update
+
+130
+00:14:16.000 --> 00:14:24.000
+to the AWS VPN service so we now support
+reusable customer gateway IP addresses
+and what that means is that on your end
+
+131
+00:14:24.000 --> 00:14:31.000
+of the VPN connection you can use the
+same IP address in many of our region's
+now for connecting to multiple VP sees
+
+132
+00:14:31.000 --> 00:14:37.000
+inside AWS so this is rolling out across
+the regions at the moment and it just
+means that you don't have to have unique
+
+133
+00:14:37.000 --> 00:14:43.000
+customer IP address for each gateway on
+your end of the connection if this is
+something you want to take advantage of
+
+134
+00:14:43.000 --> 00:14:50.000
+simply create a new virtual gateway
+create a new VPN connection then detach
+the old one from your VPC and attach the
+
+135
+00:14:50.000 --> 00:14:57.000
+new one to it then of course delete the
+old virtual gateway and the old VPN
+connection to save costs it's important
+
+136
+00:14:57.000 --> 00:15:01.000
+to note you can only have a single
+virtual gateway attached to the VPC at
+any one time so create the new one in
+
+137
+00:15:01.000 --> 00:15:06.000
+parallel and then just swap them over we
+are going to have some further features
+around VPN that are going to be
+
+138
+00:15:06.000 --> 00:15:14.000
+announced in the coming months so keep
+an eye on the forums and the blobs so
+now let's step back to the beginning how
+
+139
+00:15:14.000 --> 00:15:20.000
+do you actually create this VPN
+connection what does it look like well
+the six steps involved first of all
+
+140
+00:15:20.000 --> 00:15:26.000
+you're going to create that virtual
+gateway so you create this inside the
+AWS console or obviously via the api's
+
+141
+00:15:26.000 --> 00:15:32.000
+you give it a name and at this point
+it's not associated with anything so the
+second step is you're going to attach it
+
+142
+00:15:32.000 --> 00:15:38.000
+to your VP see what is it we want to be
+able to route traffic
+to them from the third step we're going
+
+143
+00:15:38.000 --> 00:15:43.000
+to define the other end of that VPN
+connection the customer gateway we
+specify the IP address what type of
+
+144
+00:15:43.000 --> 00:15:51.000
+routing we want to use give it a name
+etc and if it's dynamic specify das
+number that i mentioned earlier finally
+
+145
+00:15:51.000 --> 00:15:57.000
+we join those two components together
+the virtual private gateway and the
+customer gateway with a VPN so at this
+
+146
+00:15:57.000 --> 00:16:03.000
+point you're simply choosing the two
+endpoints and if you need to you can
+create a new customer gateway here if
+
+147
+00:16:03.000 --> 00:16:09.000
+you hadn't done in the previous stage
+but there's no other configuration you
+need to do once that's done you go into
+
+148
+00:16:09.000 --> 00:16:14.000
+your route tables and if this is a
+dynamic VPN simply enable root
+propagation as you can see there you
+
+149
+00:16:14.000 --> 00:16:20.000
+check the box next to the virtual
+gateway now anything that it receives
+over VPN or direct connectors we're
+
+150
+00:16:20.000 --> 00:16:25.000
+going to cover later will automatically
+be propagated into that particular route
+table so that's great everything's
+
+151
+00:16:25.000 --> 00:16:31.000
+configured now on the AWS side all
+that's left is to configure the customer
+end of this VPN connection so you'll
+
+152
+00:16:31.000 --> 00:16:36.000
+notice that we have a download
+configuration option we provide
+configurations for a range of different
+
+153
+00:16:36.000 --> 00:16:43.000
+route of manufacturers but we also have
+an option to download a generic
+configuration this is standard ipsec VPN
+
+154
+00:16:43.000 --> 00:16:48.000
+connectivity so the information you need
+is within that generic configuration
+document and you can use that to
+
+155
+00:16:48.000 --> 00:16:57.000
+configure the equipment on your end of
+the connection okay so we're going to
+move on to direct connect now so what is
+
+156
+00:16:57.000 --> 00:17:05.000
+direct connect well quite simply it is a
+dedicated private link into the AWS
+network you can create things called
+
+157
+00:17:05.000 --> 00:17:10.000
+private or public virtual interfaces on
+a direct connect give you access to
+different types of resources within the
+
+158
+00:17:10.000 --> 00:17:19.000
+AWS environment it enables you to
+benefit from reduced data transfer rates
+data transfer into AWS is always free
+
+159
+00:17:19.000 --> 00:17:26.000
+but reduce data transfer rate out of AWS
+and one of the most common reasons for
+wanting to use Direct Connect is a
+
+160
+00:17:26.000 --> 00:17:34.000
+combination between high bandwidth but
+consistent performance so there's always
+going to be latency in a connection but
+
+161
+00:17:34.000 --> 00:17:39.000
+over a direct connect it's going to be a
+consistent experience it's going to be
+as low as we can make it and it's coming
+
+162
+00:17:39.000 --> 00:17:46.000
+directly into your network it's avoiding
+any potential internet whether type
+events so the VPN connection as much
+
+163
+00:17:46.000 --> 00:17:50.000
+bandwidth as you might have on your side
+and as much as
+there is on the AWS side we are crossing
+
+164
+00:17:50.000 --> 00:17:57.000
+the public internet Direct Connect
+doesn't do that there is at least one
+direct connect location for every AWS
+
+165
+00:17:57.000 --> 00:18:02.000
+region in many cases there's multiple
+Direct Connect locations and this is
+where you interface with our equipment
+
+166
+00:18:02.000 --> 00:18:11.000
+to connect your fiber connection you can
+have multiple Direct Connect connections
+so you can establish multiple
+
+167
+00:18:11.000 --> 00:18:17.000
+connections in one of our locations or
+across multiple locations for a
+particular region and also it's very
+
+168
+00:18:17.000 --> 00:18:23.000
+common to see customers with multiple
+AWS accounts so they might have a
+perhaps a payer account and then a
+
+169
+00:18:23.000 --> 00:18:29.000
+development account a test account a
+production account and they don't want
+to purchase a direct connect for every
+
+170
+00:18:29.000 --> 00:18:36.000
+single one of those which you can share
+a direct connect across those accounts
+and then finally we have something
+
+171
+00:18:36.000 --> 00:18:42.000
+called into region connectivity which is
+available within the US regions and it
+enables you to get a connection at one
+
+172
+00:18:42.000 --> 00:18:48.000
+particular us region and reach out to
+resources in another region I'm going to
+talk about that in a little bit more
+
+173
+00:18:48.000 --> 00:18:55.000
+detail later on but it's for use with
+public virtual interfaces for accessing
+things that are outside your VPC as we
+
+174
+00:18:55.000 --> 00:19:02.000
+said earlier all of this is using bgp to
+exchange routing information and it's
+carrying that over an 80 2.1 q VLAN that
+
+175
+00:19:02.000 --> 00:19:09.000
+runs on Direct Connect we don't support
+any other routing protocols at all over
+direct connect it's specifically be GPS
+
+176
+00:19:09.000 --> 00:19:18.000
+and no static routes no ospf this is a
+list of the ados regions and their
+corresponding Direct Connect locations
+
+177
+00:19:18.000 --> 00:19:24.000
+as you can see many of them do actually
+have to direct connect locations and
+these are Colo facilities these are
+
+178
+00:19:24.000 --> 00:19:31.000
+places that you might actually have some
+of your own equipment or can at least
+get access to to deploy equipment this
+
+179
+00:19:31.000 --> 00:19:39.000
+list is maintained and updated on the
+website and we're always expanding these
+direct connect locations so given that
+
+180
+00:19:39.000 --> 00:19:47.000
+this is a network discussion I thought
+somewhere in here I've got to get a no I
+saw a chart so here we have it right at
+
+181
+00:19:47.000 --> 00:19:53.000
+the bottom there I skipped a few of them
+as you can see but at the bottom we've
+got our physical layer so layer 1 what
+
+182
+00:19:53.000 --> 00:20:00.000
+is this in direct connect terms well
+it's a single mode fiber for a one gig
+or a 10 gig direct connect the physical
+
+183
+00:20:00.000 --> 00:20:06.000
+layer
+is a single-mode fiber so let's talk
+about the physical connection side of
+
+184
+00:20:06.000 --> 00:20:12.000
+Direct Connect first and we've got a few
+turns up on the screen there I'm sure
+they're familiar to most of you some of
+
+185
+00:20:12.000 --> 00:20:19.000
+them have got something in common which
+is that that grouping are basically the
+same thing they might be delivered in a
+
+186
+00:20:19.000 --> 00:20:24.000
+slightly different way but when it comes
+down to it they're going to be either a
+layer one or a layer two Ethernet
+
+187
+00:20:24.000 --> 00:20:33.000
+delivery of the service that extends the
+port from our location to wherever
+you're located the bottom one is a
+
+188
+00:20:33.000 --> 00:20:41.000
+little bit different so how do we deploy
+the physical connection well once you
+request a direct connect connection we
+
+189
+00:20:41.000 --> 00:20:46.000
+give you something called an L away I
+have an example of it later on a letter
+of authority and what it is is
+
+190
+00:20:46.000 --> 00:20:53.000
+permission to now connect two ports on
+AWS is Reuters so if you're located
+within the same facility as our
+
+191
+00:20:53.000 --> 00:20:58.000
+equipment this can be as simple as a
+cross connect under the floor you can
+just raise a cross connect request with
+
+192
+00:20:58.000 --> 00:21:05.000
+say equinix or coresight or one of our
+Direct Connect locations and say here's
+our rack here's where AWS are located a
+
+193
+00:21:05.000 --> 00:21:11.000
+range of cross connect for me
+single-mode fiber as I said the two
+interface types that we support thousand
+
+194
+00:21:11.000 --> 00:21:19.000
+base LX and 10g base lr if you're not
+with in that facility that goes back to
+those terms i was using earlier for the
+
+195
+00:21:19.000 --> 00:21:26.000
+physical connections so you might
+purchase a pseudowire type service or a
+lan extension service from a carrier or
+
+196
+00:21:26.000 --> 00:21:32.000
+a direct connect partner and a direct
+connect partner will extend it from that
+location out to wherever you need it to
+
+197
+00:21:32.000 --> 00:21:37.000
+be delivered to your equipment and then
+the final component is obviously a
+Rooter to go on the other end of that
+
+198
+00:21:37.000 --> 00:21:43.000
+connection so that Rueter needs to
+support obviously the interface type if
+it's within the building that single
+
+199
+00:21:43.000 --> 00:21:50.000
+mode connection or however the carrier
+presents it to you it needs to support
+8.o 2.1 QV lands which is what we use to
+
+200
+00:21:50.000 --> 00:22:01.000
+carry the bgp sessions and this is what
+it looks like so we've still got our
+same scenario here left hand side is AWS
+
+201
+00:22:01.000 --> 00:22:07.000
+right hand side is the corporate network
+we now have our direct connect location
+between us we have the AWS direct
+
+202
+00:22:07.000 --> 00:22:12.000
+connect reuters in that location and in
+this example i'm showing that you're
+co-located there as well so you've got
+
+203
+00:22:12.000 --> 00:22:18.000
+perhaps some of your service
+some infrastructure there and part of
+your environment you want to link into
+
+204
+00:22:18.000 --> 00:22:24.000
+resources within AWS you probably also
+have the rest of your customer network
+connecting back to the corporate
+
+205
+00:22:24.000 --> 00:22:31.000
+environment on the right hand side so
+this is the the really simple example I
+was talking about a cross connect so
+
+206
+00:22:31.000 --> 00:22:36.000
+what are the components that make up
+this well first of all between the AWS
+region and the direct connect location
+
+207
+00:22:36.000 --> 00:22:44.000
+we have the Amazon backbone so this is
+the diverse and resilient connectivity
+from the direct connect location back to
+
+208
+00:22:44.000 --> 00:22:50.000
+all of the availability zones within the
+AWS region so direct connect gives you
+access to all of the availability zones
+
+209
+00:22:50.000 --> 00:22:57.000
+the next component here is the cross
+connect that we've ordered perhaps from
+the facility between the AWS equipment
+
+210
+00:22:57.000 --> 00:23:03.000
+and your equipment then we have your
+route of the customer Rooter pap sitting
+in your cage your rack an access circuit
+
+211
+00:23:03.000 --> 00:23:09.000
+of some sort into a network and then
+onward delivery into the corporate
+environment so pretty standard pretty
+
+212
+00:23:09.000 --> 00:23:17.000
+simple deployment the variation on this
+that I mentioned earlier was the partner
+delivery so the direct connect partners
+
+213
+00:23:17.000 --> 00:23:21.000
+and there's a list of them on the
+website they're very familiar with this
+process and what you would do is you
+
+214
+00:23:21.000 --> 00:23:28.000
+would hand them your letter of authority
+which gives them permission to connect
+into the AWS equipment they then
+
+215
+00:23:28.000 --> 00:23:34.000
+connected into their network and usually
+deliver unto you as a layer to type
+connection so now you still run the
+
+216
+00:23:34.000 --> 00:23:39.000
+vlans on your router you still run the
+BGP there are variations out there but
+this is the the most standard and the
+
+217
+00:23:39.000 --> 00:23:48.000
+simplest model for a partner connection
+at one gig or 10 gig so let's go back to
+that one that was slightly different
+
+218
+00:23:48.000 --> 00:23:55.000
+let's talk about mpls IP VPN vpls that
+type of thing well in this scenario
+you've usually got an existing network
+
+219
+00:23:55.000 --> 00:24:01.000
+connecting together your corporate
+locations perhaps a data center already
+and these might be multiple locations
+
+220
+00:24:01.000 --> 00:24:07.000
+globally so on the edge of the MPLS
+Network there's going to be what's
+called P equipment provider edge and
+
+221
+00:24:07.000 --> 00:24:14.000
+you're going to have some see reuters
+customer edge equipment inside your data
+centers now in this particular case if
+
+222
+00:24:14.000 --> 00:24:20.000
+the putt the carrier providing this
+connectivity for you is a direct connect
+partner often they will take that L away
+
+223
+00:24:20.000 --> 00:24:26.000
+from you order the cross connect and
+deliver it straight into their p Reuters
+on the side of their MPLS network they
+
+224
+00:24:26.000 --> 00:24:32.000
+then encapsulate that and deliver it
+your IP VPN or your layer 3 VPN service
+that you receive from them but they do
+
+225
+00:24:32.000 --> 00:24:37.000
+all of the bgp and the VLAN termination
+right at the edge in that location so
+it's a slightly different deployment
+
+226
+00:24:37.000 --> 00:24:45.000
+model okay let's go back to our model oh
+I've removed the the layer 1 2 3 and
+just put some of the terms in here that
+
+227
+00:24:45.000 --> 00:24:51.000
+we use for direct connect and how they
+map onto the components on the right
+hand side so I've mentioned a virtual
+
+228
+00:24:51.000 --> 00:24:56.000
+interface a couple of times so what is
+that well it sits on top of that
+physical connection we have at the very
+
+229
+00:24:56.000 --> 00:25:02.000
+bottom of the stack here so a virtual
+interface contains the VLAN definition
+that's one of the components that we
+
+230
+00:25:02.000 --> 00:25:08.000
+need to configure for direct connect it
+contains the details of the IP addresses
+that we use on each end of the BGP
+
+231
+00:25:08.000 --> 00:25:15.000
+session and it carries the BGP session
+itself so when you see the term virtual
+interface that's what it means so each
+
+232
+00:25:15.000 --> 00:25:22.000
+virtual interface is a combination of a
+VLAN and a BGP session all of that then
+enables you to route traffic as it says
+
+233
+00:25:22.000 --> 00:25:28.000
+at the top on the right hand side and if
+this is going to a VPC so it's a private
+virtual interface that's where it
+
+234
+00:25:28.000 --> 00:25:34.000
+connects with the virtual private
+gateway and gives you access into your
+VPC and this particular example all of
+
+235
+00:25:34.000 --> 00:25:44.000
+those components are owned by the same
+AWS account so on the left-hand side AC
+1 so let's talk about the difference
+
+236
+00:25:44.000 --> 00:25:50.000
+between public and private virtual
+interfaces for a moment what have they
+got in common well they both use 8021 QV
+
+237
+00:25:50.000 --> 00:25:57.000
+lands they both use ebgp peering between
+two different AS numbers as i said
+earlier we accept hundred prefixes over
+
+238
+00:25:57.000 --> 00:26:05.000
+bgp but a private virtual interface is
+for accessing resources that are inside
+your virtual private cloud so your ec2
+
+239
+00:26:05.000 --> 00:26:11.000
+resources that are running on IP
+addresses that you specified when you
+created the VPC it doesn't give you
+
+240
+00:26:11.000 --> 00:26:18.000
+access to VPC endpoints for s3 inside
+that v pc and it doesn't enable any sort
+of transitive routing using VPC peering
+
+241
+00:26:18.000 --> 00:26:24.000
+it just gives you access to that
+particular v pc so if you have multiple
+v pcs you'll have multiple virtual
+
+242
+00:26:24.000 --> 00:26:31.000
+interfaces one going to each of them a
+public virtual interface is used to
+access the services that are outside of
+
+243
+00:26:31.000 --> 00:26:39.000
+your v pc so things like DynamoDB s3
+public endpoints SQ s any of those kinds
+of services that sit outside the DPC if
+
+244
+00:26:39.000 --> 00:26:43.000
+they're the things that you're using
+then you
+most likely to need a public virtual
+
+245
+00:26:43.000 --> 00:26:51.000
+interface so back to our model here I
+want you to just call out a couple of
+other terms that you might see or hear
+
+246
+00:26:51.000 --> 00:26:56.000
+around direct connect and this is
+identifying that we can separate out the
+ownership of the various components of
+
+247
+00:26:56.000 --> 00:27:02.000
+direct connect so the physical
+connection perhaps that's owned by the
+network team so it considered one
+
+248
+00:27:02.000 --> 00:27:09.000
+particular AWS account when you create a
+virtual interface you can then choose to
+share that virtual interface to another
+
+249
+00:27:09.000 --> 00:27:15.000
+account and we then call that a hosted
+virtual interface so now we have the
+separation there between two different
+
+250
+00:27:15.000 --> 00:27:23.000
+accounts perhaps the network team and
+the application owners a further
+variation on that is where you're using
+
+251
+00:27:23.000 --> 00:27:30.000
+one of our sub 1 gig connections so
+these are bandwidths of 50 meg 100 two
+three four and five hundred megabits per
+
+252
+00:27:30.000 --> 00:27:37.000
+second these are not dedicated ports
+these reports that partners have
+connected with us already and they
+
+253
+00:27:37.000 --> 00:27:43.000
+provision the sub right connections for
+you on those ports so in this particular
+case the partner already has the
+
+254
+00:27:43.000 --> 00:27:49.000
+physical connection in this case we call
+it an interconnect you speak with that
+partner about what connectivity you
+
+255
+00:27:49.000 --> 00:27:54.000
+require how much bandwidth do you need
+and they will then provision you what's
+called a hosted connection on that
+
+256
+00:27:54.000 --> 00:27:59.000
+interconnect they specify the bandwidth
+and because they own the physical
+connection they choose the VLAN tag
+
+257
+00:27:59.000 --> 00:28:05.000
+that's going to be used for it but at
+that point is presented in to your
+account into your customer account and
+
+258
+00:28:05.000 --> 00:28:10.000
+we call that a hosted connection from
+this point up it's exactly the same as
+the other types of dedicated port
+
+259
+00:28:10.000 --> 00:28:16.000
+connections you still create a virtual
+interface and you still attached it to a
+virtual private gateway there's one site
+
+260
+00:28:16.000 --> 00:28:22.000
+difference here in that it only supports
+a single virtual interface / hosted
+connection so if you need to connect to
+
+261
+00:28:22.000 --> 00:28:27.000
+multiple V pcs simply have a
+conversation with the direct connect
+partner that says I might need two or
+
+262
+00:28:27.000 --> 00:28:35.000
+three hosted connections to put a
+virtual interface on each one of them
+just to add one more layer of complexity
+
+263
+00:28:35.000 --> 00:28:41.000
+in here you still have the option to
+create a hosted virtual interface in
+this model so the partner has now
+
+264
+00:28:41.000 --> 00:28:47.000
+created the hosted connection and shared
+it with perhaps your main account within
+that main account you've then created a
+
+265
+00:28:47.000 --> 00:28:52.000
+virtual interface and you've shared that
+to the development team so it's now a
+hosted virtual interface so we now have
+
+266
+00:28:52.000 --> 00:28:59.000
+three elements involved three owners of
+the
+different components of direct connect
+
+267
+00:28:59.000 --> 00:29:07.000
+so as I say it only provides access to
+resources within the VPC it attaches at
+that same place that the VPN connections
+
+268
+00:29:07.000 --> 00:29:12.000
+do so it comes into the virtual private
+gateway now that's relevant for cloud
+hub which will be talking about towards
+
+269
+00:29:12.000 --> 00:29:20.000
+the end you can attach multiple private
+vist virtual interfaces to that virtual
+private gateway so if there's multiple
+
+270
+00:29:20.000 --> 00:29:26.000
+connections you simply attach multiple
+virtual interfaces to that virtual
+private gateway and because this is a
+
+271
+00:29:26.000 --> 00:29:32.000
+private virtual interface you can use
+whatever IP addresses you like so you
+can specify the IP addresses for the
+
+272
+00:29:32.000 --> 00:29:39.000
+peering session or will automatically
+generate them for you you can announce
+any IP addresses you like over that BGP
+
+273
+00:29:39.000 --> 00:29:45.000
+session to us will then propagate them
+into your route table you can also just
+announced a default route so at that
+
+274
+00:29:45.000 --> 00:29:53.000
+point we'll send all traffic out by the
+virtual gateway back to your corporate
+network so what does that look like when
+
+275
+00:29:53.000 --> 00:29:59.000
+we deploy into our environment back to
+our VPC and our corporate data center on
+the right hand side you can see the
+
+276
+00:29:59.000 --> 00:30:05.000
+parameters at the very top so the first
+thing is a virtual interface we identify
+it by something good a DX VF identifier
+
+277
+00:30:05.000 --> 00:30:12.000
+you'll see that in the console on the
+custom side it's usually identified by
+some sort of sub interface or veal and
+
+278
+00:30:12.000 --> 00:30:18.000
+definition on your equipment we choose a
+VLAN tag we did that via the console
+earlier we're going to specify the IP
+
+279
+00:30:18.000 --> 00:30:26.000
+addresses that we use for that hearing
+session the AS number again on the AWS
+side that's fixed generally the same for
+
+280
+00:30:26.000 --> 00:30:32.000
+most regions but then what is some
+variation on the customer side you get
+to choose what is number you want to use
+
+281
+00:30:32.000 --> 00:30:39.000
+so as I said earlier you can choose
+anything you like this is a private
+virtual interface underneath all of that
+
+282
+00:30:39.000 --> 00:30:45.000
+there's then an md5 key that's used for
+authentication between the two BGP peers
+and the end result of this is we now
+
+283
+00:30:45.000 --> 00:30:53.000
+have an ebgp session up and running
+between AWS and your equipment from the
+AWS side what are we going to be
+
+284
+00:30:53.000 --> 00:30:59.000
+announcing it is quite simple it's the
+side a block for your VPC it will be a
+single prefix announcement we don't
+
+285
+00:30:59.000 --> 00:31:07.000
+announce individual subnets and it will
+be just that VPC that you attached the
+virtual interface to
+
+286
+00:31:07.000 --> 00:31:13.000
+on your site as I said you can announce
+anything to us generally it would be the
+culprit addresses but it could be a
+
+287
+00:31:13.000 --> 00:31:19.000
+default route but either way you still
+need to go into the virtual into the
+route table inside your VPC and either
+
+288
+00:31:19.000 --> 00:31:24.000
+turn on route propagation or put a
+static route in there this is exactly
+the same as we did for the VPN
+
+289
+00:31:24.000 --> 00:31:31.000
+connection earlier so let's go back to
+the physical deployment that we had and
+you recall earlier where we've broken
+
+290
+00:31:31.000 --> 00:31:38.000
+down the various components that make up
+the connection and obviously you could
+have two connections now if you request
+
+291
+00:31:38.000 --> 00:31:43.000
+to direct connect connections via the
+AWS console we will automatically
+provision those for you on different
+
+292
+00:31:43.000 --> 00:31:51.000
+equipment on the AWS side so at this
+point you've got hardware resilience and
+redundancy it's to coming into the same
+
+293
+00:31:51.000 --> 00:31:56.000
+physical Rooter on your side in this
+particular scenario and but then onward
+into your network to provide that
+
+294
+00:31:56.000 --> 00:32:02.000
+connectivity so what does this look like
+if we have two physical connections what
+do we now do with the virtual interfaces
+
+295
+00:32:02.000 --> 00:32:09.000
+well each of those physical connections
+is treated independently so we're going
+to configure to virtual interfaces to
+
+296
+00:32:09.000 --> 00:32:17.000
+private this in this case all the same
+parameters that we had before but
+there's two of them one thing I want to
+
+297
+00:32:17.000 --> 00:32:23.000
+draw attention to here though is that
+because we're attaching these virtual
+interfaces to the same VPC we need to
+
+298
+00:32:23.000 --> 00:32:28.000
+make sure that we're using different IP
+addresses for the peering you can
+however use the same VLAN and that's
+
+299
+00:32:28.000 --> 00:32:33.000
+because the VLAN is just contained to
+that one particular physical connection
+is used to separate out each of the
+
+300
+00:32:33.000 --> 00:32:39.000
+virtual interfaces but beyond that it
+doesn't get carried into the aid of us
+network at all so for simplicity we
+
+301
+00:32:39.000 --> 00:32:44.000
+quite often sneak customers creating
+virtual interfaces with same VLAN number
+on each of their connections if they're
+
+302
+00:32:44.000 --> 00:32:53.000
+going to the same place so going back to
+the physical infrastructure again
+obviously this kind of gives you a level
+
+303
+00:32:53.000 --> 00:32:57.000
+of resilience you now have two
+connections from AWS but actually it
+would be much better if we simply did
+
+304
+00:32:57.000 --> 00:33:05.000
+that so let's have to customer Reuters
+so the same configuration applies here
+there's no difference in terms of how
+
+305
+00:33:05.000 --> 00:33:12.000
+you deploy this but it is a really
+simple solution but a variation on that
+again if you want a level of resilience
+
+306
+00:33:12.000 --> 00:33:18.000
+that is geographically diverse is to
+move those two Reuters on your side in
+two different direct connect locations
+
+307
+00:33:18.000 --> 00:33:24.000
+so here I'm showing
+that has to direct connect locations so
+two separate sets of direct connect
+
+308
+00:33:24.000 --> 00:33:32.000
+Reuters going to two separate customer
+gateway devices and then on virus
+service provider into your network but
+
+309
+00:33:32.000 --> 00:33:38.000
+if we've gone this far well we can
+simply do that as well so now we have
+four direct connect connections the
+
+310
+00:33:38.000 --> 00:33:43.000
+point I'm making is that you can layer
+as much resiliency into the solution as
+you like we give you the options to do
+
+311
+00:33:43.000 --> 00:33:49.000
+this and each time you do you then just
+create virtual interfaces on top of the
+physical connections to carry that
+
+312
+00:33:49.000 --> 00:33:55.000
+traffic to your resources on the AWS
+side and in reality a combination of
+these scenarios are used by many
+
+313
+00:33:55.000 --> 00:34:04.000
+customers so we've got our two virtual
+interfaces up and running let's let's
+keep a fairly simple scenario just two
+
+314
+00:34:04.000 --> 00:34:09.000
+connections well what does that look
+like well if you've got two virtual
+interface you probably want to be
+
+315
+00:34:09.000 --> 00:34:14.000
+running them in an active active
+configuration and by default if these
+came into the same Rooter what would
+
+316
+00:34:14.000 --> 00:34:20.000
+happen is your Ridge will make a
+decision of which one it prefers based
+on a certain algorithm and that would be
+
+317
+00:34:20.000 --> 00:34:27.000
+where it sends all the traffic you can
+quite simply update that to use BGP
+multipath so the example here is a cisco
+
+318
+00:34:27.000 --> 00:34:35.000
+router by adding one extra configuration
+option maximum paths to the m will
+appear next to those particular routes
+
+319
+00:34:35.000 --> 00:34:40.000
+in the route table which means you'll
+now be multipathing across them
+effectively network level load balancing
+
+320
+00:34:40.000 --> 00:34:48.000
+if you like so now you're getting the
+benefit of both physical connections if
+we look at it though from the
+
+321
+00:34:48.000 --> 00:34:53.000
+perspective of the virtual gateway its
+received those announcements from you
+what's it going to do with them it's
+
+322
+00:34:53.000 --> 00:34:59.000
+received the same thing twice well we
+automatically assume therefore that you
+want to run this as active active and
+
+323
+00:34:59.000 --> 00:35:04.000
+that you would like us to also do
+multipath so we can see these two
+identical paths by two different peers
+
+324
+00:35:04.000 --> 00:35:10.000
+perfect we'll do multi path for you this
+is not a configuration or option or
+anything that you do in the console
+
+325
+00:35:10.000 --> 00:35:18.000
+that's what we choose by default what if
+you don't want to run active active
+though so what if on your side these
+
+326
+00:35:18.000 --> 00:35:25.000
+connections go to perhaps two different
+data centers and you run active standby
+or a hot cold setup well in that case
+
+327
+00:35:25.000 --> 00:35:30.000
+you're going to want to choose one
+particular connection over the other and
+you probably want to actively decide
+
+328
+00:35:30.000 --> 00:35:35.000
+which one you want
+prefer so this is where that local
+preference thing comes in that I
+
+329
+00:35:35.000 --> 00:35:40.000
+mentioned earlier in your configuration
+you specify that as you receive these
+routes from us you apply a local
+
+330
+00:35:40.000 --> 00:35:46.000
+preference to them the higher the
+preference the more preferred route so
+in this case the bottom example 200
+
+331
+00:35:46.000 --> 00:35:51.000
+that's the one that we're going to be
+using and you can see that indicated by
+the chevron on the left-hand side so
+
+332
+00:35:51.000 --> 00:35:57.000
+that's our preferred path from the
+customer side but what about on the
+virtual gateway side well we haven't
+
+333
+00:35:57.000 --> 00:36:04.000
+changed anything so it's still the same
+is path length we're still going to be
+doing BGP multipath so you're going to
+
+334
+00:36:04.000 --> 00:36:08.000
+be sending traffic over one connection
+we're going to reply by sending traffic
+over both of them and that's probably
+
+335
+00:36:08.000 --> 00:36:14.000
+not what you wanted to achieve will we
+give you the ability to influence that
+choice and you do this using a s path
+
+336
+00:36:14.000 --> 00:36:21.000
+prepending so what you do here is you
+artificially make us believe that one of
+those connections is slightly longer in
+
+337
+00:36:21.000 --> 00:36:29.000
+terms of network distance than the other
+so in this case I have two examples
+we're doing a s prepending x 2 and x 1
+
+338
+00:36:29.000 --> 00:36:37.000
+where we put our a es number on the path
+a couple of times before we pass it on
+to the AWS reuters so now we look at
+
+339
+00:36:37.000 --> 00:36:42.000
+that from the virtual gateway
+perspective and one of these paths looks
+longer than the other so we now make a
+
+340
+00:36:42.000 --> 00:36:47.000
+path selection and we choose the
+shortest path so at this point you've
+influenced our choice of whether we're
+
+341
+00:36:47.000 --> 00:36:53.000
+doing active passive or active active
+there's no configuration that you need
+to do in the console for this this is
+
+342
+00:36:53.000 --> 00:37:03.000
+all controlled from your customer device
+where you're announcing these routes so
+let's move on and talk availa a public
+
+343
+00:37:03.000 --> 00:37:10.000
+virtual interface over direct connect so
+it provides access to Amazon's public IP
+addresses so this is all of the public
+
+344
+00:37:10.000 --> 00:37:17.000
+IP addresses for that particular AWS
+region everything that's running there
+that includes things like s3 it could
+
+345
+00:37:17.000 --> 00:37:27.000
+include other services that are running
+on AWS it could include the AWS the
+Amazon retail site when you set up a BGP
+
+346
+00:37:27.000 --> 00:37:31.000
+session from a public virtual interface
+there are a few different requirements
+though compared to a private virtual
+
+347
+00:37:31.000 --> 00:37:37.000
+interface we require you to use public
+IP addresses on a public virtual
+interface so if you've got your own IP
+
+348
+00:37:37.000 --> 00:37:42.000
+addresses that you can use for this
+peering session and you're going to
+announce public IP addresses to us great
+
+349
+00:37:42.000 --> 00:37:47.000
+nothing else needs to happen you just
+configure it in the console and I'll
+you what that looks like if however you
+
+350
+00:37:47.000 --> 00:37:54.000
+don't have public IP addresses that you
+own or you aren't able to break up your
+network to be able to use those on a BGP
+
+351
+00:37:54.000 --> 00:38:01.000
+session with AWS then raise a case with
+a double your support will actually
+issue you a / 31 so two IP addresses
+
+352
+00:38:01.000 --> 00:38:06.000
+that you can use for this BGP peering
+session which point you can nap behind
+that on your end of the connection to
+
+353
+00:38:06.000 --> 00:38:11.000
+reach all of these services so simply
+raise a case with a double your support
+if that's something you need for a
+
+354
+00:38:11.000 --> 00:38:18.000
+public virtual interface the AES number
+that you use on the public virtual
+interface if you're going to use a
+
+355
+00:38:18.000 --> 00:38:25.000
+public is number you will need to own
+that is and we go through a verification
+process when you set up a public virtual
+
+356
+00:38:25.000 --> 00:38:30.000
+interface where we validate the
+ownership of the IP addresses and the AS
+number that you've used when configuring
+
+357
+00:38:30.000 --> 00:38:39.000
+it if you don't have a public AS number
+that's fine you can use a private AS
+number finally this into regional
+
+358
+00:38:39.000 --> 00:38:46.000
+feature that's available within the u.s.
+so what is it well quite simply a direct
+connect location is associated with one
+
+359
+00:38:46.000 --> 00:38:52.000
+particular region so a private virtual
+interface gives us access to the V pcs
+within that region public virtual
+
+360
+00:38:52.000 --> 00:38:58.000
+interface access to the public services
+within that region within the u.s.
+however we actually announced all of the
+
+361
+00:38:58.000 --> 00:39:04.000
+public IP addresses from all of the US
+regions at any of our Direct Connect
+locations so that means you could get a
+
+362
+00:39:04.000 --> 00:39:10.000
+connection on the west coast but
+actually be accessing services on the
+East Coast all through that single
+
+363
+00:39:10.000 --> 00:39:17.000
+connection we recently announced that
+we've added BGP communities to these
+announcements so this was posted on the
+
+364
+00:39:17.000 --> 00:39:23.000
+forum last week what this means is that
+when you look at the prefixes we
+announce to you you can now identify
+
+365
+00:39:23.000 --> 00:39:32.000
+where they came from so if you see the
+8100 community tagged on a particular
+prefix you know that came from the local
+
+366
+00:39:32.000 --> 00:39:38.000
+AWS region to which you're connected if
+it's got 8200 on it it came from
+somewhere within the continent from one
+
+367
+00:39:38.000 --> 00:39:44.000
+of the other regions and equally for
+traffic engineering purposes on your
+side you might not want us to propagate
+
+368
+00:39:44.000 --> 00:39:50.000
+your roots beyond the local region so as
+you announced them into our network we
+look at the communities that you tag
+
+369
+00:39:50.000 --> 00:39:58.000
+them with as well so if you tag them
+with 90 100 then we'll keep them to just
+the local AWS region if you tag them
+
+370
+00:39:58.000 --> 00:40:02.000
+with
+200 they'll go to all of the AWS regions
+and that's the the default position
+
+371
+00:40:02.000 --> 00:40:10.000
+within the u.s. so what does the public
+virtual interface look like in our
+configuration well exactly all of the
+
+372
+00:40:10.000 --> 00:40:15.000
+same parameters we talked about for a
+private virtual interface at the top
+there it's got a DX fifth identifier a
+
+373
+00:40:15.000 --> 00:40:23.000
+VLAN IP addresses for the BGP session
+it's got an AS number both sides and an
+md5 key but you're going to see a
+
+374
+00:40:23.000 --> 00:40:28.000
+slightly different announcement from the
+AWS side it's not a single prefix now
+it's going to be all of those prefixes I
+
+375
+00:40:28.000 --> 00:40:34.000
+talked about and these vary over time so
+you might be aware that we actually
+publish a list of all of the Amazon IP
+
+376
+00:40:34.000 --> 00:40:42.000
+addresses via an IP ranges JSON file
+that you can use to download and compare
+against this list if you need to on the
+
+377
+00:40:42.000 --> 00:40:48.000
+customer side though you can announce to
+us whatever public IP addresses you want
+us to root 2 and this impacts all
+
+378
+00:40:48.000 --> 00:40:53.000
+traffic that leaves that particular AWS
+region that's why we go through the
+verification process to check that you
+
+379
+00:40:53.000 --> 00:41:00.000
+own them that process takes maximum of
+72 hours usually a much shorter time and
+if you've used those IP addresses with
+
+380
+00:41:00.000 --> 00:41:06.000
+us before it will go through much more
+of an automatic process you can announce
+those IP addresses to us and now all
+
+381
+00:41:06.000 --> 00:41:11.000
+traffic leaving the Amazon network
+destined for those IP addresses will go
+over this public virtual interface
+
+382
+00:41:11.000 --> 00:41:19.000
+rather than over the Internet here's an
+example of the output again on a cisco
+router in this particular case and you
+
+383
+00:41:19.000 --> 00:41:25.000
+can see the AS path on the right hand
+side you'll notice that 7224 which is
+the one we use for direct connect is
+
+384
+00:41:25.000 --> 00:41:32.000
+present on all of them but then beyond
+that you see another one and one 6509 is
+the Amazon global is number so we use
+
+385
+00:41:32.000 --> 00:41:37.000
+7224 just for direct connect and then
+you're going to see the other amazon is
+numbers beyond that for some of the
+
+386
+00:41:37.000 --> 00:41:47.000
+prefixes as a community example here's a
+particular announcement that's coming
+over BGP where its showing that it's
+
+387
+00:41:47.000 --> 00:41:56.000
+tagged with the 8100 and the 8200
+community so this is showing that it's
+an inter-regional side of the local AWS
+
+388
+00:41:56.000 --> 00:42:04.000
+region so how do we actually deploy all
+of this how do we order it what does it
+look like well here are the steps and
+
+389
+00:42:04.000 --> 00:42:11.000
+the very first important one is make
+sure you choose the correct region or
+during a connection in the wrong region
+
+390
+00:42:11.000 --> 00:42:16.000
+like
+view a few few problems if you do just
+to be clear just delete the connection
+
+391
+00:42:16.000 --> 00:42:21.000
+as soon as you've created it it's not a
+problem choose the region you want the
+connection in the reason that's
+
+392
+00:42:21.000 --> 00:42:26.000
+important is when you go to actually
+create the connection in the direct
+connect console we then populate a list
+
+393
+00:42:26.000 --> 00:42:31.000
+of the direct connect locations and
+obviously they're tied to that
+particular region you then choose the
+
+394
+00:42:31.000 --> 00:42:39.000
+amount of bandwidth you need and that's
+it that's your direct connect connection
+request it we will then send you by
+
+395
+00:42:39.000 --> 00:42:46.000
+email an loa co a CF a letter of
+authority connecting facility agreement
+it's a document that says you have
+
+396
+00:42:46.000 --> 00:42:53.000
+permission to excuse me you have
+permission to connect to these ports on
+the AWS Reuters you're going to be using
+
+397
+00:42:53.000 --> 00:42:57.000
+this with the facility provider to order
+that cross connect or with the partner
+if they're going to be providing
+
+398
+00:42:57.000 --> 00:43:05.000
+connectivity the LOA CFA is sent to the
+root email address of the account that
+requested the connection so make sure
+
+399
+00:43:05.000 --> 00:43:12.000
+that you are monitoring the email
+account for that particular address once
+you've received the LOA you then need to
+
+400
+00:43:12.000 --> 00:43:17.000
+order the cross connect in our
+documentation we actually provide a list
+of the locations and what the process is
+
+401
+00:43:17.000 --> 00:43:22.000
+for that particular provider some of
+them require this by email some of them
+have a long line portal that you upload
+
+402
+00:43:22.000 --> 00:43:29.000
+this the loa to so just follow their
+process to order the cross connect or a
+partner will be doing on your behalf
+
+403
+00:43:29.000 --> 00:43:35.000
+once you've done that you're then able
+to configure your virtual interfaces now
+you can actually do this before the
+
+404
+00:43:35.000 --> 00:43:40.000
+physical connection even comes up so
+once you've ordered it you've ordered
+the cross-connect start configuring the
+
+405
+00:43:40.000 --> 00:43:45.000
+virtual interfaces at the very very top
+of the screen is the decision as to
+whether this is a public or a private
+
+406
+00:43:45.000 --> 00:43:51.000
+virtual interface once you make that
+decision the form then updates below
+that to change some of the fields to
+
+407
+00:43:51.000 --> 00:43:56.000
+match the items I was talking about
+earlier so now you fill in the details
+you're going to name this connection and
+
+408
+00:43:56.000 --> 00:44:02.000
+you can see there the virtual interface
+owner is one of the options you've got
+so you can share this virtual interface
+
+409
+00:44:02.000 --> 00:44:10.000
+into another AWS account as per the
+examples we had on the screen earlier
+once that's done just like in the VPN
+
+410
+00:44:10.000 --> 00:44:14.000
+configuration scenario we give you the
+option to download a Rooter
+configuration there's a very basic
+
+411
+00:44:14.000 --> 00:44:20.000
+configuration but it contains all the
+information you need for your end of the
+connection so contain the IP addresses
+
+412
+00:44:20.000 --> 00:44:25.000
+for the peering session the AS number
+being used by amazon the md5 key that
+you either
+
+413
+00:44:25.000 --> 00:44:32.000
+chose or that you've generated and all
+of the other details you need for
+configuring that connection so that's if
+
+414
+00:44:32.000 --> 00:44:37.000
+you're ordering a one or a 10 gig
+dedicated port the process if you're
+doing this through a partner for one of
+
+415
+00:44:37.000 --> 00:44:44.000
+those sub 1 gig connections is slightly
+different it's actually initiated by the
+partner so you're going to give your AWS
+
+416
+00:44:44.000 --> 00:44:49.000
+account number to the partner this is
+your 12 digit AWS account number and
+you're going to have a discussion with
+
+417
+00:44:49.000 --> 00:44:55.000
+them about how much bandwidth you need
+the partner is then going to configure
+that as a hosted connection for you and
+
+418
+00:44:55.000 --> 00:45:01.000
+you'll go into your account and simply
+accept that hosted connection appears in
+the same Direct Connect console where
+
+419
+00:45:01.000 --> 00:45:07.000
+you would have requested your own
+dedicated port once you've accepted that
+connection with them back into the
+
+420
+00:45:07.000 --> 00:45:12.000
+standard flow that we were following
+earlier configure a virtual interface
+configure our router so there's no
+
+421
+00:45:12.000 --> 00:45:17.000
+difference once you've accepted that
+connection but remember you can only
+create a single virtual interface on
+
+422
+00:45:17.000 --> 00:45:25.000
+that hosted connection okay now
+depending on how much resilience you've
+put into your solution you might have
+
+423
+00:45:25.000 --> 00:45:30.000
+two connections going to two different
+Direct Connect locations we'd still
+always recommend that you put a VPN in
+
+424
+00:45:30.000 --> 00:45:36.000
+place you know maintenance still might
+need to be done by your carrier's your
+partner's you might need to replace a
+
+425
+00:45:36.000 --> 00:45:43.000
+Rooter it's always good to have another
+backup in place so you can configure
+this VPN as a dynamic bgp based VPN as
+
+426
+00:45:43.000 --> 00:45:49.000
+we talked about earlier in exactly the
+same way in parallel to direct connect
+we talked about the fact that from the
+
+427
+00:45:49.000 --> 00:45:56.000
+AWS side if we see multiple ways out of
+a virtual gateway going by a direct
+connect and via VPN will always prefer
+
+428
+00:45:56.000 --> 00:46:02.000
+the direct connects first after that we
+then failover back to the VPNs and you
+would need to configure the same on your
+
+429
+00:46:02.000 --> 00:46:10.000
+site so you make past selections there
+one other interesting variation of
+running a VPN with direct connect is to
+
+430
+00:46:10.000 --> 00:46:17.000
+actually run it over the top of a direct
+connect so if you wanted an encrypted
+connection into your VPC or perhaps you
+
+431
+00:46:17.000 --> 00:46:23.000
+wanted to reach a VPC that is in a
+remote AWS region so in the US you might
+have your direct connect on the west
+
+432
+00:46:23.000 --> 00:46:29.000
+coast and you're running your v pc on
+the east coast well perhaps you to
+establish a VPN over that public virtual
+
+433
+00:46:29.000 --> 00:46:34.000
+interface because within the
+announcements for all of the Amazon
+public IP addresses are the endpoints
+
+434
+00:46:34.000 --> 00:46:41.000
+for those VPN connections as well so now
+you can take advantage of the
+direct connect that you have already on
+
+435
+00:46:41.000 --> 00:46:46.000
+one coast and connect to resources on
+the other coast running over the Amazon
+backbone network so you can see the
+
+436
+00:46:46.000 --> 00:46:50.000
+components here that you'd have to
+configure to do that you've got the
+public virtual interface at the top of
+
+437
+00:46:50.000 --> 00:46:57.000
+the screen all the parameters that we
+had before and then running over the top
+of that we have our two tunnels for the
+
+438
+00:46:57.000 --> 00:47:03.000
+VPN connection again running bgp so you
+then need to accept those on to your
+router and configure it appropriately to
+
+439
+00:47:03.000 --> 00:47:12.000
+route to the different v pcs on the AWS
+side now I just wanted to touch on
+billing for both of these services so
+
+440
+00:47:12.000 --> 00:47:18.000
+VPN connections pretty simple there are
+charges for each connection our that
+your connection is present and then we
+
+441
+00:47:18.000 --> 00:47:26.000
+charge for data transfer at our standard
+internet rates on Direct Connect we
+charge for port hours so this is a
+
+442
+00:47:26.000 --> 00:47:31.000
+charge from the moment that your port
+goes active so when you first order that
+for we know that it's going to take a
+
+443
+00:47:31.000 --> 00:47:35.000
+bit of time to organize that cross
+connect and to work with a partner
+perhaps to get their connection to your
+
+444
+00:47:35.000 --> 00:47:43.000
+facility so we don't start charging you
+for that port until it comes up for the
+first time or if 90 days of expired
+
+445
+00:47:43.000 --> 00:47:50.000
+whichever comes sooner over a direct
+connect you benefit from the reduced
+data transfer charges and one thing I
+
+446
+00:47:50.000 --> 00:47:55.000
+wanted to identify here was that you
+don't pay for data transfer when you're
+accessing resources that are owned by
+
+447
+00:47:55.000 --> 00:48:02.000
+other accounts so if you're downloading
+content from my s3 bucket you don't pay
+for that data transfer over direct
+
+448
+00:48:02.000 --> 00:48:08.000
+connect you only pay for data transfer
+from your own resources and finally if
+you're running a VPN over the top of
+
+449
+00:48:08.000 --> 00:48:14.000
+direct connect in the scenario that was
+on the previous slide that gets charged
+for the reduced rate for direct connect
+
+450
+00:48:14.000 --> 00:48:24.000
+and not at the internet data transfer
+rates so a few things to remember around
+direct connect it's one of our services
+
+451
+00:48:24.000 --> 00:48:29.000
+that has that physical component to it
+so although you interact with it via the
+API is and via the console the end
+
+452
+00:48:29.000 --> 00:48:34.000
+result is a physical port that you need
+to connect to so these ports are lat
+third-party data centers these are not
+
+453
+00:48:34.000 --> 00:48:40.000
+Amazon data centers and they're there
+because we want you to be able to access
+them you're going to have to work with
+
+454
+00:48:40.000 --> 00:48:45.000
+at least one other organization to
+achieve this connectivity if you're
+within the facility it's going to be the
+
+455
+00:48:45.000 --> 00:48:50.000
+colocation provider it could be a
+network provider or a direct connect
+partner or it could be a combination of
+
+456
+00:48:50.000 --> 00:48:54.000
+multiple if you're going to do
+connections to multiple
+letís so it's always going to involve a
+
+457
+00:48:54.000 --> 00:49:01.000
+third party sub 1 gig connections only
+support single virtual interfaces that's
+quite easy to overcome if you need
+
+458
+00:49:01.000 --> 00:49:07.000
+multiple you just request multiple
+hosted connections and run a diff over
+each one of them you can share virtual
+
+459
+00:49:07.000 --> 00:49:13.000
+interfaces with other accounts so just
+because the physical connection lives in
+one account you can use it within
+
+460
+00:49:13.000 --> 00:49:20.000
+another one and finally remember that
+the public virtual interfaces do include
+the hardware VPN endpoints that you can
+
+461
+00:49:20.000 --> 00:49:31.000
+use for a BGP or static based VPN this
+is just an example of an implementation
+plan for direct connect and the reason
+
+462
+00:49:31.000 --> 00:49:36.000
+I've put it up here is because of those
+third-party engagements that are
+required usually for deploying direct
+
+463
+00:49:36.000 --> 00:49:42.000
+connect I'd recommend that you do treat
+it as a mini project so put together a
+plan establish who should be doing what
+
+464
+00:49:42.000 --> 00:49:48.000
+standard project planning and then stick
+to it worked through that process you
+might have some complications along the
+
+465
+00:49:48.000 --> 00:49:53.000
+way with perhaps carriers arranging
+connections but if you have something
+that everyone is referring to as the
+
+466
+00:49:53.000 --> 00:50:02.000
+steps that are required this is
+something it's going to really help you
+succeed with the connection ok so just
+
+467
+00:50:02.000 --> 00:50:09.000
+winding up we're going to talk about the
+cloud hub functionality that we have so
+within a virtual gateway if you have
+
+468
+00:50:09.000 --> 00:50:15.000
+multiple connections be they over a VPN
+or virtual interfaces over direct
+connect if we see multiple connections
+
+469
+00:50:15.000 --> 00:50:22.000
+all coming from different AAS numbers in
+BGP terms will actually route between
+them for you will acts as a hub to a
+
+470
+00:50:22.000 --> 00:50:27.000
+hub-and-spoke network so this is not
+something that you go and turn on or
+turn off its default functionality
+
+471
+00:50:27.000 --> 00:50:33.000
+within the virtual gateway so at this
+point we can provide that connectivity
+between your different locations if
+
+472
+00:50:33.000 --> 00:50:42.000
+that's something you want some customers
+use it as a backup and have their own
+network linking their sites together one
+
+473
+00:50:42.000 --> 00:50:48.000
+other common deployment that we see is
+customers choose to deploy their own VPN
+solution perhaps they have an
+
+474
+00:50:48.000 --> 00:50:55.000
+established software solution that they
+use already and we have many on the AWS
+marketplace so the cisco csr the sophos
+
+475
+00:50:55.000 --> 00:51:03.000
+UTM there's various open-source options
+such as openswan bios things like that
+so you can deploy a software vpm within
+
+476
+00:51:03.000 --> 00:51:09.000
+your v pc of course in this case it does
+either virtual private gateway it comes
+in through the internet gateway and
+
+477
+00:51:09.000 --> 00:51:16.000
+terminates on that ec2 instance you also
+do need to consider high availability if
+you deploy a solution like this though
+
+478
+00:51:16.000 --> 00:51:22.000
+so certainly make sure you deploy at
+least to VPN instances into two
+different availability zones and have
+
+479
+00:51:22.000 --> 00:51:29.000
+appropriate health checking and failover
+between them one final interesting
+scenario is to combine those two things
+
+480
+00:51:29.000 --> 00:51:38.000
+together so we can take cloud hub and a
+software VPN running in another AWS
+region connect the two together and
+
+481
+00:51:38.000 --> 00:51:44.000
+provide access fire direct connect or
+VPN from the other locations so let me
+explain that a little bit more detail
+
+482
+00:51:44.000 --> 00:51:49.000
+down on the bottom right there we've got
+one of your office locations perhaps it
+might have a direct connect into the
+
+483
+00:51:49.000 --> 00:51:56.000
+virtual private gateway and it's
+receiving a BGP announcement for the VPC
+in u.s. East one in this example if you
+
+484
+00:51:56.000 --> 00:52:03.000
+then deployed a software VPN solution
+into EU Central one perhaps and
+established a VPN from those software
+
+485
+00:52:03.000 --> 00:52:10.000
+instances to the same virtual gateway in
+u.s. East the prefix is now that are
+going to be announced from that VPC in
+
+486
+00:52:10.000 --> 00:52:17.000
+EU central are actually going to be
+propagated by the virtual gateway to you
+over that direct connect so you're now
+
+487
+00:52:17.000 --> 00:52:22.000
+actually benefiting from a single
+connection or in this case to office
+connections into AWS unable to route via
+
+488
+00:52:22.000 --> 00:52:30.000
+the Virtual Private gateway to a VPC in
+another region so just to recap the
+topics that we cover there we talked
+
+489
+00:52:30.000 --> 00:52:38.000
+about VPNs both static and dynamic how
+can we achieve connectivity using AWS
+direct connect via both public and
+
+490
+00:52:38.000 --> 00:52:46.000
+private virtual interfaces cloud hub and
+software VPNs how you can use them
+together and then finally hopefully I've
+
+491
+00:52:46.000 --> 00:52:52.000
+given you an insight into some of the
+steps required to configure all of these
+elements without I'd like to say thank
+you very much and I'd really appreciate
+it if you could complete the session
+evaluations thank

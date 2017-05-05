@@ -1,0 +1,2120 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:06.000
+my name is Eric these days on with the
+AWS security team but when i joined
+amazon eight years ago i was with the
+
+2
+00:00:06.000 --> 00:00:13.000
+team that defined and launched VPC and
+that's what we're going to be talking
+about today that clicker works so this
+
+3
+00:00:13.000 --> 00:00:20.000
+is a reprise of a version of this talk
+that I gave it reinvent two years ago
+I'd like to manage expectations a lot of
+
+4
+00:00:20.000 --> 00:00:25.000
+the content is the same there is some
+new stuff but if you're expecting a
+completely new talk I'd rather you leave
+
+5
+00:00:25.000 --> 00:00:34.000
+angry now than leave angry at the end of
+the talk the problem that we're trying
+to solve with a VPC is simple where AWS
+
+6
+00:00:34.000 --> 00:00:42.000
+we have the cloud the cloud is full of
+all sorts of AWS see goodness services
+like ec2 and elastic load balancing and
+
+7
+00:00:42.000 --> 00:00:49.000
+the elastic block store and our
+relational database service and Amazon
+redshift or columnar data store and
+
+8
+00:00:49.000 --> 00:00:57.000
+elastic cash customers have data centers
+these are data centers they've owned for
+years they're expensive capital
+
+9
+00:00:57.000 --> 00:01:04.000
+investments they're not going to go away
+immediately and so as good engineers we
+go to the whiteboard and we draw an
+
+10
+00:01:04.000 --> 00:01:10.000
+arrow this is what we wanted to do we
+wanted to plug customer data centers
+into the cloud this is going to be a
+
+11
+00:01:10.000 --> 00:01:16.000
+really important to deployment scenario
+for us we have customers your stories
+about Netflix and customers like that
+
+12
+00:01:16.000 --> 00:01:21.000
+that are all in on the cloud they're
+closing their last data center but for
+every Netflix that we have for every
+
+13
+00:01:21.000 --> 00:01:27.000
+customer that's ending that journey
+we've got another customer beginning
+that journey so as a service provider we
+
+14
+00:01:27.000 --> 00:01:33.000
+are always going to have customers that
+are running hybrid operations between
+their existing infrastructure and their
+
+15
+00:01:33.000 --> 00:01:39.000
+new infrastructure in the cloud and it's
+it's unrealistic and unwise to expect
+people to do Big Bang migrations it's
+
+16
+00:01:39.000 --> 00:01:45.000
+going to be applications moving
+gradually data moving gradually so in
+order to win this business in order to
+
+17
+00:01:45.000 --> 00:01:53.000
+do club right we're going to have to
+support this for the long term so at the
+first reinvent we had a talk entitled
+
+18
+00:01:53.000 --> 00:02:00.000
+drinking your own champagne by Laura
+grid it's available on YouTube I highly
+recommend it it's about Amazon's own
+
+19
+00:02:00.000 --> 00:02:07.000
+story moving to AWS where we are an
+enterprise just like many of you we had
+data centers they were built to serve
+
+20
+00:02:07.000 --> 00:02:12.000
+our needs they were built without
+considering a future move to the cloud
+and we had some challenges
+
+21
+00:02:12.000 --> 00:02:19.000
+there VPC was critical to that adoption
+it was one of the major building blocks
+that we used and this is a story we've
+
+22
+00:02:19.000 --> 00:02:28.000
+seen unfold with a lot of other
+customers so in the beginning we had ec2
+and when you launched an instance we
+
+23
+00:02:28.000 --> 00:02:35.000
+would sign an IP address to that
+instance it was effectively a 32-bit
+random number it was it was unique in
+
+24
+00:02:35.000 --> 00:02:41.000
+the cloud you could you'd get a DNS name
+you could route traffic to it and when
+you launched another instance you'd get
+
+25
+00:02:41.000 --> 00:02:47.000
+another IP address and it was another 32
+bit random number and meanwhile there
+were other tenants the cloud is multi
+
+26
+00:02:47.000 --> 00:02:53.000
+tended their other customers launching
+instances in the cloud and we would
+assign them 32-bit random numbers as
+
+27
+00:02:53.000 --> 00:03:02.000
+well and this would go on and everything
+was great now we come to a customer data
+center and let's say that someday 20
+
+28
+00:03:02.000 --> 00:03:09.000
+years ago 10 years ago whenever this
+data center was built some network
+engineer chose 192 168 00 / 16 as the IP
+
+29
+00:03:09.000 --> 00:03:16.000
+range for the data center perfectly
+reasonable choice there's a router there
+this is a router router like piece of
+
+30
+00:03:16.000 --> 00:03:23.000
+sheet metal comes from one of the major
+router vendors it's got some embedded
+firmware on it some tcam and it's got a
+
+31
+00:03:23.000 --> 00:03:30.000
+routing table in it and it says 192 168
+that's here so if we're going to plug
+that into the cloud we're going to plug
+
+32
+00:03:30.000 --> 00:03:36.000
+that into the ec2 network that we had
+well you're going to launch an instance
+and we're going to need to route to that
+
+33
+00:03:36.000 --> 00:03:41.000
+instance we're gonna have to add it to
+your routing table but we have to add a
+/ 32 right we have to add a host route
+
+34
+00:03:41.000 --> 00:03:46.000
+because the next instance that launches
+in the right next door the next IP
+address could be a different customer
+
+35
+00:03:46.000 --> 00:03:52.000
+you don't want that instance routing
+back to your data center so as you
+launch instances we have to add them to
+
+36
+00:03:52.000 --> 00:04:00.000
+the routing table and as you terminate
+instances we have to make sure that you
+remove them from the routing table so
+
+37
+00:04:00.000 --> 00:04:09.000
+your routing table is going to one
+contain a set of routes the size of your
+instance fleet not good and to your
+
+38
+00:04:09.000 --> 00:04:15.000
+routing table is going to absorb updates
+at the rate of instance launch and
+terminate also not good but that's not
+
+39
+00:04:15.000 --> 00:04:24.000
+all let's say that a decade ago your
+network engineer chose 10 dot 4400 / 16
+an equally reasonable choice it's RFC
+
+40
+00:04:24.000 --> 00:04:30.000
+1918 it's not going to be right on the
+internet there's absolutely nothing that
+we can put in that routing table that'll
+
+41
+00:04:30.000 --> 00:04:35.000
+that make sense we've got 10 dot 44 in
+the cloud we've got 10 dot 44 in the
+data center you can do things like
+
+42
+00:04:35.000 --> 00:04:42.000
+double NAT if you ever say double Matt
+to a network engineer make sure that
+you're standing far away from them like
+
+43
+00:04:42.000 --> 00:04:52.000
+this horrible network design so we've
+got a problem here so from a customer
+facing perspective we have customer
+
+44
+00:04:52.000 --> 00:04:58.000
+selected IP addresses customers want to
+bring their own ip's you have a network
+it has some design decisions that were
+
+45
+00:04:58.000 --> 00:05:04.000
+made years ago they're not good or bad
+design decisions it's what you have it
+needs to work with our stuff we need
+
+46
+00:05:04.000 --> 00:05:10.000
+router gregation your router that you
+can try this if you want but I guarantee
+you your router will be sad if you add
+
+47
+00:05:10.000 --> 00:05:16.000
+and remove route updates if you add and
+remove routing table entries every time
+you launch a terminator an instance so
+
+48
+00:05:16.000 --> 00:05:21.000
+we need some way of aggregating this so
+that routing table updates are
+infrequent they happen when their
+
+49
+00:05:21.000 --> 00:05:27.000
+network configuration events or network
+connectivity changes and we need
+conformance with existing network
+
+50
+00:05:27.000 --> 00:05:34.000
+designs this was a fun conversation that
+we had internally we like we want to
+build a beautiful new abstract cloud
+
+51
+00:05:34.000 --> 00:05:41.000
+network and I was arguing that no
+actually customers have a preconceived
+notion of how networks go together and
+
+52
+00:05:41.000 --> 00:05:47.000
+you need to conform with that you need
+to you need to meet them where they are
+you need to allow them to photocopy
+
+53
+00:05:47.000 --> 00:05:54.000
+their existing network designs through
+our api's and then we had an early
+customer who happens to be sponsoring
+
+54
+00:05:54.000 --> 00:06:00.000
+this conference and they came to us when
+they said all networks have to be /
+24-hour provisioning tools can't deal
+
+55
+00:06:00.000 --> 00:06:07.000
+with anything else and that sold the
+case for me Amazon's own data centers
+which are amazing like we were very very
+
+56
+00:06:07.000 --> 00:06:13.000
+good at automated data centers automated
+provisioning scale and all of that the
+tools there were built by us to work in
+
+57
+00:06:13.000 --> 00:06:20.000
+our data centers for our provisioning
+use cases and all of our subnets were
+rack sized they're all / 24 and we
+
+58
+00:06:20.000 --> 00:06:25.000
+assume that all networks forever would
+be / 24 s which was the right decision
+to make when we built those provisioning
+
+59
+00:06:25.000 --> 00:06:32.000
+tools we never thought about the cloud
+and so my own company helped me sell the
+idea to my company it was a nice turn of
+
+60
+00:06:32.000 --> 00:06:41.000
+events so the high-level presentation is
+you have a data center
+it has some arbitrary Network range that
+
+61
+00:06:41.000 --> 00:06:48.000
+you've chosen you create a VPC this is
+an API call into our control plane and
+when you create the VPC you specify the
+
+62
+00:06:48.000 --> 00:06:57.000
+site or block you want for the VPC so
+this customers chosen 17 to 30 100 / 18
+it's an arbitrary choice it's up to you
+
+63
+00:06:57.000 --> 00:07:03.000
+it should be something that doesn't
+overlap with anything else you want to
+plug into it then you create a VPN
+
+64
+00:07:03.000 --> 00:07:11.000
+gateway this is our end of a private
+connection you create a customer gateway
+and we don't yet have api's that cause
+
+65
+00:07:11.000 --> 00:07:17.000
+routers to pop into existence this is
+more telling us about the device on your
+side so you give us the IP address and
+
+66
+00:07:17.000 --> 00:07:24.000
+things like that and we know now what
+the far end of the the VPN connection is
+and then you configure a VPN connection
+
+67
+00:07:24.000 --> 00:07:29.000
+it's done programmatically on our side
+would give you the router configuration
+you need to install on your side and now
+
+68
+00:07:29.000 --> 00:07:35.000
+network connectivity can come up and
+your router is going to learn route for
+that VPC one route that covers the
+
+69
+00:07:35.000 --> 00:07:42.000
+entire VPC within the VPC you can
+allocate subnets the subnets have to be
+within the site or for the VPC itself
+
+70
+00:07:42.000 --> 00:07:51.000
+you can create as many of these as you'd
+like and now as you launch instances and
+terminate them there are no changes to
+
+71
+00:07:51.000 --> 00:07:57.000
+your routing table on prem so we've
+solved the overlapping IP address
+problem and we've solved the high
+
+72
+00:07:57.000 --> 00:08:05.000
+velocity routing table update problem
+why why am I telling you about this this
+is a solved problem we've been doing
+
+73
+00:08:05.000 --> 00:08:13.000
+this for decades like a subnet you're
+using these fancy cloud terms but it's
+just a VLAN I know what this is not as
+
+74
+00:08:13.000 --> 00:08:17.000
+many people know about vrf virtual
+routing and forwarding you basically
+it's the same thing as VLANs but for
+
+75
+00:08:17.000 --> 00:08:23.000
+layer 3 you fragment your routing table
+into multiple virtual routing tables so
+you take the smart complicated physical
+
+76
+00:08:23.000 --> 00:08:29.000
+network that you've used for years and
+you ask it to make virtual copies of
+itself this is a mature business that's
+
+77
+00:08:29.000 --> 00:08:40.000
+used in data centers all over the world
+but our application is not the same as
+those applications the VLAN header
+
+78
+00:08:40.000 --> 00:08:47.000
+perfectly reasonable thing no one
+thought that 4096 was going to be a
+constraint we publicly talked about how
+
+79
+00:08:47.000 --> 00:09:00.000
+AWS has more than a million customers a
+million is larger than 4096
+even more concerning like the the 4000
+
+80
+00:09:00.000 --> 00:09:06.000
+86 that's easy to test like it's a
+12-bit field in the header you can
+iterate through all of them vrf SAR
+
+81
+00:09:06.000 --> 00:09:15.000
+complicated and most vendors haven't
+actually tested beyond 512 we know we
+tried but even if you do go beyond that
+
+82
+00:09:15.000 --> 00:09:22.000
+it large like blast furnace full rack
+routers the things that cost more than
+your house support one to two thousand
+
+83
+00:09:22.000 --> 00:09:30.000
+BR f's one to two thousand is still less
+than a million if you're buying a device
+that's claims to support more than two
+
+84
+00:09:30.000 --> 00:09:37.000
+kv RFS and you are intending to use more
+than two kb RFS you are a beta tester is
+not what we want to be building our
+
+85
+00:09:37.000 --> 00:09:46.000
+production services on and there's a
+fixed ratio of vlans to VR f's you get
+4096 V lens on a port you get a thousand
+
+86
+00:09:46.000 --> 00:09:52.000
+vr f s in the box what if your customers
+want more than four subnets / v pc what
+if they want less you're going to be
+
+87
+00:09:52.000 --> 00:09:59.000
+stranding some resources but that's not
+all we're talking about these giant
+blast furnace routers and these things
+
+88
+00:09:59.000 --> 00:10:07.000
+are fast they are amazingly capable but
+we're talking about the data plane here
+these are custom switch a6 the fabric
+
+89
+00:10:07.000 --> 00:10:16.000
+cards this is the fast part of the
+router inside the router is a control
+plane many of them are actually x86
+
+90
+00:10:16.000 --> 00:10:23.000
+boxes running freebsd or linux these
+days except they have less ram and less
+horsepower than this laptop and they
+
+91
+00:10:23.000 --> 00:10:32.000
+cost as much as a car and it's connected
+to the data plane via a straw you've got
+a data plane that's got 110 gig parts
+
+92
+00:10:32.000 --> 00:10:38.000
+and the control plane is going to
+dramatically less connectivity there
+it's the control plane that's dealing
+
+93
+00:10:38.000 --> 00:10:44.000
+with all of this configuration
+complexity and the way you scale these
+things is you do one plus one failover
+
+94
+00:10:44.000 --> 00:10:52.000
+but it's failover between the control
+planes so we loaded this up we actually
+did this we had a pair of routers and
+
+95
+00:10:52.000 --> 00:10:59.000
+these were amazing routers like you
+could push terabits of capacity through
+them but when you failed one of the
+
+96
+00:10:59.000 --> 00:11:03.000
+routers over the control planes would go
+dark there was actually one router brand
+where there's a
+
+97
+00:11:03.000 --> 00:11:09.000
+watchdog timer the control plane went
+dark so long trying to reconvert all of
+the routing protocols that this one
+
+98
+00:11:09.000 --> 00:11:15.000
+rebooted so then this one came up and
+tried to reconvert all of the writing
+protocols and rebooted and we just had
+
+99
+00:11:15.000 --> 00:11:25.000
+routers see-sawing back and forth so
+these routers are configured using text
+files if we figure an average router
+
+100
+00:11:25.000 --> 00:11:34.000
+config line is 50 characters it takes us
+10 lines of router config to describe a
+VPC of vrf figure an average of four
+
+101
+00:11:34.000 --> 00:11:41.000
+subnets / VPC takes us five lines of
+router config to describe a subnet and
+we've got 2,000 customers on the box
+
+102
+00:11:41.000 --> 00:11:50.000
+it's a three megabyte text file
+committing one of these configs on one
+of these routers literally it could take
+
+103
+00:11:50.000 --> 00:11:57.000
+it three to five minutes just to parse
+the configuration not to apply anything
+just to parse the configuration and
+
+104
+00:11:57.000 --> 00:12:04.000
+validate it texturally these routers are
+just computers with strange hardware
+they have the same bugs that every other
+
+105
+00:12:04.000 --> 00:12:11.000
+system has that the software is written
+by humans humans right all the bugs and
+so there are assumptions in these
+
+106
+00:12:11.000 --> 00:12:16.000
+routers and they work really well for
+their design point but they work really
+poorly if you use them outside that
+
+107
+00:12:16.000 --> 00:12:23.000
+design point sometimes for example we
+had a device that we were using and it
+was a similar use case we had a lot of a
+
+108
+00:12:23.000 --> 00:12:29.000
+certain kind of config where the typical
+you'd have like a dozen of these and we
+would have thousands or tens of
+
+109
+00:12:29.000 --> 00:12:35.000
+thousands of them it turns out the
+internal implementation of that was a
+singly linked list so if you wanted to
+
+110
+00:12:35.000 --> 00:12:39.000
+add one to that list you have to chase
+pointers all the way down to the end of
+the list if you wanted to delete one
+
+111
+00:12:39.000 --> 00:12:45.000
+from the middle you had to chase
+pointers until you found it and stitch
+it out when you have eight of them or 12
+
+112
+00:12:45.000 --> 00:12:50.000
+of them no one notices this computers
+are fast when you have 10,000 of them
+all of a sudden the control plane starts
+
+113
+00:12:50.000 --> 00:12:56.000
+to fall over there's another problem we
+found with a device every time you
+committed the config it would leak two
+
+114
+00:12:56.000 --> 00:13:03.000
+words of memory well how often you
+commit config on a router like a dozen
+times and you're building the thing out
+
+115
+00:13:03.000 --> 00:13:08.000
+maybe every couple of months when
+there's a network design change you add
+new capacity we commit config two
+
+116
+00:13:08.000 --> 00:13:13.000
+routers every time customers make API
+calls you want a VPC you want a new
+subnet we're going to be committing
+
+117
+00:13:13.000 --> 00:13:19.000
+config so we exhausted memory on
+control plane due to this memory leak it
+had been present in the code for like
+
+118
+00:13:19.000 --> 00:13:25.000
+ten years and no one had found it until
+we did this it's because we were
+operating outside of the common envelope
+
+119
+00:13:25.000 --> 00:13:35.000
+we'd become beta testers again so this
+doesn't scale it's going to be expensive
+the closest I have come to career
+
+120
+00:13:35.000 --> 00:13:42.000
+suicide was when I proposed this design
+in front of a bunch of network engineers
+at amazon i swear to god one of them was
+
+121
+00:13:42.000 --> 00:13:51.000
+in the back of the room sharpening a big
+knife like this is this is not the way
+to make your network engineers like you
+
+122
+00:13:51.000 --> 00:13:57.000
+we're tied to vendor bug fix cycles if
+you've got something that goes wrong in
+your data center it affects you and we
+
+123
+00:13:57.000 --> 00:14:02.000
+have something that goes wrong in our
+data center it affects all of our
+customers and it's likely to affect
+
+124
+00:14:02.000 --> 00:14:07.000
+multiple devices in our data center
+because we keep cookie cutter in out the
+same design we like to control our own
+
+125
+00:14:07.000 --> 00:14:12.000
+destiny we like to be able to fix things
+on our time scale you know that memory
+leak bug that had been present for a
+
+126
+00:14:12.000 --> 00:14:18.000
+decade it's not a high priority bug for
+literally any other customer of that
+vendor but it's super high priority for
+
+127
+00:14:18.000 --> 00:14:25.000
+us and that impedance mismatch causes
+problems and so we want to be on the
+commodity curve we want these things to
+
+128
+00:14:25.000 --> 00:14:30.000
+be getting cheaper as quickly as our
+compute and storage are getting cheaper
+and a lot of the selling points for
+
+129
+00:14:30.000 --> 00:14:36.000
+these large vertically integrated
+devices is all sorts of advanced
+features but the interoperability of
+
+130
+00:14:36.000 --> 00:14:42.000
+those advanced features is pretty poor
+and we don't care about them we want the
+network to be fast and done we want it
+
+131
+00:14:42.000 --> 00:14:51.000
+to pass the bits we don't want the fancy
+features we don't want to pay for the
+fancy features and I keep saying we
+
+132
+00:14:51.000 --> 00:14:57.000
+horizontally scale we stamp out multiple
+of these things but this isn't
+horizontal scaling it looks like
+
+133
+00:14:57.000 --> 00:15:02.000
+horizontal scaling because there's two
+similar things sitting next to each
+other but it's really silos of capacity
+
+134
+00:15:02.000 --> 00:15:10.000
+so we've got routers and because I got
+tired of making boxes in PowerPoint each
+router can support for customers and 40
+
+135
+00:15:10.000 --> 00:15:17.000
+instances worth of capacity and so
+customer a shows up and asks for three
+instances we arbitrarily choose to place
+
+136
+00:15:17.000 --> 00:15:26.000
+them on the left silo customer b shows
+up arbitrarily place them on the right
+silo customer see like there's some sort
+
+137
+00:15:26.000 --> 00:15:30.000
+of load balancing placement algorithm
+going
+on here and as launches come and go we
+
+138
+00:15:30.000 --> 00:15:36.000
+add them now custom ray just launched
+two more instances because they're VPC
+is hosted in the left silo I have to
+
+139
+00:15:36.000 --> 00:15:43.000
+place them in the left silo that
+placement decision is made for me
+customer I shows up it's one instance
+
+140
+00:15:43.000 --> 00:15:50.000
+looks puny this is an incredibly
+important customer for us this is the
+getting started guide every single one
+
+141
+00:15:50.000 --> 00:15:55.000
+of our customers was once a one instance
+customer this customer may get off the
+platform tomorrow and we may never hear
+
+142
+00:15:55.000 --> 00:16:04.000
+from them again they may be the next
+netflix i don't know f shows up this is
+a large enterprise customer this is a
+
+143
+00:16:04.000 --> 00:16:09.000
+planned migration maybe we knew how much
+capacity they were going to need and we
+could make a an intentional manual
+
+144
+00:16:09.000 --> 00:16:20.000
+decision here customer g I just
+allocated the last customer on that left
+silo it's full I've got a bunch of
+
+145
+00:16:20.000 --> 00:16:27.000
+capacity available but I can only sell
+it to those for customers obviously in
+the real world it'd be a lot more than 4
+
+146
+00:16:27.000 --> 00:16:33.000
+you'd get better statistical averaging
+but still I'm stranding some capacity
+here and I can hide that by increasing
+
+147
+00:16:33.000 --> 00:16:39.000
+prices if I get ninety percent
+utilization out of the fleet compared to
+what I used to get eleven percent higher
+
+148
+00:16:39.000 --> 00:16:45.000
+prices and we're back where we started
+and we just announced our 50th price
+decrease pitching products at amazon
+
+149
+00:16:45.000 --> 00:16:55.000
+that cause things to get more expensive
+is not a good path to success so this is
+bad but this isn't the worst customer be
+
+150
+00:16:55.000 --> 00:17:02.000
+is some sort of social media application
+whatever the kids are using these days
+I've stranded some router capacity there
+
+151
+00:17:02.000 --> 00:17:09.000
+but it's nowhere near as bad as the fact
+that I've exhausted my instance capacity
+I can't hide this from the customer
+
+152
+00:17:09.000 --> 00:17:16.000
+customer be wants one more instance or
+even poor dnf who have no idea that
+they're co-located with be I have to
+
+153
+00:17:16.000 --> 00:17:21.000
+expose that to them they have to go
+create another subnet or they have to
+create a new VP see that's an
+
+154
+00:17:21.000 --> 00:17:29.000
+unacceptable customer experience so to
+do this internally and this is actually
+a line from our original design doc we
+
+155
+00:17:29.000 --> 00:17:36.000
+want to support millions of environments
+the size of amazon com we must not
+further constrain the placement problem
+
+156
+00:17:36.000 --> 00:17:46.000
+any instance anywhere can be in any
+subnet in any VPC
+so to do this we've got servers someone
+
+157
+00:17:46.000 --> 00:17:51.000
+has to be the bottom turtle we're the
+ones that on the sheet metal so we've
+got a physical network with physical
+
+158
+00:17:51.000 --> 00:18:00.000
+servers on those servers we place
+instances those instances are grouped
+together into V pcs virtual private
+
+159
+00:18:00.000 --> 00:18:09.000
+clouds and our API is V pcs have
+identify as v pc dash 8 hex cars i also
+got tired of typing goes in so i used
+
+160
+00:18:09.000 --> 00:18:17.000
+colors here so we've got 3 v pc is
+running around in this network and then
+the mapping service this is a piece of v
+
+161
+00:18:17.000 --> 00:18:23.000
+pc that's not exposed directly to
+customers the mapping service is the
+linchpin around everything around which
+
+162
+00:18:23.000 --> 00:18:32.000
+everything revolves so these are the
+basic building blocks this is layer two
+Ethernet this is how Ethernet has been
+
+163
+00:18:32.000 --> 00:18:38.000
+working for decades it comes off the
+operating system DVD or I guess whatever
+it is we used to distribute out OSS
+
+164
+00:18:38.000 --> 00:18:49.000
+these days 1000 to wants to talk to 1000
+3 he's going to arc last time I gave
+this talk i said i'm using this this mac
+
+165
+00:18:49.000 --> 00:18:55.000
+of IP address notation because typing
+and mac addresses is arduous and it's
+hard to remember which max go with which
+
+166
+00:18:55.000 --> 00:19:01.000
+IP addresses and i said please
+substitute your favorite 48-bit number
+one of my co-workers kindly pointed out
+
+167
+00:19:01.000 --> 00:19:11.000
+that not all 48 bit numbers or valid mac
+addresses so please substitute a valid
+48-bit MAC address hi Andrew
+
+168
+00:19:11.000 --> 00:19:17.000
+the ethernet switch doesn't know where
+1000 3 is let's pretend everything is
+freshly booted so you thur nets which is
+
+169
+00:19:17.000 --> 00:19:25.000
+going to flood that r / quest out every
+port including the part that happens to
+have 1000 3 connected to it 1000 3 is
+
+170
+00:19:25.000 --> 00:19:30.000
+going to respond and say hey that's me
+we're going to learn the mac at the
+switch and the ethernet switch will
+
+171
+00:19:30.000 --> 00:19:37.000
+forward the response so now 1000 to is
+managed to learn the mac of 1000 3 the
+switch happens to have programmed it
+
+172
+00:19:37.000 --> 00:19:47.000
+scan and so now we can send some sort of
+IP packet the l2 and l3 source match the
+l2 and l3 destinations match the
+
+173
+00:19:47.000 --> 00:19:53.000
+ethernet switch ford's it across the
+network this is happening I don't know
+how many trillions of times a second all
+
+174
+00:19:53.000 --> 00:20:01.000
+around the world that's what we have to
+make work so 1000 to wants to talk to
+1000 3 he's going to send that exact
+
+175
+00:20:01.000 --> 00:20:06.000
+same ARP request we're going to trap
+that art / quest we're going to send a
+query to the mapping service I'm going
+
+176
+00:20:06.000 --> 00:20:13.000
+to say hey we're looking for blue 1000 3
+mapping service is going to tell us
+where 1000 3 is we learn the mac but we
+
+177
+00:20:13.000 --> 00:20:21.000
+also learn the physical server on which
+blue 1000 three lives and we form an art
+response and propagate it back to the
+
+178
+00:20:21.000 --> 00:20:29.000
+guest one interesting wrinkle here that
+art / quest never made it to 1000 3 you
+can do this today in bpc spin up an
+
+179
+00:20:29.000 --> 00:20:35.000
+instance run tcpdump you'll never see
+our requests it turns out you don't
+actually need to see the ARP requests it
+
+180
+00:20:35.000 --> 00:20:43.000
+totally doesn't matter so now we can
+send that packet it's the exact same
+packet we're going to send across the
+
+181
+00:20:43.000 --> 00:20:49.000
+physical Network we're going to trap
+that packet we're going to wrap it with
+a VPC Hatter it's tagged to the blue VPC
+
+182
+00:20:49.000 --> 00:20:56.000
+we're going to wrap it with this
+physical network a substrate network IP
+header and we're going to send it
+
+183
+00:20:56.000 --> 00:21:04.000
+directly to the server that's hosting
+blue 1000 3 on receipt we're going to
+ask the mapping service hey I just got
+
+184
+00:21:04.000 --> 00:21:12.000
+this packet from someone claiming to be
+blue 1000 to what's up the mapping
+services because they that's cool and it
+
+185
+00:21:12.000 --> 00:21:20.000
+didn't draw it here in the slide but
+this is how we feel in the mac address
+for the source at receive time and then
+
+186
+00:21:20.000 --> 00:21:26.000
+we can deliver this packet to the guest
+so this is
+that this is the ethernet stack this is
+
+187
+00:21:26.000 --> 00:21:32.000
+layer 2 packet forwarding within a
+subnet working straight off the LS DVD
+we didn't have to change anything in the
+
+188
+00:21:32.000 --> 00:21:40.000
+instances Windows Linux whatever it just
+works in order for these two instances
+to communicate the only requirements are
+
+189
+00:21:40.000 --> 00:21:46.000
+they have to have direct IP connectivity
+to each other and they have to be able
+to talk to the mapping service we know
+
+190
+00:21:46.000 --> 00:21:52.000
+how to build networks that span data
+centers that span the globe so we've
+succeeded here we have not constrained
+
+191
+00:21:52.000 --> 00:21:59.000
+the placement problem any to physical
+servers can host a pair of instances in
+any subnet regardless of their placement
+
+192
+00:21:59.000 --> 00:22:07.000
+on the IP network so the virtual l2
+topology is completely decoupled from
+the physical topology step napping check
+
+193
+00:22:07.000 --> 00:22:17.000
+on receipt let's dig into that for a
+moment so let's say that for whatever
+reason Rey 1000 for wants to talk to
+
+194
+00:22:17.000 --> 00:22:25.000
+1000 3 we're going to send a query to
+the mapping service but it's going to be
+tagged to grey you have full access to
+
+195
+00:22:25.000 --> 00:22:30.000
+the IP headers in the packets you
+generate you can fill in any 32-bit
+destination address you want we will
+
+196
+00:22:30.000 --> 00:22:37.000
+always interpret that in the context of
+your VPC and so you can scan you can
+literally scan a slash 0 from within
+
+197
+00:22:37.000 --> 00:22:48.000
+your VPC and unless you have routes to
+them you can't talk two instances in
+other V pcs via some means we've got a
+
+198
+00:22:48.000 --> 00:22:58.000
+corrupt mapping something something has
+gone wrong here we're going to send this
+query and it's tagged to blue so we
+
+199
+00:22:58.000 --> 00:23:04.000
+claim to be from the blue VPC the
+mapping service knows that there aren't
+any blue instances on that physical
+
+200
+00:23:04.000 --> 00:23:10.000
+server this is an errant packet it
+should not flow so we're going to deny
+that napping we're not going to tell the
+
+201
+00:23:10.000 --> 00:23:18.000
+source where that destination is and
+we're going to call a human if via some
+means we managed to obtain the mapping
+
+202
+00:23:18.000 --> 00:23:26.000
+and we send the packet across the
+physical network on receipt we're going
+to do that reverse mapping check we're
+
+203
+00:23:26.000 --> 00:23:32.000
+going to say could you please verify for
+me that the instance claiming to be blue
+1000 for is really at that physical
+
+204
+00:23:32.000 --> 00:23:41.000
+source no it's not de spent this mapping
+is invalid this packet is invalid
+so we're going to drop that packet we're
+
+205
+00:23:41.000 --> 00:23:47.000
+going to call for a human what this
+means is that packets can't flow across
+the network unless all parties involved
+
+206
+00:23:47.000 --> 00:23:53.000
+the source the destination and the
+mapping service agree that the package
+should flow our control plant has 100%
+
+207
+00:23:53.000 --> 00:23:59.000
+visibility into where every l2 and l3
+address is placed in the network and we
+can very strictly control which packets
+
+208
+00:23:59.000 --> 00:24:09.000
+flow so next up is l3 again this is
+straight off the OS DVD it's the way
+it's worked for years in this case we
+
+209
+00:24:09.000 --> 00:24:17.000
+have if we assume / 24 net masks we're
+talking across a subnet boundary so 1000
+to wants to talk to Tim 013 this is in a
+
+210
+00:24:17.000 --> 00:24:23.000
+different subnet we have to go through
+our gateway so we're going to art for a
+gateway it's the exact same dance packet
+
+211
+00:24:23.000 --> 00:24:32.000
+floods we learn the mac and we learn the
+destination MAC address and so now we
+can send a packet and in this case the
+
+212
+00:24:32.000 --> 00:24:39.000
+l2 and l3 sources lineup but the l2 and
+l3 destinations don't the l2 destination
+is the gateway the l3 destination is the
+
+213
+00:24:39.000 --> 00:24:47.000
+eventual host we send it to the router
+the router swaps up the MAC addresses
+now the source is the routers interface
+
+214
+00:24:47.000 --> 00:24:55.000
+on the right subnet and the l3
+destination is still the eventual box
+and we deliver it this is l3 IP
+
+215
+00:24:55.000 --> 00:25:04.000
+forwarding as routers have been doing it
+since time began so we've got the same
+situation in VPC we're going to arc for
+
+216
+00:25:04.000 --> 00:25:11.000
+our gateway the mapping service is going
+to tell us it's a special host it's a
+gateway so we get a mac address for it
+
+217
+00:25:11.000 --> 00:25:18.000
+we don't have a physical destination for
+it we can send the artists ponce back to
+the guests thus completing the protocol
+
+218
+00:25:18.000 --> 00:25:24.000
+and so now the guest is going to try and
+send a packet this is the exact same
+packet that would have put on the wire
+
+219
+00:25:24.000 --> 00:25:31.000
+in the previous slide we stopped that
+packet we queue it up and we make a
+secondary query to the mapping service
+
+220
+00:25:31.000 --> 00:25:39.000
+and this time we don't query on the l2
+destination with query on the l3
+destination so we learned that blue 1001
+
+221
+00:25:39.000 --> 00:25:46.000
+3 is located in that box in the lower
+right 192 168 1 4 so now we can send
+this packet across the physical Network
+
+222
+00:25:46.000 --> 00:25:53.000
+wrapped in the VPC how to wrap it in a
+physical header and deliver it
+the exact same reverse mapping check
+
+223
+00:25:53.000 --> 00:26:09.000
+gets performed we swap out the MAC
+addresses deliver to the guest this
+again achieves our goal we've placed no
+
+224
+00:26:09.000 --> 00:26:15.000
+further constraints on l3 packet
+forwarding compared to L 2 packet
+forwarding any two boxes that have IP
+
+225
+00:26:15.000 --> 00:26:20.000
+connectivity with each other and with
+the mapping service can host any two
+instances in any VPC across subnet
+
+226
+00:26:20.000 --> 00:26:29.000
+boundaries so this is this is the system
+we went with the system is not without
+scaling limits but it's with scaling
+
+227
+00:26:29.000 --> 00:26:36.000
+limits that match our use case it's
+designed to match our very specific very
+narrow use case and we own it we can fix
+
+228
+00:26:36.000 --> 00:26:48.000
+it we can alter it as time goes on so I
+queued this packet the customer sent it
+I snagged it I queried the mapping
+
+229
+00:26:48.000 --> 00:26:53.000
+service so this means that the mapping
+service is now critical to packet flows
+but if the mapping service isn't
+
+230
+00:26:53.000 --> 00:27:00.000
+available the packets won't flow in an
+addition even if the mapping service is
+working correctly there's no two paths
+
+231
+00:27:00.000 --> 00:27:05.000
+through the system there's a fast path
+where we've already got the mappings and
+there's a slow pathway if the cue
+
+232
+00:27:05.000 --> 00:27:13.000
+packets in query the mapping service and
+so in reality there's a mapping service
+replica a little cash on every single
+
+233
+00:27:13.000 --> 00:27:20.000
+one of our physical boxes and they
+subscribe to the mapping service it's
+logically exactly the same we have
+
+234
+00:27:20.000 --> 00:27:25.000
+strict ackles on all of the records in
+the mapping service the cache can't
+populate records that it shouldn't have
+
+235
+00:27:25.000 --> 00:27:31.000
+access to we get the same kinds of
+alarms raised when instances try and
+fetch the wrong records but it means
+
+236
+00:27:31.000 --> 00:27:38.000
+that we have a 100-percent kashyap ratio
+we actually did not implement the cache
+miss path the only way to translate
+
+237
+00:27:38.000 --> 00:27:43.000
+packets is through this cash so that
+gets us dead flat latency and it
+mitigates a bunch of availability
+
+238
+00:27:43.000 --> 00:27:55.000
+concerns so new content warning I've
+told you how we can talk within a subnet
+well to forwarding and how we can talk
+
+239
+00:27:55.000 --> 00:28:02.000
+across subnet boundaries l3 forwarding
+but I haven't answered the problem that
+motivated the entire talk how do you get
+
+240
+00:28:02.000 --> 00:28:10.000
+back to your home office or your
+your existing data centers we know how
+to send the packet like there's a source
+
+241
+00:28:10.000 --> 00:28:19.000
+IP a destination IP life is good we can
+wrap it with a VPC header but then what
+do we put in for the destination or if I
+
+242
+00:28:19.000 --> 00:28:24.000
+do put in your your VPN router as the
+destination it's going to get this
+proprietary Amazon wrapped packet and be
+
+243
+00:28:24.000 --> 00:28:32.000
+all confused drop it on the floor and
+your packets aren't going to flow and so
+we've got a new kind of thing in the VPC
+
+244
+00:28:32.000 --> 00:28:40.000
+world we call them edges or very
+creative people so if we look at the
+mappings that are cached on this
+
+245
+00:28:40.000 --> 00:28:47.000
+physical server there's actually two
+kinds of mappings there there's flash
+32s effectively there's host mappings
+
+246
+00:28:47.000 --> 00:28:54.000
+this is for talking to other instances
+but then there's also browse their site
+or mappings and so we have a route here
+
+247
+00:28:54.000 --> 00:29:04.000
+that says 17 to 16 00 / 16 which is the
+home office or the data center routes to
+this edge and so we know how to do this
+
+248
+00:29:04.000 --> 00:29:12.000
+you send the packet we wrap it up we
+send it on to the edge the edge will
+perform exactly the same reverse mapping
+
+249
+00:29:12.000 --> 00:29:19.000
+checks it's just another participant in
+the VPC network and so what this thing
+does if for example we're talking down
+
+250
+00:29:19.000 --> 00:29:27.000
+to VPN connection we send the packet to
+the edge the packet is familiar with our
+virtual networking protocols it can
+
+251
+00:29:27.000 --> 00:29:35.000
+unwrap this packet figure out where it's
+going and it can rewrap this packet and
+in the case of VPN it's all IPSec so
+
+252
+00:29:35.000 --> 00:29:42.000
+we've got a system that takes VPC
+encapsulated packets determines whether
+or not they should flow maps them onto
+
+253
+00:29:42.000 --> 00:29:50.000
+customer IPSec tunnels and sends them
+out over the open Internet if you're
+using direct connect rather than using
+
+254
+00:29:50.000 --> 00:29:57.000
+IPSec tunnels over the internet you can
+get a hardline connection a fiber
+gigabit 10 gigabit connection to AWS if
+
+255
+00:29:57.000 --> 00:30:04.000
+you're using direct connect we do almost
+exactly the same thing except it rather
+than doing IPSec we put a dot 1q VLAN
+
+256
+00:30:04.000 --> 00:30:13.000
+tag for handoff to our direct connect
+router I complained about VLAN tags
+earlier so I owe you guys an explanation
+
+257
+00:30:13.000 --> 00:30:19.000
+4096 isn't a lot but this v line is
+literally
+long it moves from one router in a cage
+
+258
+00:30:19.000 --> 00:30:27.000
+to another router in the same cage and
+so we're limited to four thousand
+customers per port and that's not a
+
+259
+00:30:27.000 --> 00:30:36.000
+limitation for us we reuse VLAN tags per
+port so there's also the internet people
+like talking to the internet there's a
+
+260
+00:30:36.000 --> 00:30:45.000
+lot of stuff out there send the packet
+to the edge this is getting boring but
+then what do we do with it how do we
+
+261
+00:30:45.000 --> 00:30:51.000
+encapsulate it for sending to the
+Internet the reality is we don't want to
+encapsulate it to send it to the
+
+262
+00:30:51.000 --> 00:31:02.000
+internet we just want I p packets that's
+what the internet runs on and so there
+you go if I send this packet out to the
+
+263
+00:31:02.000 --> 00:31:09.000
+internet with this source IP it'll
+actually arrive the destination will get
+it and it will attempt to send return
+
+264
+00:31:09.000 --> 00:31:16.000
+traffic 1000 to is an RFC 1918 IP
+address it's not routable on the
+internet so the host actually doesn't
+
+265
+00:31:16.000 --> 00:31:22.000
+know that it'll if it's a TCP connection
+the syn packet will go out the syn ack
+packet will be generated by the server
+
+266
+00:31:22.000 --> 00:31:27.000
+he'll drop it into his network it'll
+fall on the floor this is an
+unsuccessful network connection so we do
+
+267
+00:31:27.000 --> 00:31:34.000
+one-to-one nat this is where elastic IP
+addresses enter the story so when you
+map an EIP an elastic IP address a
+
+268
+00:31:34.000 --> 00:31:39.000
+public internet routable IP address to
+your instance this edge is the box
+that's performing that one to one
+
+269
+00:31:39.000 --> 00:31:46.000
+translation some the way out we replace
+the source IP with your eip on the way
+back it's going to be sent to your e IP
+
+270
+00:31:46.000 --> 00:31:54.000
+we swap out the destination IP address
+for the private IP of your instance so
+we've got a box now it does packet
+
+271
+00:31:54.000 --> 00:32:04.000
+mangling for us packet translations and
+an interesting story there's a
+good-sized chunk of the ec2 team in Cape
+
+272
+00:32:04.000 --> 00:32:13.000
+Town South Africa which is almost as far
+as you can get from Seattle it's called
+Antipodes if you put a globe on a drill
+
+273
+00:32:13.000 --> 00:32:21.000
+press and you start in Seattle the drill
+will come out in the Indian Ocean off
+the coast of South Africa if you go
+
+274
+00:32:21.000 --> 00:32:29.000
+there you will encounter the African
+penguin the African penguin has also
+known as the jackass penguin
+
+275
+00:32:29.000 --> 00:32:38.000
+they really do sound like donkeys but
+it's also known as the Blackfoot penguin
+and tux is the Linux mascot so when we
+
+276
+00:32:38.000 --> 00:32:46.000
+built a linux-based network appliance
+for ec2 we named it the Blackfoot so if
+you hear any amazon people talking about
+
+277
+00:32:46.000 --> 00:32:52.000
+black feet that's those edge devices and
+it also happens to be the name of one of
+our office buildings in Seattle so most
+
+278
+00:32:52.000 --> 00:33:06.000
+of AWS works in the Blackfoot building
+so pricing VPC costs nothing subnets
+costs nothing and we instances in a VPC
+
+279
+00:33:06.000 --> 00:33:15.000
+don't cost any more and so I mentioned
+that earlier we had our 50th price
+decrease at AWS VPC will never
+
+280
+00:33:15.000 --> 00:33:26.000
+participate in AWS as tradition of
+decreasing prices but this is exactly
+where we want it to be we can now offer
+
+281
+00:33:26.000 --> 00:33:36.000
+customers a flexible programmable
+virtual network at no charge in addition
+to being the day after my birthday this
+
+282
+00:33:36.000 --> 00:33:43.000
+is the day that the last US retail web
+server last US retail physical web
+server was turned off i sold this live
+
+283
+00:33:43.000 --> 00:33:49.000
+from LA regrets drinking your own
+champagne talk so if you bought anything
+if you've surfed the amazon website
+
+284
+00:33:49.000 --> 00:33:59.000
+since november 10 2010 and i hope you
+all have the page you viewed was
+rendered by an ec2 instance one hundred
+
+285
+00:33:59.000 --> 00:34:07.000
+percent of us retail boy pages have been
+rendered in DC to since this date so
+this is not a research project for us
+
+286
+00:34:07.000 --> 00:34:16.000
+this is a robust production network we
+run our business on it and we carried q4
+in november this year it's going to be
+
+287
+00:34:16.000 --> 00:34:28.000
+the 6th q4 for amazon retail that we
+carry in VPC VPC has grown a lot it's
+become a platform so you were always
+
+288
+00:34:28.000 --> 00:34:37.000
+able to get instances in your v pc but a
+lot of our services like RDS databases
+and redshift clusters can be launched
+
+289
+00:34:37.000 --> 00:34:42.000
+inside your v pc and so now clients in
+your home office
+access these things over the private
+
+290
+00:34:42.000 --> 00:34:48.000
+network these things can access your
+existing data centers / Direct Connect
+connections to load data and to interact
+
+291
+00:34:48.000 --> 00:34:54.000
+with existing applications there have
+been a ton of features that we've
+launched with you see two we didn't have
+
+292
+00:34:54.000 --> 00:35:00.000
+a network to describe but there was no
+network you had an IP address and now
+that we have a network we've added
+
+293
+00:35:00.000 --> 00:35:06.000
+network features so we started off with
+VPN and direct connect private
+connectivity to the cloud security
+
+294
+00:35:06.000 --> 00:35:12.000
+groups we've always had security groups
+in ec2 but in VPC we added egress
+filtering so if you want to filter
+
+295
+00:35:12.000 --> 00:35:18.000
+packets outbound from your instances you
+can do it in VPC Network ackles we have
+a lot of customers that are used to
+
+296
+00:35:18.000 --> 00:35:25.000
+grouping instances together in ec to IP
+addresses were random numbers to IP
+addresses that were close together
+
+297
+00:35:25.000 --> 00:35:29.000
+didn't mean that they were doing the
+same job they weren't both web servers
+they may not even be owned by the same
+
+298
+00:35:29.000 --> 00:35:36.000
+customer in VPC you can lay out your
+subnets however you want if you have IT
+policies that say that these kind of
+
+299
+00:35:36.000 --> 00:35:41.000
+servers must be separated from those
+kind of service you can do with a couple
+of API calls and then you can use
+
+300
+00:35:41.000 --> 00:35:47.000
+network ackles as you do today in your
+data center to separate those servers
+routing tables this allows you to
+
+301
+00:35:47.000 --> 00:35:57.000
+implement virtual appliances with
+elastic network interfaces we like our
+elasticity at AWS you can basically plug
+
+302
+00:35:57.000 --> 00:36:04.000
+multiple nics into an ec2 instance and
+so once you have to nix in a box you can
+set it up as a virtual appliance you can
+
+303
+00:36:04.000 --> 00:36:09.000
+plug it into two subnets and now you've
+got a firewall or a load balancer or
+whatever it is that you want to program
+
+304
+00:36:09.000 --> 00:36:17.000
+that box to do multiple IP addresses /
+Nick we had customers that want to serve
+multiple sites off of their instances
+
+305
+00:36:17.000 --> 00:36:23.000
+and they didn't have sni support so they
+needed to serve different sorts based on
+who is contacting them things like this
+
+306
+00:36:23.000 --> 00:36:34.000
+are really useful to customers and a fun
+one that we launched recently I'm really
+a fan of this feature is s3 endpoints
+
+307
+00:36:34.000 --> 00:36:41.000
+prior to launching this feature if your
+instances wanted to talk to s3 they had
+to do so over the Internet you to create
+
+308
+00:36:41.000 --> 00:36:47.000
+an Internet gateway in your v pc and you
+sent the traffic out this meant that
+either this instance or an at instance
+
+309
+00:36:47.000 --> 00:36:53.000
+something had a public IP address and
+this traffic was traversing the Amazon
+border network
+
+310
+00:36:53.000 --> 00:37:02.000
+so we introduced the ability to create
+an s3 endpoint you declare this VR api's
+you say I want an s3 endpoint and I want
+
+311
+00:37:02.000 --> 00:37:09.000
+to attach it to this VPC and it's a
+routable target and so your instance
+talks to your s3 gateway your s3
+
+312
+00:37:09.000 --> 00:37:18.000
+endpoint and the s3 endpoint takes care
+of getting that traffic to s3 via
+Amazon's private network and the way we
+
+313
+00:37:18.000 --> 00:37:27.000
+implemented this this should look very
+familiar we edit a new kind of route so
+rather than routing a cider block you
+
+314
+00:37:27.000 --> 00:37:35.000
+can now route what we call the name to
+prefix so there's a set of IP addresses
+that represent s3 in this case in u.s.
+
+315
+00:37:35.000 --> 00:37:44.000
+East one and you can say s3 and Us East
+one doesn't go towards the Internet it
+goes towards there and so exactly the
+
+316
+00:37:44.000 --> 00:37:50.000
+same thing it's a little bit more
+constrained I assume you're not going to
+be sending UDP or ICMP traffic to s3 you
+
+317
+00:37:50.000 --> 00:37:57.000
+can if you want we're not going to do
+anything useful with it we can wrap that
+packet send it to an edge and pass it on
+
+318
+00:37:57.000 --> 00:38:06.000
+and what we've done here is we've
+created a new encapsulation that's
+specific to VPC endpoints and we don't
+
+319
+00:38:06.000 --> 00:38:14.000
+nat when this packet arrives at s3 it
+has the original source IP address the
+private IP address of that instance when
+
+320
+00:38:14.000 --> 00:38:21.000
+it gets dest 3 and it also has that
+green header there it's tagged with a
+VPC endpoint ID the reason we created a
+
+321
+00:38:21.000 --> 00:38:26.000
+new encapsulation was to decouple state
+we didn't want us three to have to
+understand all of the placement of
+
+322
+00:38:26.000 --> 00:38:32.000
+instances this isn't tell you where the
+physical server is located in the VPC
+network it just tells you it came from
+
+323
+00:38:32.000 --> 00:38:41.000
+this VPC endpoint laws are our two teams
+to iterate separately we weren't coupled
+so because you get the original source
+
+324
+00:38:41.000 --> 00:38:49.000
+IP address and you get the VPC endpoint
+ID you can do some interesting things
+you can apply an aspen policy a standard
+
+325
+00:38:49.000 --> 00:38:58.000
+AWS access control policy to that end
+point and you can say only this bucket
+is accessible via this endpoint
+
+326
+00:38:58.000 --> 00:39:06.000
+instances that are routing through that
+endpoint will not be able to get to any
+other buckets likewise you can apply a
+
+327
+00:39:06.000 --> 00:39:12.000
+policy to your
+three bucket you've been able to do this
+for years but now you can speak to the
+
+328
+00:39:12.000 --> 00:39:22.000
+VPC endpoint or the VPC ID in the policy
+and so I've said that my bucket is only
+accessible from this one VPC i could
+
+329
+00:39:22.000 --> 00:39:29.000
+give you my AWS keys i could crack open
+everything else about that bucket but
+you still wouldn't be able to get to it
+
+330
+00:39:29.000 --> 00:39:37.000
+unless you are inside my VPC and so now
+you can use the exact same policies that
+use elsewhere in AWS to enforce you to
+
+331
+00:39:37.000 --> 00:39:47.000
+enforce your desired security stance
+end-to-end so there's there's a spectrum
+here on the one hand you've got simple
+
+332
+00:39:47.000 --> 00:39:53.000
+on the other hand you've got complex
+simple things tend to be limited there
+are fewer knobs to turn fewer dials to
+
+333
+00:39:53.000 --> 00:40:01.000
+play with things that are complex tend
+to be more flexible there's more of a
+learning curve auc to network was simple
+
+334
+00:40:01.000 --> 00:40:07.000
+you're going to IP address you've got a
+public IP address you were done the VPC
+network is complicated but there's a lot
+
+335
+00:40:07.000 --> 00:40:13.000
+more you can do with it and this isn't a
+value judgement I own both a multimeter
+an oscilloscope they're both good tools
+
+336
+00:40:13.000 --> 00:40:24.000
+but I use them for different things and
+so a feature that we added a couple of
+years ago is default VPC the problem we
+
+337
+00:40:24.000 --> 00:40:31.000
+had is we want everyone to be in a VPC
+if you launch an ec2 instance perfectly
+reasonable thing to do we like it when
+
+338
+00:40:31.000 --> 00:40:36.000
+people on GC two instances and you
+decide three years later that now you're
+scaled application needs private
+
+339
+00:40:36.000 --> 00:40:43.000
+connectivity somewhere you want egress
+filtering on your security groups or you
+want an s3 end point you have to move
+
+340
+00:40:43.000 --> 00:40:52.000
+into a VPC this is hard to do so we
+wanted everyone to have a VPC but we
+didn't want everyone to have to deal
+
+341
+00:40:52.000 --> 00:40:59.000
+with all of the complexity of epc on
+their first day as a customer and so it
+needed to be code compatible with you
+
+342
+00:40:59.000 --> 00:41:05.000
+see too we've got a getting started
+guide we can fix our getting started
+guide we've got an SDK we can fix our
+
+343
+00:41:05.000 --> 00:41:12.000
+SDK there's an infinite number of blog
+posts out there that talk about how you
+do something in AWS and we couldn't
+
+344
+00:41:12.000 --> 00:41:18.000
+invalidate that whole body of knowledge
+it had to continue working so we had to
+be code compatible with ec2 and so it is
+
+345
+00:41:18.000 --> 00:41:24.000
+you can launch and terminate instances
+you can run those shell scripts you find
+on web pages all over the place and it
+
+346
+00:41:24.000 --> 00:41:30.000
+works but if one date is you decide you
+need the functionality of VPC you can
+break the glass you can peek at the man
+
+347
+00:41:30.000 --> 00:41:36.000
+behind the curtain and it turns out that
+when you launch that first instance we
+created a VPC we laid out subnets and
+
+348
+00:41:36.000 --> 00:41:42.000
+then we hid everything from you and so
+the getting started guide is still
+pickin ami run an instance but if you
+
+349
+00:41:42.000 --> 00:41:49.000
+later want connectivity to your home
+office or it's your data center you can
+go through all of that and so we've
+
+350
+00:41:49.000 --> 00:41:57.000
+managed to span a fairly large swath of
+this spectrum we've got one service that
+allows customers to get started easily
+
+351
+00:41:57.000 --> 00:42:03.000
+and quickly just like ec2 did but allows
+them to evolve incrementally as they
+need the additional flexibility
+
+352
+00:42:03.000 --> 00:42:13.000
+additional functionality of epc to
+adjust some very complicated use cases
+so thank you for your time and I've been
+
+353
+00:42:13.000 --> 00:42:19.000
+told that my return ticket home is in
+danger if you do not fill out your
+evaluation so please fill out your
+evaluations we value your feedback

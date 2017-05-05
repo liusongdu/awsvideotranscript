@@ -1,0 +1,2366 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:08.000
+hello and welcome to sa c320 a deep dive
+on implementing security and governance
+across a multicam strategy I'm Matt
+
+2
+00:00:08.000 --> 00:00:14.000
+brought in and I'm joined here by my
+colleague Joshua gealach and we're part
+of the security risk and compliance
+
+3
+00:00:14.000 --> 00:00:20.000
+practice within professional services
+for those of you that haven't dealt with
+professional services or the security
+
+4
+00:00:20.000 --> 00:00:26.000
+risk and compliance practice our goal is
+to really work with enterprises to help
+them move on to AWS in a quicker and
+
+5
+00:00:26.000 --> 00:00:31.000
+more secure manner so we work with a lot
+of the large organizations and help them
+understand what it means to be secure
+
+6
+00:00:31.000 --> 00:00:37.000
+and actually work hands-on to actually
+build our prototypes and actually help
+them implement the best practices and
+
+7
+00:00:37.000 --> 00:00:44.000
+security policies within AWS so today
+what we're actually going to dive into
+is kind of some of the problems that
+
+8
+00:00:44.000 --> 00:00:51.000
+we've been working with our clients on
+when they decide to move into a multi
+account strategy now within this session
+
+9
+00:00:51.000 --> 00:00:56.000
+we're going to kind of a some of the
+baseline around why you want to look at
+a multi account strategy and then we'll
+
+10
+00:00:56.000 --> 00:01:02.000
+also go and dive into some of the
+solutions on how to deal with account
+management so going from one to ten
+
+11
+00:01:02.000 --> 00:01:07.000
+accounts is relatively straightforward
+you can still do a lot of that manually
+I start as soon as you start looking at
+
+12
+00:01:07.000 --> 00:01:14.000
+the 20s 40 hundreds or thousands of
+accounts we want to start looking at a
+way to automate that so we're going to
+
+13
+00:01:14.000 --> 00:01:20.000
+take you through some of the frameworks
+and solutions we've worked with clients
+and internally with an AWS on that and
+
+14
+00:01:20.000 --> 00:01:25.000
+then we're also going to talk around
+role management so when you start
+looking at how do you provide identity
+
+15
+00:01:25.000 --> 00:01:30.000
+and all these hundreds of thousands of
+accounts we want to provide you with
+some solutions on that and then from a
+
+16
+00:01:30.000 --> 00:01:36.000
+continuous assurance standpoint how do
+you always validate that these accounts
+are meeting your security best practices
+
+17
+00:01:36.000 --> 00:01:42.000
+and bass lines across the organization
+and finally we will conclude with some
+incident response recommendations for
+
+18
+00:01:42.000 --> 00:01:47.000
+you so if an incident were to occur vet
+word our current one of your accounts
+how do you respond to that in timely
+
+19
+00:01:47.000 --> 00:01:56.000
+matter and from identification to
+actually remediation of that event so
+first off why do you want to look at a
+
+20
+00:01:56.000 --> 00:02:01.000
+multi account strategy one of the
+reasons we come across most frequently
+is you want to define beta blast radius
+
+21
+00:02:01.000 --> 00:02:09.000
+across your organization's oftentimes
+you could do this with IM policies and
+have it across regions or even have
+
+22
+00:02:09.000 --> 00:02:15.000
+really strict policies around using
+tagging Service Catalog or something
+like that but when we start talking
+
+23
+00:02:15.000 --> 00:02:21.000
+about an organization you may want that
+even more constrained and more hardened
+in nature so that's what we're going to
+
+24
+00:02:21.000 --> 00:02:28.000
+look at a count as the blast radius
+itself is now a count to another account
+is no different from AWS perspective
+
+25
+00:02:28.000 --> 00:02:33.000
+then you and another organization
+another company entirely we're going to
+have that fully isolated from each other
+
+26
+00:02:33.000 --> 00:02:40.000
+now you have the ability to create the
+collaboration between those two which
+will go into it a little bit the next
+
+27
+00:02:40.000 --> 00:02:45.000
+topic that we normally here is our own
+consolidated billing yes you could very
+well use tagging and other constructs to
+
+28
+00:02:45.000 --> 00:02:51.000
+actually do show about could bill back
+within your organization but is also we
+found a lot easier if Europe your
+
+29
+00:02:51.000 --> 00:02:56.000
+individual business units could actually
+have their own accounts is now it fully
+rolls up it's a lot easier to show the
+
+30
+00:02:56.000 --> 00:03:03.000
+organization from an s3 or ec2 usage how
+much they are actually using and build
+that organization or third-party back
+
+31
+00:03:03.000 --> 00:03:09.000
+correctly and then there is also the VPC
+our account limits that are inherent
+within AWS for example within a given
+
+32
+00:03:09.000 --> 00:03:15.000
+region you may only be allowed to have
+5v pcs within the region for your
+particular organization this may be too
+
+33
+00:03:15.000 --> 00:03:20.000
+few and by splitting that out across
+account you're able to bypass that
+limitation and show that your business
+
+34
+00:03:20.000 --> 00:03:26.000
+is April operate as you expect and
+finally one of the great examples that
+we come to is if you're dealing with
+
+35
+00:03:26.000 --> 00:03:31.000
+mergers and acquisition activity if
+you're building out a new service that
+you feel that you may want to sell off
+
+36
+00:03:31.000 --> 00:03:37.000
+or divest yourself from in the future
+having a dedicated account allows you to
+do that in a much easier manner now
+
+37
+00:03:37.000 --> 00:03:43.000
+instead of having actually rebuild your
+infrastructure perhaps provide the
+initial cloud formation templates or
+
+38
+00:03:43.000 --> 00:03:49.000
+actually provide access into your own
+account you could literally just provide
+the blue credentials and have them take
+
+39
+00:03:49.000 --> 00:03:56.000
+over that route credentials and then
+create their own identity from there to
+getting them the access so when we
+
+40
+00:03:56.000 --> 00:04:02.000
+actually look at what account a multi
+account setup looks like this is a
+normal diagram of what we're seeing our
+
+41
+00:04:02.000 --> 00:04:07.000
+customers we're seeing it normally an
+enterprise has their existing data
+center and they're connecting into us by
+
+42
+00:04:07.000 --> 00:04:13.000
+our backbone this could be by a direct
+connector a VPN connection depending on
+the account from there you have a number
+
+43
+00:04:13.000 --> 00:04:19.000
+of resource accounts this is really
+where your business units are running
+their their workloads themselves so this
+
+44
+00:04:19.000 --> 00:04:23.000
+is where they're spinning up there you
+see two instances using our different
+services such as that's three what have
+
+45
+00:04:23.000 --> 00:04:28.000
+you
+then we would normally see a minimum of
+two other dedicated accounts one of
+
+46
+00:04:28.000 --> 00:04:34.000
+those accounts that we're going to talk
+heavily upon is the security account
+this is a significantly hardened account
+
+47
+00:04:34.000 --> 00:04:39.000
+with very limited access for your
+general population but this is where all
+your centralized logging is going to
+
+48
+00:04:39.000 --> 00:04:46.000
+occur to so your cloud trail you VPC
+flow logs you know lb logs whatever you
+really want to have immediate access to
+
+49
+00:04:46.000 --> 00:04:51.000
+and then drive decisions based upon
+that's going to be sitting within your
+security count as we get further along
+
+50
+00:04:51.000 --> 00:04:55.000
+in this presentation we're going to talk
+about some of the other services that
+you could be building it within that
+
+51
+00:04:55.000 --> 00:05:01.000
+security account to to help you through
+there is a continuous automation around
+your security events as well the other
+
+52
+00:05:01.000 --> 00:05:06.000
+account that we normally see as a
+consolidated billing account this is
+from a logical perspective where all
+
+53
+00:05:06.000 --> 00:05:12.000
+your accounts are rolling up into and
+allows you to actually have the building
+construction so that it again locked
+
+54
+00:05:12.000 --> 00:05:16.000
+down to specific individuals that
+require that access so generally
+speaking you may feel that your
+
+55
+00:05:16.000 --> 00:05:22.000
+organization and your business your unit
+shouldn't be able to be able to see that
+detailed billing reports and therefore
+
+56
+00:05:22.000 --> 00:05:32.000
+within the consolidated billing account
+you have that ability to lock that down
+so gently with all those accounts has
+
+57
+00:05:32.000 --> 00:05:37.000
+been a challenge for customers
+historically and making sure that you
+have the appropriate governance in place
+
+58
+00:05:37.000 --> 00:05:41.000
+when you're growing from tens of
+accounts to hundreds of counts and
+making sure you have an appropriate
+
+59
+00:05:41.000 --> 00:05:50.000
+baseline and so we launched in limited
+public preview this week a new service
+called a diverse organizations if you
+
+60
+00:05:50.000 --> 00:05:57.000
+haven't heard this definitely take a
+look it's a new capability that allows
+customers to centrally control and
+
+61
+00:05:57.000 --> 00:06:06.000
+manage multiple a diverse accounts
+additionally you'll gain some features
+that will enable you to apply what we're
+
+62
+00:06:06.000 --> 00:06:12.000
+calling it organizational control
+policies across these accounts which
+will allow you to control which services
+
+63
+00:06:12.000 --> 00:06:20.000
+and API calls those accounts and the
+entities within them can operate with
+additionally you can gain the ability to
+
+64
+00:06:20.000 --> 00:06:28.000
+programmatically create new accounts
+going forward as well from a high level
+there's a number of key concepts we want
+
+65
+00:06:28.000 --> 00:06:33.000
+to talk about so we have the actual
+organization itself this is just the
+consolidated set of all the accounts
+
+66
+00:06:33.000 --> 00:06:38.000
+that you have and you want essentially
+control
+and then you have the AWS accounts
+
+67
+00:06:38.000 --> 00:06:44.000
+themselves sometimes I'll refer to this
+as the child account but those accounts
+that mauer was talking about in the
+
+68
+00:06:44.000 --> 00:06:50.000
+diagram would be these AWS accounts and
+then you have a master account if you're
+familiar with consolidated billing this
+
+69
+00:06:50.000 --> 00:06:56.000
+is essentially the same thing you would
+might migrate from a consolidated
+billing account to the master account
+
+70
+00:06:56.000 --> 00:07:02.000
+automatically when you're activating AWS
+organizations so you want to make sure
+you choose the master account wisely and
+
+71
+00:07:02.000 --> 00:07:09.000
+then you'll define the organizational
+units this is how you would view your
+organization and we'll take a look at
+
+72
+00:07:09.000 --> 00:07:15.000
+what that means and then I mentioned the
+organizational control policy and
+specifically we'll talk about service
+
+73
+00:07:15.000 --> 00:07:25.000
+control policies so you can define what
+services and AP is you're allowing your
+team to use within those accounts so we
+
+74
+00:07:25.000 --> 00:07:31.000
+have a high level diagram of what AWS
+organizations looks like we're going to
+have that master account there at the
+
+75
+00:07:31.000 --> 00:07:39.000
+top and then the way my organization
+thinks about our accounts is development
+accounts test accounts and production
+
+76
+00:07:39.000 --> 00:07:46.000
+accounts so I'm going to create
+organizational units for those three
+things and then I'm going to assign
+
+77
+00:07:46.000 --> 00:07:52.000
+child accounts to that so I'm going to
+assign some accounts to development some
+accounts the test some accounts to
+
+78
+00:07:52.000 --> 00:07:59.000
+production and then I apply the service
+control policies anywhere within that so
+I'll apply one to the master account one
+
+79
+00:07:59.000 --> 00:08:08.000
+to the organizational units as well as
+perhaps one to the child account itself
+now when we're evaluating those policies
+
+80
+00:08:08.000 --> 00:08:15.000
+but it's important to understand how
+they actually function so let's say we
+have a service control policy or the
+
+81
+00:08:15.000 --> 00:08:23.000
+union of service control policies so all
+of them together that allow ec2 and s3
+and then within a child account i'm
+
+82
+00:08:23.000 --> 00:08:32.000
+going to have an IM policy assigned
+perhaps to a group a role or a user that
+is allowing ec2 and SQ s so it's
+
+83
+00:08:32.000 --> 00:08:36.000
+actually when we're evaluating it's
+actually to take the intersection of
+those two so it's still a default deny
+
+84
+00:08:36.000 --> 00:08:44.000
+so both policies allowed ec2 but in this
+case s 3 and s 2 s are not being allowed
+because again it is the intersection of
+
+85
+00:08:44.000 --> 00:08:51.000
+those two policies
+now moving forward when you're adding
+more accounts it's important to make
+
+86
+00:08:51.000 --> 00:08:56.000
+sure you have an appropriate baseline
+and so using something like cloud
+formation templates or perhaps your
+
+87
+00:08:56.000 --> 00:09:04.000
+favorite programming language you can
+use our SDKs our Ruby SDK or Python boto
+SDK to make sure you have appropriate
+
+88
+00:09:04.000 --> 00:09:11.000
+deployment mechanisms in place to make
+sure you have consistent repeatability
+across all of your accounts and then you
+
+89
+00:09:11.000 --> 00:09:16.000
+want to commit those to your favorite
+repository could be a git repository it
+can be subversion there you want to make
+
+90
+00:09:16.000 --> 00:09:22.000
+sure you gain the benefits of versioning
+and historical information as well as
+adding a readme file so somebody in the
+
+91
+00:09:22.000 --> 00:09:28.000
+future that needs to maintain those
+deployment scripts or templates can know
+what you're doing as well as identifying
+
+92
+00:09:28.000 --> 00:09:34.000
+changes on who made the change and when
+as we're launching new services and
+features to make sure you have an
+
+93
+00:09:34.000 --> 00:09:41.000
+appropriate baseline going forward and
+whenever you're programmatically adding
+accounts using a diverse organizations
+
+94
+00:09:41.000 --> 00:09:50.000
+it's important to make sure you have new
+account set up to add an appropriately
+so in the case of cloud services before
+
+95
+00:09:50.000 --> 00:09:55.000
+you can actually provision resources you
+need access so you need to actually set
+up the identity and access management
+
+96
+00:09:55.000 --> 00:10:02.000
+controls so in the case we'll talk about
+roles and policies in a bit as well as
+turning on the appropriate logging
+
+97
+00:10:02.000 --> 00:10:08.000
+mechanisms so we often will say our best
+practices that you turn cloud trail and
+in all regions but you want to look at
+
+98
+00:10:08.000 --> 00:10:13.000
+what other logging capabilities you need
+to enable and make sure you're
+aggregating those appropriately as well
+
+99
+00:10:13.000 --> 00:10:20.000
+and another one I like to talk about
+with customers is your vbc and your
+networking you want to make sure you
+
+100
+00:10:20.000 --> 00:10:26.000
+have a consistent commonality between
+all of your accounts if every account
+and your hundreds or thousands of
+
+101
+00:10:26.000 --> 00:10:30.000
+accounts has a different bpc style with
+different subnets it's going to create
+an operational headache when you're
+
+102
+00:10:30.000 --> 00:10:35.000
+trying to troubleshoot and you're
+looking at a network diagram for a very
+specific account so if you have a
+
+103
+00:10:35.000 --> 00:10:42.000
+commonality in your networking across
+these accounts it'll help you
+troubleshoot a lot faster
+
+104
+00:10:42.000 --> 00:10:49.000
+so now that we understand kind of the
+account management standpoint how are
+you going to start looking at managing
+
+105
+00:10:49.000 --> 00:10:55.000
+the actual access into these accounts
+this is also an interesting port because
+when we start thinking about this you
+
+106
+00:10:55.000 --> 00:11:01.000
+have a number of different options
+natively with an AWS today you could
+actually create local IM users and roles
+
+107
+00:11:01.000 --> 00:11:05.000
+within each of these hundreds of
+thousands of accounts which obviously is
+a bit of a nightmare when it comes to
+
+108
+00:11:05.000 --> 00:11:09.000
+managing and showing that when movers
+and leavers occur within your
+organization that they're properly
+
+109
+00:11:09.000 --> 00:11:16.000
+reflected within AWS as well then you
+also have the option to actually feder a
+twit the UI within your internal
+
+110
+00:11:16.000 --> 00:11:22.000
+identity provider direct access into AWS
+as well now this has to be done on a pro
+account basis which adds some complexity
+
+111
+00:11:22.000 --> 00:11:28.000
+Booker T's will be scripted out if you
+so choose the last option really is
+around a centralized authentication
+
+112
+00:11:28.000 --> 00:11:33.000
+account this allows you to actually
+create a centralized security count and
+then allow access into the one account
+
+113
+00:11:33.000 --> 00:11:38.000
+which other has a trust policy into your
+individual resources account now there's
+something definitely pros and cons
+
+114
+00:11:38.000 --> 00:11:45.000
+across all these you have to make that
+decision but today we also wanted to
+provide another framework for you well
+
+115
+00:11:45.000 --> 00:11:52.000
+calling this framework that
+multi-account strategic compliance in
+operations tool or mascot for short we
+
+116
+00:11:52.000 --> 00:11:59.000
+spent a lot of time coming up with this
+acronym too by the way so what this is
+this is a framework that internally to
+
+117
+00:11:59.000 --> 00:12:04.000
+AWS we use this framework allows us to
+manage our internal accounts and within
+professional services we actually worked
+
+118
+00:12:04.000 --> 00:12:10.000
+with into it as well to actually help
+them manage their accounts in this
+process as well and now what this allows
+
+119
+00:12:10.000 --> 00:12:17.000
+you to do is that allows you to make it
+easier for your employees and their
+teams to use AWS accounts while still
+
+120
+00:12:17.000 --> 00:12:23.000
+allowing the organization to manage
+those accounts and the IM roles within
+them so what is that section mean from
+
+121
+00:12:23.000 --> 00:12:29.000
+an onboarding perspective what this
+means is that when you register an
+account into mascot you were actually
+
+122
+00:12:29.000 --> 00:12:34.000
+allowing you to capture metadata around
+that account so for example the
+environment that it belongs in is it a
+
+123
+00:12:34.000 --> 00:12:40.000
+production accountant on production
+account is it a test account we're all
+stable allowing you to capture the data
+
+124
+00:12:40.000 --> 00:12:46.000
+classification of that account are you
+dealing with customer data a pci data or
+HIPAA data in that count yes n we're
+
+125
+00:12:46.000 --> 00:12:51.000
+able to use this data later on when we
+talk about the continuous assurance
+programs to make risk-based decisions on
+
+126
+00:12:51.000 --> 00:12:56.000
+that account so for example if you see
+something suspicious in that account if
+it's a production account
+
+127
+00:12:56.000 --> 00:13:01.000
+that's going to require a faster
+remediation that it may be in the dev or
+a test account and based upon the
+
+128
+00:13:01.000 --> 00:13:08.000
+customer data as well you can make those
+risks based decisions additionally now
+we're also allowing you to capture the
+
+129
+00:13:08.000 --> 00:13:14.000
+owners of the account now obviously you
+as an organization or the owner of the
+account but who has the individual owner
+
+130
+00:13:14.000 --> 00:13:19.000
+of that account also allows you to have
+a point a person to follow up on in
+terms of an event or incident within
+
+131
+00:13:19.000 --> 00:13:26.000
+that as well the other thing from an
+operation standpoint we're allowing
+federated access to the AWS management
+
+132
+00:13:26.000 --> 00:13:32.000
+console now individuals don't need to
+log in multiple locations you have
+single sign-on able to quickly view the
+
+133
+00:13:32.000 --> 00:13:37.000
+number of accounts and roles that you
+have permissions to from Active
+Directory in one example and you're able
+
+134
+00:13:37.000 --> 00:13:42.000
+have one click access into the portal
+from there additionally allows for all
+creation and management in those
+
+135
+00:13:42.000 --> 00:13:48.000
+individual accounts as well as the
+security policy template creation
+imagine so similar to how AWS provides
+
+136
+00:13:48.000 --> 00:13:53.000
+you with managed IM policies this
+framework could allow you to provide
+your organization with the same type of
+
+137
+00:13:53.000 --> 00:13:58.000
+managed policies as well so as an
+administrator of this system you could
+say these are the list of policies that
+
+138
+00:13:58.000 --> 00:14:05.000
+you as an individual have access to and
+you can then create your roles and
+deploy them from there the last I'm
+
+139
+00:14:05.000 --> 00:14:11.000
+sorry so let's dive into what this
+actually looks like from a high level
+you have an individual logging into a
+
+140
+00:14:11.000 --> 00:14:17.000
+portal this could be by a single sign-on
+or using your domain credentials into
+the portal from there you're accessing
+
+141
+00:14:17.000 --> 00:14:23.000
+our service the mascot service which is
+running within your security account the
+back end of that is a database which is
+
+142
+00:14:23.000 --> 00:14:29.000
+capturing all the roles and permissions
+that that individual is able to access
+based upon his active directory group in
+
+143
+00:14:29.000 --> 00:14:35.000
+this example as well as some of the
+security credentials we need to actually
+assume into those other accounts each
+
+144
+00:14:35.000 --> 00:14:40.000
+role within each of the accounts has a
+unique external ID for those that
+haven't used the external ID within the
+
+145
+00:14:40.000 --> 00:14:46.000
+assume role STS call it allows us to
+have a unique identifier that we could
+keep locked down as well so even if so
+
+146
+00:14:46.000 --> 00:14:53.000
+it knows the role and has the access key
+and secret key for that role they need
+that the actual external idea as well to
+
+147
+00:14:53.000 --> 00:15:00.000
+actually perform that a stroll
+assumption so if we dive in a little bit
+deeper now this is what it's actually
+
+148
+00:15:00.000 --> 00:15:05.000
+looking like from a service to implement
+you have an account owner which is the
+individual that's actually on board the
+
+149
+00:15:05.000 --> 00:15:11.000
+account on to
+mascot as well as a federated user from
+there it goes into our mascot service
+
+150
+00:15:11.000 --> 00:15:17.000
+this allows us to a federal rate with
+your internal identity provider and the
+example we'll show you in a little bit
+
+151
+00:15:17.000 --> 00:15:24.000
+as Active Directory it also allows us to
+have account management bolted to that
+as well as a second owner workflow so if
+
+152
+00:15:24.000 --> 00:15:30.000
+the primary owner leaves the
+organization we could automatically
+perform remediation steps and follow up
+
+153
+00:15:30.000 --> 00:15:37.000
+a wad here's where we integrate with
+your active directory and then what it
+also does the audit trail is ties us
+
+154
+00:15:37.000 --> 00:15:43.000
+into a database so now every action
+that's performed within mascot is being
+logged for your identification and
+
+155
+00:15:43.000 --> 00:15:49.000
+follow-up as well so what that means is
+so when a user uses this to login to
+assume role into an account we're
+
+156
+00:15:49.000 --> 00:15:53.000
+capturing that information so when you
+identify between this and the cloud
+shell events that are also being
+
+157
+00:15:53.000 --> 00:15:59.000
+captured hopefully is you've turned that
+on that you're able to correlate the
+events more effectively additionally
+
+158
+00:15:59.000 --> 00:16:05.000
+what we're able to see is if the data
+classification from the account changes
+we're actually able to audit this so now
+
+159
+00:16:05.000 --> 00:16:10.000
+if someone's manipulating a data
+classification or environmental variable
+on the account weibull capture that
+
+160
+00:16:10.000 --> 00:16:16.000
+perform an action to say hey you just
+moved a production account back down to
+a demo account why'd that happen is that
+
+161
+00:16:16.000 --> 00:16:21.000
+supposed to have happen are you trying
+to do something from a malicious
+standpoint we're able to capture and
+
+162
+00:16:21.000 --> 00:16:27.000
+actually tie it into a ticketing system
+to verify that we're auditing and
+remediating that stuff as quickly as
+
+163
+00:16:27.000 --> 00:16:37.000
+possible so now we're actually going to
+provide you with a demo of mascot number
+four yep
+
+164
+00:16:37.000 --> 00:16:43.000
+um so this is what you see obviously I'm
+not attached to a domain right now I'm
+using the same Wi-Fi all you are but if
+
+165
+00:16:43.000 --> 00:16:51.000
+this was a domain you can have the
+single sign-on functionality but when we
+sign on to this hopefully that Wi-Fi and
+
+166
+00:16:51.000 --> 00:16:56.000
+everything works demo gods are good yep
+um what we're seeing here is the
+accounts that I've been accounting roles
+
+167
+00:16:56.000 --> 00:17:02.000
+that I've been provisioned to so within
+this we're actually seeing two accounts
+here there are some details around there
+
+168
+00:17:02.000 --> 00:17:07.000
+so the top account is account that I
+actually owning created for the bottom
+account is a role that I belong to
+
+169
+00:17:07.000 --> 00:17:12.000
+within the active directory which I'll
+show you in a little bit as well that
+I've automatically been provisioned for
+
+170
+00:17:12.000 --> 00:17:19.000
+it so as a 80 user was assigned to that
+group that automatically appears up here
+within mascot you're able to register an
+
+171
+00:17:19.000 --> 00:17:24.000
+account as I talked about earlier here's
+where we're capturing that metadata I
+talked about so when you create an
+
+172
+00:17:24.000 --> 00:17:29.000
+account you enter the data
+classification of that count what type
+of data it holds does it hold no
+
+173
+00:17:29.000 --> 00:17:34.000
+sensitive data as well as the data
+around the environment itself which
+we're going to be using to make those
+
+174
+00:17:34.000 --> 00:17:39.000
+risk based decisions decisions that I
+alluded to to actually on board an
+account to relatively straightforward
+
+175
+00:17:39.000 --> 00:17:46.000
+process you provide as within I am
+credential not the route credential but
+an IM user credential that has IM star
+
+176
+00:17:46.000 --> 00:17:51.000
+privileges so essentially an admin that
+credential is not being stored by us
+we're actually using that credential to
+
+177
+00:17:51.000 --> 00:17:57.000
+create two new roles within that
+onboarding account one is a security
+auditor role which essentially only has
+
+178
+00:17:57.000 --> 00:18:02.000
+read-only permissions the other role
+we're creating is the mascot role we're
+going to be using to assume roles as
+
+179
+00:18:02.000 --> 00:18:08.000
+well as perform remediation steps in
+case of an emergency also capturing the
+primary owner of the account here it
+
+180
+00:18:08.000 --> 00:18:13.000
+automatically pulls in my active
+directory credential as well as the
+account description which I'm going to
+
+181
+00:18:13.000 --> 00:18:19.000
+use to recognize that account in the
+future so once you register account you
+can then create your policy templates
+
+182
+00:18:19.000 --> 00:18:25.000
+here you have the ability to see the
+existing policy templates that as an
+organization I'm provision in able to
+
+183
+00:18:25.000 --> 00:18:33.000
+see I'm also able to add a customer in
+policy so if we create a new policy
+template allow all and we'll go creative
+
+184
+00:18:33.000 --> 00:18:50.000
+how's everything we're going to make
+this real simple it myself
+we clicked and out of that this is now a
+
+185
+00:18:50.000 --> 00:18:55.000
+policy that we can now use as an
+organization to allow other users to use
+this role and we're going to add one
+
+186
+00:18:55.000 --> 00:19:15.000
+more policy right here as well a simple
+deny all which we'll use in a little bit
+now we just created two policies within
+
+187
+00:19:15.000 --> 00:19:23.000
+a mascot system now that we have a
+policy created we can now also create a
+role this role is not actually assigned
+
+188
+00:19:23.000 --> 00:19:28.000
+to an account day one but you have the
+ability to do that and I'll walk you
+that as well so here what we're going to
+
+189
+00:19:28.000 --> 00:19:41.000
+do we're going to use that denial role
+we're going to create that I'll roll
+we're going to select the denial policy
+
+190
+00:19:41.000 --> 00:19:50.000
+we just created which is all to populate
+off the policies you have access to and
+click Add here's that role we just
+
+191
+00:19:50.000 --> 00:19:57.000
+created it's not applied to any accounts
+yet we now have to have the access to be
+I'll apply that account as well so when
+
+192
+00:19:57.000 --> 00:20:02.000
+we click the deploy button again what we
+see here is the list of accounts that
+you are owning from me as the owner
+
+193
+00:20:02.000 --> 00:20:08.000
+again knows before I had those two
+accounts when I am just a user of the
+Active Directory one and here's the
+
+194
+00:20:08.000 --> 00:20:17.000
+actual account that I'm an owner so I
+can actually click to deploy this role
+within that or reinvent account so as
+
+195
+00:20:17.000 --> 00:20:22.000
+you see up here I now have these two
+this role this original which I
+originally created beforehand as well as
+
+196
+00:20:22.000 --> 00:20:28.000
+the new deny all roll so to actually
+access this account again it's
+relatively simple you click the full
+
+197
+00:20:28.000 --> 00:20:34.000
+admin role the role that you want to
+assume and will actually dynamically log
+you into the portal AWS portfolio what
+
+198
+00:20:34.000 --> 00:20:39.000
+this allows you to what the background
+of this what's actually happening is
+that we're actually performing assume
+
+199
+00:20:39.000 --> 00:20:45.000
+role functionality but the better part
+about this is that your users no longer
+need to have long term credentials you
+
+200
+00:20:45.000 --> 00:20:51.000
+don't have to worry about them losing
+those credentials mismatching them it's
+a one-click access into the portal but
+
+201
+00:20:51.000 --> 00:20:57.000
+the other thing that allows you to do
+for those that want to actually allow a
+CLI access or anything on this denial
+
+202
+00:20:57.000 --> 00:21:05.000
+roll you can actually view the STS
+tokens as well now these are live sts
+tokens obviously i created the denial of
+
+203
+00:21:05.000 --> 00:21:11.000
+policy for the specific reason because i
+don't want any of you taking a picture
+and using these credentials but
+
+204
+00:21:11.000 --> 00:21:17.000
+you could actually copy and paste this
+into your CLI access and have a lot of
+potential so therefore you have the
+
+205
+00:21:17.000 --> 00:21:22.000
+functionality and now all this isn't any
+magic in the background these all API so
+you could actually integrate this in
+
+206
+00:21:22.000 --> 00:21:27.000
+wrap this around your existing CLI so
+they don't actually even need to do this
+are actually turn into your SDKs and
+
+207
+00:21:27.000 --> 00:21:34.000
+everything as well so when we actually
+look at this from an ad perspective the
+other thing I want to show you is how
+
+208
+00:21:34.000 --> 00:21:42.000
+easy it is to add users from an Active
+Directory perspective so from if we look
+look at um actually let's show Josh log
+
+209
+00:21:42.000 --> 00:22:06.000
+in right now so here so there's another
+Active Directory user Josh logging into
+his mascot slowly
+
+210
+00:22:06.000 --> 00:22:16.000
+notice he only has the one role now so
+now let's look at what it actually looks
+like to add a new role in group with an
+
+211
+00:22:16.000 --> 00:22:27.000
+active directory so here's our active
+directory structure right here you have
+the one role this is kind of the role
+
+212
+00:22:27.000 --> 00:22:32.000
+that everyone's being accessed here that
+you see dynamically within all of our
+accounts but what we'll do now is create
+
+213
+00:22:32.000 --> 00:22:38.000
+a new role so we're going to grab the
+role name it's a predetermined structure
+that we're created here it's relatively
+
+214
+00:22:38.000 --> 00:22:47.000
+straightforward I'll walk you through it
+so the group name is based upon a
+predetermined structure here it's AWS as
+
+215
+00:22:47.000 --> 00:22:53.000
+a prefix of that group followed by the
+account that they should have access to
+followed by the specific role name that
+
+216
+00:22:53.000 --> 00:22:59.000
+they allowed to have access to as well
+so we're creating this new group with an
+active directory where they're going to
+
+217
+00:22:59.000 --> 00:23:24.000
+add josh to this group
+okay and now if we switch back to Josh
+and have him relog into the console he's
+
+218
+00:23:24.000 --> 00:23:30.000
+been provisioned for that role in access
+into the account again he much simpler
+automatically adds him access into the
+
+219
+00:23:30.000 --> 00:23:35.000
+role into the account that he's been
+provisioned for it's a lot greater of a
+user experience as well and then as he
+
+220
+00:23:35.000 --> 00:23:41.000
+again as he clicks on a roll to actually
+assume that it's actually being logged
+within both the cloud trail events as
+
+221
+00:23:41.000 --> 00:23:55.000
+well as within mascot itself so that you
+could actually use it going forward as
+well again all that is a framework you
+
+222
+00:23:55.000 --> 00:24:00.000
+could build it yourself this isn't
+anything special it's using public API s
+and kind of the architecture which we
+
+223
+00:24:00.000 --> 00:24:05.000
+discussed but we could also help you
+from a professional services it's the
+important and actually implementing it
+
+224
+00:24:05.000 --> 00:24:12.000
+as well the other thing that we want to
+talk about is the continuous assurance
+this is allowing automated methods to
+
+225
+00:24:12.000 --> 00:24:17.000
+actually regularly verify or ensure your
+information security controls are
+appropriately configured we view this as
+
+226
+00:24:17.000 --> 00:24:23.000
+a huge force multiplier in with an AWS
+multi-account strategy now your team
+doesn't have to manually go across all
+
+227
+00:24:23.000 --> 00:24:29.000
+your accounts verify or even worst case
+find out that something's been
+misconfigured when an event has occurred
+
+228
+00:24:29.000 --> 00:24:36.000
+now they're proactively identifying them
+in a near real-time err on a regular
+basis so what are some things you could
+
+229
+00:24:36.000 --> 00:24:41.000
+actually start looking for first one
+that often right off the bat is weak
+policies you can actually start looking
+
+230
+00:24:41.000 --> 00:24:47.000
+for I am start policies KMS star
+policies these are really powerful
+policies that have used missile
+
+231
+00:24:47.000 --> 00:24:52.000
+maliciously could affect your entire
+account you want to make sure that
+you're aware of those usage the other
+
+232
+00:24:52.000 --> 00:24:58.000
+thing you can start looking for security
+groups our privilege ports exposed to
+the internet such as SSH or rdp we've in
+
+233
+00:24:58.000 --> 00:25:04.000
+memcache port you're able to look
+through your actual security groups do
+describe them identify what's exposed to
+
+234
+00:25:04.000 --> 00:25:10.000
+your internet and follow up with those
+individuals in a quicker more automated
+method more interestingly enough you
+
+235
+00:25:10.000 --> 00:25:15.000
+could also start touching those
+individual ports so let's say identified
+say that you have identified or servers
+
+236
+00:25:15.000 --> 00:25:20.000
+that's exposed to the Internet is it
+using the default credentials for that
+service or is it actually using custom
+
+237
+00:25:20.000 --> 00:25:25.000
+credentials you can programmatically
+build this framework out so that you
+could test the type
+
+238
+00:25:25.000 --> 00:25:33.000
+questions within your environment the
+other thing that you should start doing
+are the proper logs enabled within your
+
+239
+00:25:33.000 --> 00:25:39.000
+environment is cloud trail configured
+properly is it pointing to a centralized
+account what about VPC flow logs and
+
+240
+00:25:39.000 --> 00:25:46.000
+elastic load balancing and then you
+could also start searching cloud trail
+for unexpected IPS as well so if you're
+
+241
+00:25:46.000 --> 00:25:51.000
+having root credentials being used from
+external IP addresses or even at root
+credentials being used at all these are
+
+242
+00:25:51.000 --> 00:25:58.000
+all red flags you can start doing
+programmatically so what is this a
+framework actually look like let's dive
+
+243
+00:25:58.000 --> 00:26:03.000
+into that we're going to be using lambda
+heavily in this framework because it
+allows us to scale more dynamically as
+
+244
+00:26:03.000 --> 00:26:09.000
+you move up in accounts you don't want
+to be tied to a specific ec2 instance do
+a threading concerns now we're able to
+
+245
+00:26:09.000 --> 00:26:15.000
+actually build this out using lambda and
+DynamoDB to be highly scalable and
+actually get us results in a quicker
+
+246
+00:26:15.000 --> 00:26:21.000
+manner so we have here is the
+coordinator which is attaches to the
+account database this database in our
+
+247
+00:26:21.000 --> 00:26:26.000
+example in framework is the same
+database that we're creating with a
+mascot this is holding a metadata we're
+
+248
+00:26:26.000 --> 00:26:30.000
+going to be needing it's going to be
+holding the accounts the security
+auditor role as well as the external ID
+
+249
+00:26:30.000 --> 00:26:35.000
+security token that we're going to need
+to be able to assume that role in 2 the
+count to verify what's happening but
+
+250
+00:26:35.000 --> 00:26:39.000
+it's also going to have the metadata
+associated to that account again it's
+going to have the environment it's going
+
+251
+00:26:39.000 --> 00:26:46.000
+to have the data classification which we
+can use within the account coordinator
+to determine what tests we need to run
+
+252
+00:26:46.000 --> 00:26:51.000
+the same test maybe across all your
+environment or you may want more
+stringent tests within your production
+
+253
+00:26:51.000 --> 00:26:55.000
+account or you may want to slightly
+different tests to ensure that your
+HIPAA compliant or PCI compliant your
+
+254
+00:26:55.000 --> 00:27:01.000
+account coordinator is able to do this
+from there it's going to kick off a
+lambda test chain that lambda test chain
+
+255
+00:27:01.000 --> 00:27:07.000
+is going to perform the test on an
+individual basis so back to my example
+of searching for ssh exposed to the
+
+256
+00:27:07.000 --> 00:27:13.000
+internet that is one individual lambda
+function that one lambda function will
+assume the credentials as being passed
+
+257
+00:27:13.000 --> 00:27:20.000
+into it from the account coordinator be
+it a test within the resource account
+using the auditor role which we pre
+
+258
+00:27:20.000 --> 00:27:27.000
+deployed using mascot and then I'll pass
+back the findings into our own findings
+database that finding database will be
+
+259
+00:27:27.000 --> 00:27:32.000
+the continuous record around how our
+audits are being run within our
+environment from there it's also
+
+260
+00:27:32.000 --> 00:27:38.000
+interesting because we could also tie
+this into a ticketing service now once
+we identify a
+
+261
+00:27:38.000 --> 00:27:43.000
+content within that doesn't meet our
+expectations we could automatically
+create a ticket based upon the owner of
+
+262
+00:27:43.000 --> 00:27:50.000
+that account within the account database
+and assign it to that individual for
+remediation more importantly once that
+
+263
+00:27:50.000 --> 00:27:56.000
+individual remediate sit let's say they
+forgot to close the ticket we actually
+have that findings database information
+
+264
+00:27:56.000 --> 00:28:02.000
+that next run if we identify that
+finding no longer is valid we could
+programmatically go in and close that
+
+265
+00:28:02.000 --> 00:28:08.000
+ticket for them more importantly if
+they've closed the ticket and it hasn't
+actually been remediated we can quickly
+
+266
+00:28:08.000 --> 00:28:18.000
+reopen that ticket and reassign it as
+well the ticketing system is a huge
+force multiplier in this problem what
+
+267
+00:28:18.000 --> 00:28:24.000
+allows us to do from a security
+organization allows us to concentrate on
+securing them for infrastructure and
+
+268
+00:28:24.000 --> 00:28:29.000
+working with the business to understand
+where they're going so we could be
+proactive and not engagement more
+
+269
+00:28:29.000 --> 00:28:34.000
+importantly we need to choose a system
+that allows for this integration you
+need to have an API on that ticketing
+
+270
+00:28:34.000 --> 00:28:39.000
+system you have to be able to cut
+tickets and remediate them and then you
+also have to be able to reopen them when
+
+271
+00:28:39.000 --> 00:28:46.000
+appropriate but from a security
+organization it also allows us to drive
+some interesting numbers we cannot show
+
+272
+00:28:46.000 --> 00:28:53.000
+back to the business or what ROI and kpi
+on our tickets are we could show how
+many tickets we proactively open how
+
+273
+00:28:53.000 --> 00:28:59.000
+long they've took to close how many we
+we had we had to reopen as well which we
+can then justify what we're doing and
+
+274
+00:28:59.000 --> 00:29:06.000
+how quickly we're responding to issues
+versus having a queue that was like
+Layton in nature the other thing though
+
+275
+00:29:06.000 --> 00:29:13.000
+that we have to emphasize is providing a
+ticket and cutting a ticket isn't enough
+you have to have some documentation on
+
+276
+00:29:13.000 --> 00:29:18.000
+how to actually remediated ticket you
+have to be able provide details I want
+what that ticket means why was it cut
+
+277
+00:29:18.000 --> 00:29:23.000
+what are the steps they need to take to
+actually mediate that and more
+importantly you have to test your
+
+278
+00:29:23.000 --> 00:29:29.000
+guidance by creating tickets you don't
+want your business units to be attacking
+you and say I got this ticket I have no
+
+279
+00:29:29.000 --> 00:29:33.000
+idea what to do with it it should be
+self-evident and then they're only
+coming to you if they really don't
+
+280
+00:29:33.000 --> 00:29:40.000
+understand something and for again
+you're building that relationship with
+the business units the other thing we
+
+281
+00:29:40.000 --> 00:29:45.000
+want to talk about is how to actually
+validate your cloud trail events we have
+this now great this great centralized
+
+282
+00:29:45.000 --> 00:29:50.000
+security account where all of our cloud
+trailer logs are being pushed into but
+how do we actually start processing them
+
+283
+00:29:50.000 --> 00:29:58.000
+in an oak wicked
+manner now yes you've retired us into a
+Splunk or other data logging service but
+
+284
+00:29:58.000 --> 00:30:05.000
+let's say we wanted to use our internal
+services as well with an AWS you could
+do that so within this within this cloud
+
+285
+00:30:05.000 --> 00:30:11.000
+trail bucket we have an SNS notification
+that's notifying us whenever a new cloud
+travel object is being put into it from
+
+286
+00:30:11.000 --> 00:30:19.000
+there this is kicking off a lambda
+loader this lambdas loaders only job is
+to get that SMS notification reach into
+
+287
+00:30:19.000 --> 00:30:26.000
+this cloud trail bucket and parse out
+the actual events and records within
+that cloud trail from there it's going
+
+288
+00:30:26.000 --> 00:30:31.000
+to push that into a kanisa stream which
+allows us to then control where that log
+is going to be put to as well as bulking
+
+289
+00:30:31.000 --> 00:30:39.000
+grouping those logs together which
+allows us to again push it to another
+lambda coordinator this coordinators job
+
+290
+00:30:39.000 --> 00:30:47.000
+simona was before reaches into a test
+database to understand i see this event
+occurring within cloud show it then
+
+291
+00:30:47.000 --> 00:30:53.000
+looks within the test database to
+understand for that specific API what
+test should I verify have occurred or
+
+292
+00:30:53.000 --> 00:30:59.000
+did not occur and from there is able to
+kick off the appropriate lambda
+responders so for example if it
+
+293
+00:30:59.000 --> 00:31:05.000
+identifies that you deployed an Internet
+gateway within a production account and
+that should never be occurring per your
+
+294
+00:31:05.000 --> 00:31:10.000
+standards you can actually kick off a
+lambda responder that's going to
+proactively go in shut down that and
+
+295
+00:31:10.000 --> 00:31:16.000
+remove that internet gateway within that
+account and therefore shut down the
+malicious activity as quickly as
+
+296
+00:31:16.000 --> 00:31:23.000
+possible the other thing the Kinesis
+stream is going to allow us to do is
+push all that data in team our EMR
+
+297
+00:31:23.000 --> 00:31:28.000
+allows us to have real-time access to
+that data that we're able to query
+against historical events from an
+
+298
+00:31:28.000 --> 00:31:34.000
+incident response perspective we're able
+to now view what's happening you know
+query this data and actually use it to
+
+299
+00:31:34.000 --> 00:31:43.000
+our advantage in addition to the lambda
+responders in which are proactively
+going out and remediating risk
+
+300
+00:31:43.000 --> 00:31:49.000
+so let's take a look at how you would
+actually set that up of course I won't
+be able to show all the code because
+
+301
+00:31:49.000 --> 00:31:54.000
+PowerPoint only allows you to fit so
+much on a screen but I took some
+snippets of things that should be
+
+302
+00:31:54.000 --> 00:32:01.000
+valuable to you to understand a picture
+as we dive deeper so as Matt mentioned
+whenever cloud shale deposits a log file
+
+303
+00:32:01.000 --> 00:32:09.000
+in s3 that object can trigger an event
+notification we could send that to
+wherever we want in this case the event
+
+304
+00:32:09.000 --> 00:32:14.000
+notification contains the the bucket
+name as well as the key of that object
+and so I want to have that event
+
+305
+00:32:14.000 --> 00:32:20.000
+notification actually trigger a lambda
+function in this case the lambda loader
+that Matt was describing so I can go in
+
+306
+00:32:20.000 --> 00:32:25.000
+the console and I could say when this
+event notification from this bucket
+happens on object creation I want to
+
+307
+00:32:25.000 --> 00:32:33.000
+trigger a lambda function so within that
+lambda function the incoming event which
+I underlined there near the top is that
+
+308
+00:32:33.000 --> 00:32:40.000
+what actually contains that s3 event
+notification data so i can parse that
+event variable for that bucket name as
+
+309
+00:32:40.000 --> 00:32:47.000
+well as the key name and then i can make
+a request to s3 to get that object now
+natively lambda does not have the
+
+310
+00:32:47.000 --> 00:32:56.000
+ability to actually go get the object
+from s3 I have to launch it into a role
+that has that API functionality allowed
+
+311
+00:32:56.000 --> 00:33:04.000
+and so I'll need to provide the role to
+this lambda function but I'm going to
+have it go and get the object from s3 at
+
+312
+00:33:04.000 --> 00:33:10.000
+this point I'm going to parse the s3
+object for the cloud shell records that
+are in there I'm going to group them by
+
+313
+00:33:10.000 --> 00:33:16.000
+20 records together I'm going to convert
+that to an array and then to a string so
+that way i can then put it into Kinesis
+
+314
+00:33:16.000 --> 00:33:23.000
+so there at the bottom I'm putting the
+record to Kinesis which is a group of 20
+collateral events and so I can start
+
+315
+00:33:23.000 --> 00:33:32.000
+loading up that Kinesis stream with
+these events at this point once the data
+is in kinases I'll need to extract it
+
+316
+00:33:32.000 --> 00:33:38.000
+out like Matt mentioned we can have lamb
+to do that we can have EMR do that in
+this example I'm going to have lambda
+
+317
+00:33:38.000 --> 00:33:47.000
+grab a batch size of 100 and I can set
+this up in the console or CLI so as
+lambda is reading from the Kinesis
+
+318
+00:33:47.000 --> 00:33:53.000
+record we're going to have to pull out
+the payload is a buffer so I'll need to
+parse it and convert it into this
+
+319
+00:33:53.000 --> 00:33:59.000
+records variable
+and then I can start actually filtering
+it out and looking for specific events
+
+320
+00:33:59.000 --> 00:34:05.000
+that I'm interested now I don't want
+this lambda function to do everything
+I'm going to need this lambda function
+
+321
+00:34:05.000 --> 00:34:12.000
+wants it detects a record to actually
+kick off another lambda job and so they
+can finish its processing now this is
+
+322
+00:34:12.000 --> 00:34:19.000
+just one of many ways in which you can
+provide those security checks there's a
+number of partners that will provide
+
+323
+00:34:19.000 --> 00:34:24.000
+capabilities perhaps something similar
+to this or some other auditing
+monitoring or vulnerability analysis
+
+324
+00:34:24.000 --> 00:34:30.000
+that you might be interested in
+depending on what requirements you have
+there might be a partner that would be
+
+325
+00:34:30.000 --> 00:34:38.000
+as interest to you as well as even some
+open source tooling like Netflix launch
+security monkey or a capital one launch
+
+326
+00:34:38.000 --> 00:34:45.000
+a cloud auditor and so definitely take a
+look at some of the the capabilities are
+out there from a partner perspective as
+
+327
+00:34:45.000 --> 00:34:56.000
+well as an open source perspective let's
+take a look at incident response as well
+which is the last part of our talk we
+
+328
+00:34:56.000 --> 00:35:02.000
+did talk previously in the last couple
+years on incident response we have a
+number of interesting sessions that
+
+329
+00:35:02.000 --> 00:35:09.000
+could be valuable to you they walk
+through a number of scenarios from you
+no compromise access keys to actual
+
+330
+00:35:09.000 --> 00:35:15.000
+forensic analysis so depending on what
+kind of instant response you're talking
+about there should be an interesting
+
+331
+00:35:15.000 --> 00:35:21.000
+session that you might be interested in
+watching but from high level I just kind
+of want to talk about setting up an
+
+332
+00:35:21.000 --> 00:35:28.000
+instant response program so if you have
+one and you're looking to convert that
+to your cloud strategy or perhaps you
+
+333
+00:35:28.000 --> 00:35:33.000
+don't have a well-versed instant
+response program and you're looking to
+build one for the cloud there's still a
+
+334
+00:35:33.000 --> 00:35:39.000
+number of steps you can take and
+primarily they both start with education
+so even though the technology terms
+
+335
+00:35:39.000 --> 00:35:45.000
+might be the same in terms of compute
+storage and database the actual
+technology is slightly different you're
+
+336
+00:35:45.000 --> 00:35:52.000
+going to be accessing them through AP is
+you can use automation you're not going
+to go pull a hard drive there's some
+
+337
+00:35:52.000 --> 00:35:58.000
+education that will need to happen from
+a security operations point of view with
+the forensic analyst with the incident
+
+338
+00:35:58.000 --> 00:36:04.000
+responders and at that point once you
+feel you've level set and baseline your
+education you can start preparing make
+
+339
+00:36:04.000 --> 00:36:10.000
+sure people have access to the tooling
+make sure that they have
+be logging aggregated appropriately that
+
+340
+00:36:10.000 --> 00:36:17.000
+you've actually activated the logging
+and you started build run books and play
+books on you know certain scenarios that
+
+341
+00:36:17.000 --> 00:36:23.000
+might be of interest view in terms of
+you need to respond to an event or an
+anomaly that you've detected within your
+
+342
+00:36:23.000 --> 00:36:31.000
+account at that point you can kick off a
+simulation we did a security jam on
+Monday with the number of simulations
+
+343
+00:36:31.000 --> 00:36:38.000
+for customers to practice incident
+response in the cloud and so it's
+important to at least provide practice
+
+344
+00:36:38.000 --> 00:36:43.000
+to your team and so they can actually
+test the run books and play books and
+make sure they have access to the toy
+
+345
+00:36:43.000 --> 00:36:50.000
+and that stimulation will provide you
+valuable feedback on whether or not
+you're actually prepared whether or not
+
+346
+00:36:50.000 --> 00:36:57.000
+you have the right mechanisms in the
+place and so getting that feedback loop
+and applying an iterative lifecycle to
+
+347
+00:36:57.000 --> 00:37:07.000
+your instant response program will
+definitely help you now Matt mentioned
+the auditor role but there's two roles
+
+348
+00:37:07.000 --> 00:37:14.000
+that we primarily recommend for incident
+response within a multi cloud strategy
+one is a read-only role or the auditor
+
+349
+00:37:14.000 --> 00:37:19.000
+role that Matt was talking about as well
+as a privileged role and this would be
+something for break glass something that
+
+350
+00:37:19.000 --> 00:37:25.000
+can be used an emergency to intervene
+and make make a change within the
+account but it will be important to
+
+351
+00:37:25.000 --> 00:37:34.000
+scope the Tres policy to only allow
+assumption from the security account so
+you'll have a number of directive
+
+352
+00:37:34.000 --> 00:37:41.000
+controls that say what should or should
+be happening in your account and then
+you'll have preventive controls that
+
+353
+00:37:41.000 --> 00:37:46.000
+prevent people from actually doing those
+things that you define should not happen
+in your account this could be things
+
+354
+00:37:46.000 --> 00:37:53.000
+like the I and policies the service
+control policies that we talked about
+within AWS organizations as well as you
+
+355
+00:37:53.000 --> 00:37:58.000
+know your kms key policies and your
+bucket policies you'll have a number of
+preventive controls that enforce your
+
+356
+00:37:58.000 --> 00:38:06.000
+directive controls but of course
+potentially somebody could go around
+those controls perhaps you did not
+
+357
+00:38:06.000 --> 00:38:14.000
+define them appropriately or somebody
+with too much access was able to change
+the preventive controller went around it
+
+358
+00:38:14.000 --> 00:38:20.000
+so you want to make sure you have
+appropriate directive controls to
+trigger an alarm or canary that notifies
+
+359
+00:38:20.000 --> 00:38:27.000
+you that
+your directive control has been violated
+at that point you want to respond to the
+
+360
+00:38:27.000 --> 00:38:33.000
+actual event that happened within your
+account so you detect an anomaly and now
+you need to respond to it and you can do
+
+361
+00:38:33.000 --> 00:38:41.000
+this one of two ways one being manual or
+one being automated historically the
+time between a detective control in the
+
+362
+00:38:41.000 --> 00:38:47.000
+actual incident response has been very
+very long and so if we can reduce that
+time from a manual response to an
+
+363
+00:38:47.000 --> 00:38:54.000
+automated response it'll definitely help
+you going forward especially when you're
+thinking about a thousand accounts
+
+364
+00:38:54.000 --> 00:39:02.000
+Automation is much much better so going
+back to kind of what we talked about
+with centralizing all of your logs and
+
+365
+00:39:02.000 --> 00:39:08.000
+providing yourself security checks
+across all of your accounts you can
+definitely increase your ability to
+
+366
+00:39:08.000 --> 00:39:14.000
+respond effectively within music house
+you know set up those common security
+checks using the cross account access
+
+367
+00:39:14.000 --> 00:39:21.000
+and the the tooling will help you
+definitely cutting tickets but the
+response is often still manual you can
+
+368
+00:39:21.000 --> 00:39:26.000
+respond to some things as Matt mentioned
+so if cloud show is turned off for
+example you know you should go and have
+
+369
+00:39:26.000 --> 00:39:33.000
+lambda automatically turn it back on but
+perhaps some of the response you don't
+know if what the outcome or the effect
+
+370
+00:39:33.000 --> 00:39:39.000
+would be within those accounts and you
+might cause an outage so you can
+decentralize some of your controls as
+
+371
+00:39:39.000 --> 00:39:45.000
+well because the individual account
+owners understand their individual
+business risk for that specific account
+
+372
+00:39:45.000 --> 00:39:50.000
+and you can set up something like using
+cloud watch events that is actually
+waiting for an event to happen and then
+
+373
+00:39:50.000 --> 00:39:56.000
+triggering a lambda function that can
+respond to it that lambda function can
+assume the role to take action within
+
+374
+00:39:56.000 --> 00:40:03.000
+the account and this is actually very
+fast how much events is faster than
+cloud trail so something like this would
+
+375
+00:40:03.000 --> 00:40:10.000
+be useful if you're curious about how
+this works or how to set up more
+automated security events or security
+
+376
+00:40:10.000 --> 00:40:21.000
+responses there's a session later today
+that you might be interested in at SCC
+313 so definitely take a look at that so
+
+377
+00:40:21.000 --> 00:40:26.000
+closing up we've talked about a lot of
+different options for you from an
+account management with a new launch of
+
+378
+00:40:26.000 --> 00:40:31.000
+organizations you have a better ability
+to actually control those and group
+those into organization units that
+
+379
+00:40:31.000 --> 00:40:36.000
+matched to your own individual business
+units from the role management
+we're talking about a new framework
+
+380
+00:40:36.000 --> 00:40:41.000
+called that we have with an AWS
+professional services it's called mascot
+but that you can build out yourself that
+
+381
+00:40:41.000 --> 00:40:47.000
+allows your organization's to actually
+be able to proactively access your
+accounts in a safe manager with mad
+
+382
+00:40:47.000 --> 00:40:54.000
+manner without having them to actually
+have long term credentials and also
+houses you as an organization to be able
+
+383
+00:40:54.000 --> 00:41:00.000
+to control the roles and policies that
+are being pushed out to those accounts
+from the continuous assurance side we
+
+384
+00:41:00.000 --> 00:41:05.000
+talked around lambda responders and I
+how do I actually programmatically look
+at your account on a reoccurring basis
+
+385
+00:41:05.000 --> 00:41:11.000
+to understand if it matches your
+security baseline or if it's deviated
+over time and also the ability to
+
+386
+00:41:11.000 --> 00:41:16.000
+actually proactively look at the cloud
+trail events that are coming in and
+respond to those not just generate alert
+
+387
+00:41:16.000 --> 00:41:22.000
+from them but program if we go into that
+account and either remediate that alert
+or at least mitigate that allure to the
+
+388
+00:41:22.000 --> 00:41:27.000
+best of your ability and from an
+incident response perspective looking at
+how to actually automate that instant
+
+389
+00:41:27.000 --> 00:41:32.000
+response and ensure that you have the
+proper ability to actually understand
+how to respond to an event from the
+
+390
+00:41:32.000 --> 00:41:39.000
+actual roles as well as the practicing
+about through security incident response
+simulations and everything so with that
+
+391
+00:41:39.000 --> 00:41:46.000
+I just want to thank you all for coming
+to our session please remember to fill
+out your surveys and evaluations on this
+
+392
+00:41:46.000 --> 00:41:51.000
+because it is really important for us to
+know what else you want to hear about as
+well as if you like this session we we
+
+393
+00:41:51.000 --> 00:41:57.000
+know to have more around this in the
+future also we have a number of related
+sessions that talk around the multi
+
+394
+00:41:57.000 --> 00:42:01.000
+account strategy and how to do security
+automation as well so feel free to check
+out those getting the rest of this week
+as well so thank you very much

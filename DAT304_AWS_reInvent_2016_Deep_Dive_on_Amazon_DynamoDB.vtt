@@ -1,0 +1,3292 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:06.000
+welcome everybody thanks for taking the
+time to come see me talk a little bit
+about DynamoDB my name is Rick Houlihan
+
+2
+00:00:06.000 --> 00:00:13.000
+I'm a principal technical product
+manager on the database services team at
+AWS I work primarily with dynamodb but I
+
+3
+00:00:13.000 --> 00:00:18.000
+very well versed in a variety of no SQL
+technologies and some of what we're
+talking about today is obviously going
+
+4
+00:00:18.000 --> 00:00:25.000
+to apply not only to dynamo but to a
+variety of other technologies as well so
+just to kind of get started here how
+
+5
+00:00:25.000 --> 00:00:34.000
+many people are familiar with no SQL
+technologies in the room all right very
+good getting better every year the and
+
+6
+00:00:34.000 --> 00:00:41.000
+how many people have used dynamo dB all
+right all right so that's that's getting
+better to this is good alright so today
+
+7
+00:00:41.000 --> 00:00:46.000
+we're going to talk a little bit about
+some of the history of data processing I
+like to go through a couple of charts
+
+8
+00:00:46.000 --> 00:00:52.000
+here not very much time but just a kind
+of level set why do we even want to
+consider no SQL technologies when we
+
+9
+00:00:52.000 --> 00:00:57.000
+have this wonderful relational database
+we've been using for many years I will
+talk a little bit about DynamoDB
+
+10
+00:00:57.000 --> 00:01:06.000
+internals the scaling characteristics
+and this dreaded hotkeys what are these
+things that we need to understand that
+
+11
+00:01:06.000 --> 00:01:12.000
+affect all know SQL platforms not just
+DynamoDB and some of the design
+considerations that are important to
+
+12
+00:01:12.000 --> 00:01:18.000
+keep in mind when we're building
+applications on no SQL technologies then
+we'll get into a dual discussion don't
+
+13
+00:01:18.000 --> 00:01:25.000
+know SQL data modeling how do we look at
+relational data in the context of a no
+SQL database basically a normalized
+
+14
+00:01:25.000 --> 00:01:31.000
+versus an unstructured schema and then
+we'll talk a little bit about some of
+the common no SQL design patterns that
+
+15
+00:01:31.000 --> 00:01:38.000
+I've run into with customers and how we
+solve some of their problems around
+things like time series data right
+
+16
+00:01:38.000 --> 00:01:44.000
+sharding we'll talk a little bit about
+what that is why that's important and
+mvcc which is a transactional design
+
+17
+00:01:44.000 --> 00:01:50.000
+pattern for no SQL here a lot of people
+talk about we need to have transactions
+in no SQL so I have a design pattern
+
+18
+00:01:50.000 --> 00:01:56.000
+will talk about that gets into that and
+if we have enough time we'll talk a
+little bit about how Amazon DynamoDB
+
+19
+00:01:56.000 --> 00:02:01.000
+plays in this surrealist ecosystem and
+this new server list application
+framework that's becoming so popular at
+
+20
+00:02:01.000 --> 00:02:09.000
+AWS so first off if you look at any
+technology you could look at the
+evolution of that technology is a
+
+21
+00:02:09.000 --> 00:02:17.000
+history of innovations and
+as innovations occur when we see some
+sort of a a pressure point in the market
+
+22
+00:02:17.000 --> 00:02:22.000
+in the case of data processing that is
+data pressure so it's the ability of the
+system to process the amount of data
+
+23
+00:02:22.000 --> 00:02:28.000
+that we're being asked to process at a
+reasonable cost or in a reasonable time
+and when we can't do either one of those
+
+24
+00:02:28.000 --> 00:02:34.000
+things we have a technology trigger and
+that really forces innovation so if we
+look at the history of data processing
+
+25
+00:02:34.000 --> 00:02:39.000
+the first database we had was the one
+between our ears it was a very good
+database highly available and you know
+
+26
+00:02:39.000 --> 00:02:47.000
+maybe questionable durability not much
+in the way of fault tolerance single
+user system and so obviously we had to
+
+27
+00:02:47.000 --> 00:02:51.000
+figure out something else so we were
+rapidly gathering more information than
+we could possibly store between our ears
+
+28
+00:02:51.000 --> 00:02:58.000
+so we developed a system of ledger
+accounting and basically wrote things
+down this is a system that ran the world
+
+29
+00:02:58.000 --> 00:03:03.000
+for many many years and it really is if
+you look at the first database anytime
+you start organizing data in a
+
+30
+00:03:03.000 --> 00:03:10.000
+structured way and you start to build
+hierarchies or aggregations of data this
+is really what databases do so I look at
+
+31
+00:03:10.000 --> 00:03:16.000
+Ledger's is really kind of that early
+early database rapidly we started to
+evolve our technologies as we got into
+
+32
+00:03:16.000 --> 00:03:22.000
+around eighteen eighty you know the the
+US Census a guy named Herman Hollerith
+came along and he was tasked with
+
+33
+00:03:22.000 --> 00:03:28.000
+processing all of the data that was
+collected during the 1880s census and it
+took him eight years to do that and he
+
+34
+00:03:28.000 --> 00:03:33.000
+realized in 1890 when we have to gather
+all that data again we're going to need
+something better and that was one of the
+
+35
+00:03:33.000 --> 00:03:40.000
+first technology triggers in them in the
+era of modern data processing he
+invented the machine readable punch card
+
+36
+00:03:40.000 --> 00:03:46.000
+and the punch card sorting system which
+was a big piece one of the pillars of a
+small little company we know today is
+
+37
+00:03:46.000 --> 00:03:54.000
+IBM has had a long and storied footprint
+on database technology so rapidly we've
+all from there through a series of
+
+38
+00:03:54.000 --> 00:04:00.000
+innovations and what we discovered was
+the more we innovated the more we the
+more technologies we brought to bear to
+
+39
+00:04:00.000 --> 00:04:06.000
+process the data the more data that we
+needed to process because the more
+applications we found for processing of
+
+40
+00:04:06.000 --> 00:04:12.000
+that data so we went through data drums
+who went through paper tape magnetic
+tape and we found that the way that we
+
+41
+00:04:12.000 --> 00:04:17.000
+access the data was really dependent on
+the way we stored it right if I put data
+on tape I had to read the end of the
+
+42
+00:04:17.000 --> 00:04:22.000
+tape to retrieve the file these are
+things that can we were slow again
+leading and
+
+43
+00:04:22.000 --> 00:04:29.000
+increased pressure for more and more
+applications to process data led us to
+another innovation which was the
+
+44
+00:04:29.000 --> 00:04:36.000
+distributed file system distributed
+block store drag random access file
+system a distributed block store this
+
+45
+00:04:36.000 --> 00:04:43.000
+was really a turning point in data
+processing because up until today or the
+invention of this technology the every
+
+46
+00:04:43.000 --> 00:04:49.000
+thing we brought to bear made things
+cheaper right when we started storing
+data on disk it actually made things
+
+47
+00:04:49.000 --> 00:04:55.000
+more expensive right disks are the disk
+technology was very expensive so the
+next innovation was actually and this is
+
+48
+00:04:55.000 --> 00:05:00.000
+critical was the invention of the
+relational database and the relational
+database was really invented to
+
+49
+00:05:00.000 --> 00:05:07.000
+denormalize deduplicate and reduce the
+footprint of data on disk that was its
+primary mission the secondary mission
+
+50
+00:05:07.000 --> 00:05:13.000
+was built to provide an ad hoc query
+language so I could ask questions of the
+data and produce materialized views that
+
+51
+00:05:13.000 --> 00:05:19.000
+my applications actually consumed and
+the reason we did this was because this
+was expensive in CPU was cheap right so
+
+52
+00:05:19.000 --> 00:05:23.000
+burning CPU by hopping around the disk
+and building materialized views wasn't
+something that was too much of a problem
+
+53
+00:05:23.000 --> 00:05:31.000
+when I was saving the enormous cost that
+my enterprise IT staff was investing in
+racking storage in my data center so
+
+54
+00:05:31.000 --> 00:05:37.000
+fast-forward 40 years and what we found
+is we kind of flipped the tables here
+CPU is now the most expensive resource
+
+55
+00:05:37.000 --> 00:05:42.000
+in the data center and storage is cheap
+so why would I use a database technology
+it's really optimized for the least
+
+56
+00:05:42.000 --> 00:05:48.000
+expensive resource in the data center so
+we now are looking at distributed data
+databases like no SQL databases that
+
+57
+00:05:48.000 --> 00:05:55.000
+store data in a way the application uses
+it and reduce the CPU burden on the
+database to produce these materialized
+
+58
+00:05:55.000 --> 00:06:02.000
+views so what does that look like you
+know from a data processing perspective
+this is actually a trend that we've been
+
+59
+00:06:02.000 --> 00:06:08.000
+seeing for 150 years is just becoming
+really noticeable now because we're the
+tail end of the whip ninety percent of
+
+60
+00:06:08.000 --> 00:06:15.000
+the data we store today was generating
+the last two years this is a pretty
+common commonly accepted fact and you
+
+61
+00:06:15.000 --> 00:06:21.000
+know you'll find forests or IBM research
+lots of people have verified this and
+from a practical perspective what that
+
+62
+00:06:21.000 --> 00:06:29.000
+means is one terabyte of data in 2011 is
+now 6.5 petabytes of data today and I
+see this every day in dealing with
+
+63
+00:06:29.000 --> 00:06:33.000
+customers right I had customers and you
+know five years ago talking to me about
+their terabyte databases and thinking
+
+64
+00:06:33.000 --> 00:06:37.000
+we'll all be 10 or 20 terabytes you know
+in five
+years from now and that's what they're
+
+65
+00:06:37.000 --> 00:06:41.000
+planning for these same customers come
+to me today and they talk about the
+petabytes of data that they have to deal
+
+66
+00:06:41.000 --> 00:06:47.000
+with and the problems that they're
+dealing with trying to manage all of
+this data so everybody is seeing this
+
+67
+00:06:47.000 --> 00:06:52.000
+data explosion there's a linear
+correlation as we've seen throughout
+history between this type of data
+
+68
+00:06:52.000 --> 00:06:57.000
+pressure and technical innovation so we
+can expect something's going to come
+along and that's something today is no
+
+69
+00:06:57.000 --> 00:07:03.000
+SQL technology and there's really no
+reason that that trend is not going to
+continue so are we done with no SQL is
+
+70
+00:07:03.000 --> 00:07:08.000
+at the end probably not there'll be
+something else but today this is what we
+have so this is what we're going to talk
+
+71
+00:07:08.000 --> 00:07:16.000
+about so from a technology perspective
+what I really see in the market this
+isn't really just in databases right
+
+72
+00:07:16.000 --> 00:07:21.000
+this applies to every technology you'll
+see these technology triggers because
+people are having problems doing
+
+73
+00:07:21.000 --> 00:07:27.000
+something in the case of data processing
+we talked about data pressure when we
+see that trigger will see people run to
+
+74
+00:07:27.000 --> 00:07:34.000
+market with new solutions new answers to
+solve these problems to resolve that
+customer pain and customers will
+
+75
+00:07:34.000 --> 00:07:39.000
+obviously run to these technologies
+because somebody somewhere had a good
+experience so they know they solved that
+
+76
+00:07:39.000 --> 00:07:46.000
+problem with that that must be my
+solution inevitably we see then people
+run to the solution they fail miserably
+
+77
+00:07:46.000 --> 00:07:52.000
+right it doesn't work for them I have an
+application that doesn't apply I mean
+you know how many times I walked into
+
+78
+00:07:52.000 --> 00:07:59.000
+customers and heard that statement my
+app doesn't work with no SQL we have to
+have a relational database the reality
+
+79
+00:07:59.000 --> 00:08:04.000
+is you're trying to use the new tool
+like you used the old tool and if you're
+trying to do this you're going to have a
+
+80
+00:08:04.000 --> 00:08:10.000
+lot of problems no SQL technology
+doesn't like to do things like joins
+between tables and whatnot you want to
+
+81
+00:08:10.000 --> 00:08:15.000
+store that data as a hierarchical
+structure so if you try to do this at
+the application tier you're going to
+
+82
+00:08:15.000 --> 00:08:20.000
+have a miserable experience with no SQL
+so how do I know that I'm that guy
+that's in that trough of disillusionment
+
+83
+00:08:20.000 --> 00:08:25.000
+it's because you're running around
+looking for things to provide the
+features that you think are missing from
+
+84
+00:08:25.000 --> 00:08:32.000
+the technology I need transaction
+libraries I need object mapping
+libraries I need things that I was very
+
+85
+00:08:32.000 --> 00:08:37.000
+familiar and comfortable with using in
+the relational world my answer to that
+is embracing the native api's because
+
+86
+00:08:37.000 --> 00:08:44.000
+even though those libraries may exist
+for you they're there as security
+blankets oftentimes they create a lot of
+
+87
+00:08:44.000 --> 00:08:48.000
+problems especially at scale so I'm
+going to talk to you about design
+patterns today don't leverage any of
+
+88
+00:08:48.000 --> 00:08:56.000
+these things
+use the native AP is in design patterns
+that are very specific to know SQL why
+
+89
+00:08:56.000 --> 00:09:04.000
+do I want to use no SQL well again we
+talked a little bit about how SQL is
+really optimized for storage and was it
+
+90
+00:09:04.000 --> 00:09:11.000
+due to be that way it uses normalized
+data structures that deduplicate the
+data on disk and then it supports ad hoc
+
+91
+00:09:11.000 --> 00:09:16.000
+queries to generate materialized views
+that the application needs right so
+oftentimes the application doesn't
+
+92
+00:09:16.000 --> 00:09:21.000
+really just need to select data from a
+table right in a relational database it
+needs to select data from a table and
+
+93
+00:09:21.000 --> 00:09:27.000
+join another I may have a customer's
+table and orders orders table and I want
+all the orders for our customers so it's
+
+94
+00:09:27.000 --> 00:09:33.000
+select from customers inner joint orders
+right in a no SQL database I would store
+orders and customers together in a
+
+95
+00:09:33.000 --> 00:09:40.000
+single document or a single collection
+of items that would be selected off the
+same table so it's bastard no SQL
+
+96
+00:09:40.000 --> 00:09:46.000
+databases scale vertically right they
+don't partition the data store so you
+have to buy a bigger box right many many
+
+97
+00:09:46.000 --> 00:09:51.000
+customers I've worked with have you know
+fought this battle repeatedly and now at
+the point where they said we just can't
+
+98
+00:09:51.000 --> 00:09:57.000
+buy another one I had a customer
+recently came to me said they had just
+invested a half a million dollars in a
+
+99
+00:09:57.000 --> 00:10:03.000
+ms SQL server infrastructure and then
+six months later after having the
+Microsoft guys come in and tune
+
+100
+00:10:03.000 --> 00:10:10.000
+everything every way they possibly can
+the answer was you need a bigger box
+right they said that's enough okay we're
+
+101
+00:10:10.000 --> 00:10:16.000
+going to we're going to look at moving
+to a platform that scales incrementally
+and allows a partitioning of the data
+
+102
+00:10:16.000 --> 00:10:22.000
+store and so we're talking to them about
+a variety of no SQL technologies so
+really SQL technologies play very well
+
+103
+00:10:22.000 --> 00:10:28.000
+in one particular application space
+that's the OLAP space right online
+analytics if I don't know what the
+
+104
+00:10:28.000 --> 00:10:33.000
+question is if I don't know what the
+access pattern is that my application is
+going to require and this is typically
+
+105
+00:10:33.000 --> 00:10:39.000
+your bi analytics scenario an SQL
+database is really the best option
+because it supports that ad hoc query
+
+106
+00:10:39.000 --> 00:10:45.000
+it's not going to be the most efficient
+producing those views but you don't know
+what views you need now oltp apps on the
+
+107
+00:10:45.000 --> 00:10:51.000
+other hand they always process data the
+exact same way when the user clicks the
+button the same thing happens right
+
+108
+00:10:51.000 --> 00:10:58.000
+they're very repetitive and how they use
+data which gives us the ability to store
+that data on disk in a very structured
+
+109
+00:10:58.000 --> 00:11:02.000
+format that's specific to the
+application right so we use denormalized
+hire our
+
+110
+00:11:02.000 --> 00:11:09.000
+Gold views of data we'll talk a little
+bit about what that looks like these are
+the instantiating out of your relational
+
+111
+00:11:09.000 --> 00:11:16.000
+store when you run that ad hoc query
+those views typically get stored in that
+context within a no SQL database they
+
+112
+00:11:16.000 --> 00:11:22.000
+scale horizontally so they partition
+across multiple nodes allowing you to
+continually grow the database and the
+
+113
+00:11:22.000 --> 00:11:29.000
+processing power of your database and
+really because of this they're built for
+I say built for oltp at scale so really
+
+114
+00:11:29.000 --> 00:11:36.000
+two technologies two different types of
+applications if you really want
+performance and scale n oltp no SQL is
+
+115
+00:11:36.000 --> 00:11:43.000
+the solution for you ok so let's talk a
+little bit about DynamoDB some lot of
+familiar you here they're a couple
+
+116
+00:11:43.000 --> 00:11:47.000
+people that weren't so we'll talk some
+of the basics not too much we'll get
+into the design pattern stuff again this
+
+117
+00:11:47.000 --> 00:11:53.000
+is a deep dive session I got a lot of
+contents will run it to the end of the
+hour and hopefully we'll have some time
+
+118
+00:11:53.000 --> 00:11:59.000
+for questions if not I'll be out in the
+hallway but DynamoDB is a fully managed
+mill SQL database and that's probably
+
+119
+00:11:59.000 --> 00:12:06.000
+the biggest value of it yeah I worked at
+companies like MongoDB I've worked with
+technologies like Cassandra DynamoDB and
+
+120
+00:12:06.000 --> 00:12:13.000
+other no SQL databases and really the
+biggest thing that I can tell you as a
+customers at DynamoDB they benefit from
+
+121
+00:12:13.000 --> 00:12:18.000
+the fact that they don't need to manage
+the operational infrastructure of the
+database it's not easy to run a scaled
+
+122
+00:12:18.000 --> 00:12:27.000
+out distributed no SQL database many may
+servers many clusters and shards each
+MongoDB shard has three servers so as I
+
+123
+00:12:27.000 --> 00:12:33.000
+scale out I'm incremented increasing the
+number of servers and I'm increasing the
+operational burden on my support staff
+
+124
+00:12:33.000 --> 00:12:40.000
+now first you may not notice this when
+you get to 50 100 150 200 instances you
+will start to notice the amount of money
+
+125
+00:12:40.000 --> 00:12:45.000
+you're spending just managing those
+servers so taking that away from the
+customer is probably the biggest value
+
+126
+00:12:45.000 --> 00:12:52.000
+you can get out of an manage no SQL
+service like dynamo DB dynamo DB is also
+what we call a document or key value
+
+127
+00:12:52.000 --> 00:12:58.000
+store I really call it a key value store
+that supports a document attribute type
+we'll talk a little bit about how it
+
+128
+00:12:58.000 --> 00:13:05.000
+does that later in the presentation to
+design points of the technology it was
+designed to be fast and consistent at
+
+129
+00:13:05.000 --> 00:13:11.000
+any scale and we have customers that are
+running millions of transactions per
+second against item 0 DB and reach and
+
+130
+00:13:11.000 --> 00:13:17.000
+and and experiencing low single-digit
+millisecond latency
+very consistently across those requests
+
+131
+00:13:17.000 --> 00:13:24.000
+and again it's the design core design of
+the system was was taken into
+consideration those were one of the
+
+132
+00:13:24.000 --> 00:13:31.000
+requirements that were in consideration
+when they design the system fine grained
+access control so you have those of you
+
+133
+00:13:31.000 --> 00:13:37.000
+familiar with I am its identity access
+management you can create users assign
+permissions to those users to access
+
+134
+00:13:37.000 --> 00:13:44.000
+your dynamodb tables a very granular way
+on a table level on the item level you
+can you can restrict these types of
+
+135
+00:13:44.000 --> 00:13:51.000
+users to particular attributes or items
+on the table and then it gets a
+backplane service it's fully managed
+
+136
+00:13:51.000 --> 00:13:57.000
+it's always there you don't need to
+provision it all you need to do is turn
+it on and as such that makes it what we
+
+137
+00:13:57.000 --> 00:14:01.000
+call a backplane service that's really
+suitable for these event-driven
+programming models or serverless
+
+138
+00:14:01.000 --> 00:14:09.000
+computing right it's not something that
+you need to provision is something that
+we manage for you all right so real
+
+139
+00:14:09.000 --> 00:14:16.000
+quick tables and dynamodb like any other
+database you create tables tables have
+items and items have attributes all
+
+140
+00:14:16.000 --> 00:14:22.000
+right so items can have any number of
+attributes the only mandatory attribute
+in any item is the partition key you
+
+141
+00:14:22.000 --> 00:14:27.000
+have to provide that that's like the
+unique primary key in a relational
+database table that will uniquely
+
+142
+00:14:27.000 --> 00:14:34.000
+identify the item optionally you can
+provide an additional mandatory schema
+attribute which would be a sort key when
+
+143
+00:14:34.000 --> 00:14:40.000
+I do this now the combination of the
+partition of the sort key to find the
+uniqueness of the item this is really
+
+144
+00:14:40.000 --> 00:14:46.000
+defining a bucket right so in the case
+of customers and orders right you might
+imagine the partition key could be the
+
+145
+00:14:46.000 --> 00:14:51.000
+customer ID the sort key could be the
+order ID now all of the orders for a
+particular customer are going to fall
+
+146
+00:14:51.000 --> 00:14:57.000
+into the same bucket or partition and
+the reason we do this is because we want
+to line those items up on disk so that
+
+147
+00:14:57.000 --> 00:15:02.000
+when you when you query for a particular
+customer you can get all those orders
+with a single table select and a large
+
+148
+00:15:02.000 --> 00:15:08.000
+sequential read the sort key also gives
+us the ability to execute complex range
+queries against those attributes so
+
+149
+00:15:08.000 --> 00:15:14.000
+partition key queries are equality only
+when I query a partition key I must know
+what is the customer I'm looking for
+
+150
+00:15:14.000 --> 00:15:20.000
+when I query the sort key I can add a
+range operator greater than less than
+equals to so imagine the same scenario
+
+151
+00:15:20.000 --> 00:15:28.000
+customers and orders this time customer
+is ID and sorted by timestamp now I can
+issue a range query and say give me all
+
+152
+00:15:28.000 --> 00:15:32.000
+your
+for this customer in the last 24 hours
+and the and the system is able to go
+
+153
+00:15:32.000 --> 00:15:39.000
+right to disk right to the location
+where all those items are issue a very
+selective sequential read and bring that
+
+154
+00:15:39.000 --> 00:15:46.000
+data back and this is why dynamodb is
+very very fast and efficient and scales
+linearly across any load because I am I
+
+155
+00:15:46.000 --> 00:15:51.000
+am literally I'm telling the system
+exactly where to go every time I give it
+a query so I don't have to worry about
+
+156
+00:15:51.000 --> 00:15:57.000
+the scale of the table causing
+additional latency in my query one of
+the biggest advantages of the system
+
+157
+00:15:57.000 --> 00:16:07.000
+like dynamo so how do we scale partition
+keys are typically hashed to create a
+randomized range or key space is what we
+
+158
+00:16:07.000 --> 00:16:13.000
+call it will take those hash values we
+will line those items up across that key
+space and as you increase the capacity
+
+159
+00:16:13.000 --> 00:16:19.000
+or the size of the table we will chunk
+that key space and split it across
+multiple nodes this is a fundamental
+
+160
+00:16:19.000 --> 00:16:25.000
+principle in no SQL is however you know
+SQL database scales Cassandra and
+MongoDB dynamo dB there are all the same
+
+161
+00:16:25.000 --> 00:16:30.000
+and you know there'll be some sort of a
+shard attribute that we will use to
+create an arbitrary key space we will
+
+162
+00:16:30.000 --> 00:16:36.000
+chunk that key space across multiple
+nodes and the best way to increase the
+performance of the system is to get
+
+163
+00:16:36.000 --> 00:16:41.000
+multiple nodes to participate in the
+query activity so we talk about hot keys
+hot keys are nailing all the workload to
+
+164
+00:16:41.000 --> 00:16:48.000
+one of these stories partitions and
+we'll talk about some design patterns to
+avoid that so scaling scaling and dynamo
+
+165
+00:16:48.000 --> 00:16:56.000
+DB two dimensions of scale we scale on
+throughput in size throughput you
+control you tell us how much through put
+
+166
+00:16:56.000 --> 00:17:01.000
+you on the table in right capacity and
+read capacity there's some calculations
+we'll go through in a minute about how
+
+167
+00:17:01.000 --> 00:17:08.000
+we use those numbers to split across a
+number of partitions sighs you start
+inserting items on the table every 10
+
+168
+00:17:08.000 --> 00:17:14.000
+gigabytes of items we're going to split
+to another partition alright so those
+are the two dimensions that we scale on
+
+169
+00:17:14.000 --> 00:17:22.000
+scaling is achieved as we discuss
+through partitioning across multiple
+storage nodes throughput is provisioned
+
+170
+00:17:22.000 --> 00:17:28.000
+at the table level so he's privy each
+table you provision in DynamoDB will
+have throughput provision independently
+
+171
+00:17:28.000 --> 00:17:34.000
+its provision in right capacity and read
+capacity these two knobs are completely
+independent of each other all right so
+
+172
+00:17:34.000 --> 00:17:41.000
+you will have right capacity units that
+are in one kilobyte per second read
+capacity at four kilobytes per second
+
+173
+00:17:41.000 --> 00:17:48.000
+feeds are automatically consistent in
+dynamodb we replicate across three nodes
+by default when you read after you write
+
+174
+00:17:48.000 --> 00:17:54.000
+when you write we will acknowledge the
+right when to have come back and when
+you read will read from an arbitrary to
+
+175
+00:17:54.000 --> 00:17:59.000
+and give you the most current data okay
+so that makes it a read after write
+consistent platform you can turn that
+
+176
+00:17:59.000 --> 00:18:05.000
+off you can make that eventually
+consistent when you do that it has your
+read consumption so it's a very cheap
+
+177
+00:18:05.000 --> 00:18:11.000
+way to build w read capacity is use
+eventually consistent reads by default
+they're turned off so that's something
+
+178
+00:18:11.000 --> 00:18:17.000
+you need to do in the driver and most
+work most access patterns will support
+eventually consistent I read so i would
+
+179
+00:18:17.000 --> 00:18:23.000
+go ahead and recommend that you would
+use that unless you have an absolute
+need for consistency partitioning math
+
+180
+00:18:23.000 --> 00:18:29.000
+kind of works like this today these are
+the numbers in the future this could
+change when you provision capacity for
+
+181
+00:18:29.000 --> 00:18:38.000
+every 3,000 RC use you know or 1000 WC
+use or fraction thereof we will give you
+a partition so you take the toll RCU you
+
+182
+00:18:38.000 --> 00:18:44.000
+want / 3000 you take the total wcu you
+want / 1000 you add those two together
+and that's how many numbers dominate
+
+183
+00:18:44.000 --> 00:18:51.000
+partitions you will need by capacity now
+by size it's very easy divide the table
+size by 10 gigabytes you get another
+
+184
+00:18:51.000 --> 00:18:56.000
+number we're going to give you the
+larger one of the two right because I
+need to be able to satisfy the larger
+
+185
+00:18:56.000 --> 00:19:02.000
+requirement so again in the day in the
+future these details could change let's
+see how that looks like today for a
+
+186
+00:19:02.000 --> 00:19:12.000
+partitioning example of an 8 gigabyte
+table 5000 RS you used 500 WC use the
+way the math runs 2.17 by capacity 0.8
+
+187
+00:19:12.000 --> 00:19:18.000
+by size that's going to give me a number
+of two numbers two points 17 and 0.8 I'm
+going to round up and I'm going to and
+
+188
+00:19:18.000 --> 00:19:22.000
+I'm going to give you the larger so
+you're going to get three partitions so
+a lot of people might say at this point
+
+189
+00:19:22.000 --> 00:19:28.000
+why do I care well you care because when
+we give you those three partitions we
+are going to evenly distribute the RCU
+
+190
+00:19:28.000 --> 00:19:35.000
+and the wcu that you have provision
+across those three partitions so if you
+have a workload that nails any kind of
+
+191
+00:19:35.000 --> 00:19:41.000
+activity to anyone needs partitions that
+consumes more than that then we can have
+what we call a hotkey you might get
+
+192
+00:19:41.000 --> 00:19:47.000
+throttled alright so what does that look
+like if sustained throughput goes beyond
+the provision throughput on a per
+
+193
+00:19:47.000 --> 00:19:53.000
+partition basis for an extended period
+of time you may see throttling now we
+have some burst capacity built in the
+
+194
+00:19:53.000 --> 00:19:59.000
+system you get about five minutes of
+use capacity in a burst bucket that will
+be provided to you on a best-effort
+
+195
+00:19:59.000 --> 00:20:05.000
+basis if it's there so but if it's not
+there then you're going to get throttled
+if you exhaust that burst bucket meaning
+
+196
+00:20:05.000 --> 00:20:10.000
+you have a hotkey on a particular
+partition that goes for too long you're
+going to exhaust that then you will be
+
+197
+00:20:10.000 --> 00:20:14.000
+throttled so again we're going through
+some design patterns to talk about how
+do you deal with these types of
+
+198
+00:20:14.000 --> 00:20:22.000
+situations non-uniform workloads again
+high-velocity access to a single item
+that's going to be a bad idea mixing
+
+199
+00:20:22.000 --> 00:20:28.000
+your hot data and your cold data talks
+about you know time series data where
+over time you don't care about this but
+
+200
+00:20:28.000 --> 00:20:33.000
+if you keep on inserting it to the table
+the table is going to grow and if we
+grow too big you keep splitting and
+
+201
+00:20:33.000 --> 00:20:37.000
+splitting and you can see that
+throughput dilution gets worse and worse
+and eventually you end up with hot keys
+
+202
+00:20:37.000 --> 00:20:43.000
+so we want to make sure we're rolling
+that cold data off of the table you know
+again from the example before if we
+
+203
+00:20:43.000 --> 00:20:51.000
+exceed the 1666 RC use or 166 WC use
+then we're probably going to see some
+throttling and this would not be a good
+
+204
+00:20:51.000 --> 00:20:57.000
+situation so this is what that looks
+like we have a lot of customers ask for
+these these are heat maps we run these
+
+205
+00:20:57.000 --> 00:21:02.000
+when customers suspect they're having
+hot keys I can usually spot a hotkey
+without this look at your cloud watch
+
+206
+00:21:02.000 --> 00:21:07.000
+metrics if you're being throttled and
+you're well below your provision
+capacity you're probably got a hot key
+
+207
+00:21:07.000 --> 00:21:13.000
+somewhere either on the table or on the
+index okay but this is really the no SQL
+equivalent of cardiac arrest right
+
+208
+00:21:13.000 --> 00:21:18.000
+system is dead it's flatlined there's
+you're going to be throttled right and
+left your application is going to be
+
+209
+00:21:18.000 --> 00:21:24.000
+falling over sideways you don't want
+these types of situations so how do we
+avoid that well in DynamoDB there's
+
+210
+00:21:24.000 --> 00:21:31.000
+again we talked about some of the
+dimensions of scale but really what it
+comes down to if I want to if I get the
+
+211
+00:21:31.000 --> 00:21:37.000
+most out of the throughput out a dynamo
+dB I want to create tables with that
+partition key element is a high
+
+212
+00:21:37.000 --> 00:21:42.000
+cardinality set right it has a large
+number of distinct values so I'm
+spreading the data out across a number
+
+213
+00:21:42.000 --> 00:21:49.000
+of partitions and then when I execute my
+queries I'm gathering data from a number
+of partitions across multiple threads
+
+214
+00:21:49.000 --> 00:21:56.000
+DynamoDB scales linearly across threads
+single thread performance and DynamoDB
+is not the best right we have HTTP API
+
+215
+00:21:56.000 --> 00:22:01.000
+you're going to be making requests you
+can be building connections and tearing
+them down you can't really pipeline
+
+216
+00:22:01.000 --> 00:22:07.000
+requests so what you want to do is to
+spin up multiple threads you cannot
+break the DynamoDB API people have tried
+
+217
+00:22:07.000 --> 00:22:15.000
+there is no way to do it
+just like route 53 there's a the API
+ain't going to go down and so then then
+
+218
+00:22:15.000 --> 00:22:23.000
+the next part of the equation is we want
+to request those values fairly uniformly
+right as and over time so that gives us
+
+219
+00:22:23.000 --> 00:22:29.000
+two dimensions we have space and this is
+about distribution of your data we can
+always distribute your data right if
+
+220
+00:22:29.000 --> 00:22:35.000
+you're having a hotkey problem let's
+talk we can make this we can mitigate
+the issue times a little different time
+
+221
+00:22:35.000 --> 00:22:40.000
+you have no real control over when the
+users come right if the Thundering Herd
+arrives you need to be able to step up
+
+222
+00:22:40.000 --> 00:22:46.000
+and respond to that and there's some
+design patterns will talk about how to
+deal with those situations as well but
+
+223
+00:22:46.000 --> 00:22:51.000
+if we can if we can satisfy both those
+requirements then we end up with this
+type of picture this is really what
+
+224
+00:22:51.000 --> 00:22:56.000
+wanna see as a matter of fact I really
+like to see a little more color in here
+I really like see more of a pepperoni
+
+225
+00:22:56.000 --> 00:23:02.000
+pizza where we see little red spots all
+over the place I mean you've got a high
+utilization table you're getting some
+
+226
+00:23:02.000 --> 00:23:07.000
+random alignment of keys across the key
+space that are causing a little bit of
+key pressure here and there a little bit
+
+227
+00:23:07.000 --> 00:23:13.000
+of throttling is OK at high utilization
+the driver catches some of that your
+application can catch and retry but
+
+228
+00:23:13.000 --> 00:23:21.000
+bottom line is we don't want to see
+those be red lines right those are bad
+things in SQL alright it's getting a
+
+229
+00:23:21.000 --> 00:23:26.000
+data modeling how do we look at data
+well TV apps it's all about aggregations
+right we talked about customers and
+
+230
+00:23:26.000 --> 00:23:32.000
+orders we could talk about parts and
+assemblies we can you know talk about
+any any particular way a customer and an
+
+231
+00:23:32.000 --> 00:23:38.000
+OLTP app uses the data it's always
+trying to aggregate items in a certain
+dimension right so this is really the
+
+232
+00:23:38.000 --> 00:23:44.000
+fundamental principle of DynamoDB is to
+maintain those aggregations somewhere on
+these tables or indexes right doesn't
+
+233
+00:23:44.000 --> 00:23:50.000
+matter what app you're building social
+networks document management IT
+monitoring you name it we're trying to
+
+234
+00:23:50.000 --> 00:23:57.000
+aggregate data so we do this in SQL it's
+a fairly straightforward SQL structure
+here we've got products table here
+
+235
+00:23:57.000 --> 00:24:03.000
+that's tied to a bunch of others through
+common relationships one-to-one
+one-to-many many-to-many relationships
+
+236
+00:24:03.000 --> 00:24:08.000
+and you can imagine what kind of queries
+I have to run against this database if I
+want to get a list of all my products
+
+237
+00:24:08.000 --> 00:24:14.000
+right I'll run three different queries
+one of them is relatively simple to them
+are pretty complex and think about how
+
+238
+00:24:14.000 --> 00:24:20.000
+much time that CPU is spending hopping
+around disk to build this materialized
+view well in no sqli wanna take a
+
+239
+00:24:20.000 --> 00:24:25.000
+different approach I don't want
+normalized data I want
+gations I want denormalized data right I
+
+240
+00:24:25.000 --> 00:24:31.000
+want these hierarchies to be stored as
+items when I retrieve these items I
+could see how this was my product table
+
+241
+00:24:31.000 --> 00:24:37.000
+for example now isolate say select star
+from products I get everything I don't
+have to go and join data from multiple
+
+242
+00:24:37.000 --> 00:24:43.000
+tables and drive that cpu nuts to build
+this materialized view because it's
+already there all right and you know the
+
+243
+00:24:43.000 --> 00:24:49.000
+interesting byproduct of this is if I
+you know really need what people talk
+about the need for acid transactions
+
+244
+00:24:49.000 --> 00:24:55.000
+it's really about updating these
+application layer objects where the data
+lives on multiple tables right you know
+
+245
+00:24:55.000 --> 00:25:01.000
+if I don't have an application layer
+object that requires be built from data
+that's in multiple places then maybe I
+
+246
+00:25:01.000 --> 00:25:06.000
+don't need that that acid style
+transaction to do those updates and
+we'll talk a little bit about that later
+
+247
+00:25:06.000 --> 00:25:11.000
+hierarchical data right this kind of
+structures we just saw how do I
+represent this though there's multiple
+
+248
+00:25:11.000 --> 00:25:18.000
+ways to represent this in DynamoDB the
+first way would be to create a series of
+items and then store these in partitions
+
+249
+00:25:18.000 --> 00:25:24.000
+so in this example we have a products
+table where I've done exactly that we
+have our book record that book record is
+
+250
+00:25:24.000 --> 00:25:30.000
+just a single item because that was that
+one to one table right I'd products and
+books one to one I can maintain all that
+
+251
+00:25:30.000 --> 00:25:35.000
+relationship in a single item on the
+table right just collapse those
+attributes the one too many of the
+
+252
+00:25:35.000 --> 00:25:43.000
+album's I can maintain as a hierarchy
+under the product ID ID to category by
+just concatenate amide II and track IDs
+
+253
+00:25:43.000 --> 00:25:48.000
+together right I can use a leading
+indicator that tells me that this is an
+album or attract my application layer
+
+254
+00:25:48.000 --> 00:25:54.000
+can switch on the type of the item that
+it's iterating through to build these
+application layer objects so you can see
+
+255
+00:25:54.000 --> 00:25:59.000
+if I want particular album I just say
+select product ID 2 i'm going to get all
+the tracks i'm going to get all the
+
+256
+00:25:59.000 --> 00:26:05.000
+metadata that describes the album and i
+can build that application layer object
+with the single query right this is the
+
+257
+00:26:05.000 --> 00:26:10.000
+idea no SQL you want very simple
+straightforward queries selects off the
+table to get you the data you don't want
+
+258
+00:26:10.000 --> 00:26:16.000
+to have to go to multiple places to get
+the data your application needs the
+other opportunity of here is that I can
+
+259
+00:26:16.000 --> 00:26:22.000
+store these hierarchies as JSON
+attributes so I've done that in this
+particular case you have fewer items now
+
+260
+00:26:22.000 --> 00:26:28.000
+why might I do one versus the other well
+in this case I might go with the second
+route because all those items are
+
+261
+00:26:28.000 --> 00:26:34.000
+relatively small right and I'm gonna
+have to pay one WC you to insert every
+single item whereas maybe if I build the
+
+262
+00:26:34.000 --> 00:26:39.000
+hierarchy this way
+i'm only paying three WC you to insert
+these three items the other way I might
+
+263
+00:26:39.000 --> 00:26:45.000
+be paying 15 wcu to insert all those
+items right so on the read not so bad
+because I'm aggregating all the items
+
+264
+00:26:45.000 --> 00:26:52.000
+and the read capacity is aggregated but
+on the right I have to pay for each item
+i'm inserting so again depending on your
+
+265
+00:26:52.000 --> 00:27:00.000
+access pattern one way or the other
+might make sense right if i have a very
+very large hierarchy I want to go to
+
+266
+00:27:00.000 --> 00:27:07.000
+multiple items because I have 400
+kilobyte limit on the item size in
+dynamo dB okay and conversely i can also
+
+267
+00:27:07.000 --> 00:27:15.000
+support hierarchies of any size right
+this way okay let's get into design
+patterns and some best practices here
+
+268
+00:27:15.000 --> 00:27:18.000
+the first thing where you talk about our
+a couple constructs that are important
+in some of the design patterns i'm going
+
+269
+00:27:18.000 --> 00:27:25.000
+to talk about so the first thing we'll
+talk about is DynamoDB streams and
+lambda alright so i hear a lot from
+
+270
+00:27:25.000 --> 00:27:30.000
+customers about how they wish that
+dynamodb had a stored procedure engine
+okay and I saw them well you know we
+
+271
+00:27:30.000 --> 00:27:37.000
+have lambda write lambda is actually the
+best stored procedure engine you can
+find out there in most databases you run
+
+272
+00:27:37.000 --> 00:27:42.000
+those stored procedures where are they
+executing right on the database head
+node if I have a complex stored
+
+273
+00:27:42.000 --> 00:27:49.000
+procedure or a javascript in the case of
+MongoDB you find out real quick when
+you're running MongoDB that at scale you
+
+274
+00:27:49.000 --> 00:27:54.000
+don't want do aggregations and you don't
+want to run JavaScript on the server as
+a matter of fact the professional
+
+275
+00:27:54.000 --> 00:27:59.000
+services team at MongoDB will tell you
+don't do that and the reason why is
+because when you're running these types
+
+276
+00:27:59.000 --> 00:28:06.000
+of JavaScript stored procedures so to
+speak against large data sets you can
+crush the processing power of the server
+
+277
+00:28:06.000 --> 00:28:13.000
+you can crush the memory space on the
+server this is really really bad for any
+database but especially bad for a no SQL
+
+278
+00:28:13.000 --> 00:28:20.000
+database like MongoDB that relies on
+data being in memory so when you look at
+lambda it gives us the ability to scale
+
+279
+00:28:20.000 --> 00:28:25.000
+that stored procedure execution
+framework independently of the database
+head mode so I knew whatever I want the
+
+280
+00:28:25.000 --> 00:28:30.000
+only thing I'm going to consume off the
+table is read and write capacity I'm not
+going to consume the processing
+
+281
+00:28:30.000 --> 00:28:36.000
+horsepower I'm not going to drive
+latency into the system by running a
+complex aggregation or a real-time
+
+282
+00:28:36.000 --> 00:28:43.000
+materialized view and you know
+in a lambda function right streams is
+really a changelog for dynamo DB streams
+
+283
+00:28:43.000 --> 00:28:49.000
+allows you to basically have every
+update every insert on the table every
+delete or every operation that changes
+
+284
+00:28:49.000 --> 00:28:56.000
+data on the table you appear on a
+durable queue that comes off the back of
+the table that Q can be used to trigger
+
+285
+00:28:56.000 --> 00:29:03.000
+stored procedures through lambda right
+so these two constructs together a very
+powerful execution framework that you
+
+286
+00:29:03.000 --> 00:29:08.000
+can leverage around your DynamoDB table
+and some of the design patterns were
+going to talk about do this and these
+
+287
+00:29:08.000 --> 00:29:12.000
+are some of the things you can do so it
+triggers off the table into that lambda
+function a lot of customers will take
+
+288
+00:29:12.000 --> 00:29:18.000
+that data and rotate it into a
+derivative view create a derivative
+table or a real time running aggregation
+
+289
+00:29:18.000 --> 00:29:24.000
+this is a great way to do that use
+lambda update cloud search update
+elastic cash or even execute you know
+
+290
+00:29:24.000 --> 00:29:31.000
+external workflows against third-party
+systems or notifications so a great
+operate way to be able to execute those
+
+291
+00:29:31.000 --> 00:29:41.000
+types of workflows on your data I used
+to use that lambda in streams okay first
+design power could talk about real time
+
+292
+00:29:41.000 --> 00:29:48.000
+voting so in elections typically there's
+a long list or maybe a short list of
+candidates but really there's only one
+
+293
+00:29:48.000 --> 00:29:53.000
+or two options to get a lot of votes all
+right so if I have a table out there and
+I'm trying to aggregate votes and on
+
+294
+00:29:53.000 --> 00:29:59.000
+aggregating votes by candidate ID and
+everybody in the country is voting for
+one or the other then what is happening
+
+295
+00:29:59.000 --> 00:30:05.000
+is I have two keys that are really
+really busy that's the definition of a
+hotkey this is a problematic scenario
+
+296
+00:30:05.000 --> 00:30:11.000
+and no SQL right so if I'm running these
+types of high-velocity aggregations on
+the table the way to deal with that is
+
+297
+00:30:11.000 --> 00:30:18.000
+to take those candidate IDs and add some
+arbitrary random value within an own
+range to the end of those what I'm
+
+298
+00:30:18.000 --> 00:30:26.000
+really doing here is I'm taking those
+two candidate buckets and I'm turning
+them into 20 or 200 or 2000 right and
+
+299
+00:30:26.000 --> 00:30:31.000
+I'm spraying the votes across these
+partitions on the back side since I know
+that I've sprayed those those records
+
+300
+00:30:31.000 --> 00:30:38.000
+across this known range I execute what
+we call a scatter gather I just query
+all the partitions and then I merge sort
+
+301
+00:30:38.000 --> 00:30:44.000
+those results at you know as I'm
+executing this query so I you this is
+something that you code into the
+
+302
+00:30:44.000 --> 00:30:50.000
+application tier it's totally invisible
+to the developers once it's been
+implemented in the dowel and it really
+
+303
+00:30:50.000 --> 00:30:56.000
+allows you to scale
+that no SQL the idea again is to get
+more partitions participating in the
+
+304
+00:30:56.000 --> 00:31:03.000
+query load that's exactly how we do this
+when we have these dense aggregations
+and this is not unique to dynamo DB
+
+305
+00:31:03.000 --> 00:31:09.000
+you'll see this in Mongo you'll see this
+in Cassandra as well a big part of no
+SQL is making sure that when I execute
+
+306
+00:31:09.000 --> 00:31:16.000
+my queries that that data is coming off
+of multiple nodes in the cluster right
+that I'm not nailing a lot of work or
+
+307
+00:31:16.000 --> 00:31:24.000
+all the work in some cases to a single
+storage partition so the answer here is
+basically shard those right heavy
+
+308
+00:31:24.000 --> 00:31:29.000
+partition keys when we have those dents
+aggregations you're trading off the read
+cost so to speak for that right
+
+309
+00:31:29.000 --> 00:31:35.000
+scalability but it gives you a lot more
+throughput against the table a lot more
+flexibility when dealing with those
+
+310
+00:31:35.000 --> 00:31:41.000
+dents aggregations right and will show
+that in other use cases as well ways to
+be able to use this design pattern use
+
+311
+00:31:41.000 --> 00:31:46.000
+this when that right workload is not
+necessarily as scalable as you'd like it
+to be horizontally you can add
+
+312
+00:31:46.000 --> 00:31:55.000
+additional and you know nodes into the
+query workflow by doing this okay next
+case we'll talk about is event logging
+
+313
+00:31:55.000 --> 00:32:00.000
+and it's about time series data now time
+series data there's two types of time
+series first we'll talk about static
+
+314
+00:32:00.000 --> 00:32:09.000
+time series data this would be an event
+monitoring system you know or whatever
+itsm a type of application where I have
+
+315
+00:32:09.000 --> 00:32:15.000
+no events dreams coming in off of a
+number of devices events or metrics or
+whatever they are some sort of time
+
+316
+00:32:15.000 --> 00:32:20.000
+series data when you're dealing with
+time series data it's usually about some
+sort of operational analytics and
+
+317
+00:32:20.000 --> 00:32:26.000
+operational analytics operate over a
+period of time that is relevant to the
+application so that could be 24 hours it
+
+318
+00:32:26.000 --> 00:32:31.000
+could be seven days could be 30 days
+whatever after that period of time
+usually that data is not so interesting
+
+319
+00:32:31.000 --> 00:32:37.000
+anymore right so less queries will be
+operating against it the idea here is
+that you create this table that's called
+
+320
+00:32:37.000 --> 00:32:43.000
+your hot table hot table has high right
+capacity hi Reid capacity it's taking a
+lot of taking all the ingestion has
+
+321
+00:32:43.000 --> 00:32:49.000
+taken a lot of your operational
+analytics queries about halfway through
+your interesting period you're going to
+
+322
+00:32:49.000 --> 00:32:54.000
+roll that hot table back to a cold table
+or to a warm table now warm table is
+going to have zero right capacity
+
+323
+00:32:54.000 --> 00:32:58.000
+because it doesn't need to take any new
+data it's going to handle about half of
+your operational analytics queries
+
+324
+00:32:58.000 --> 00:33:03.000
+because it's the back end of the time
+period that's interesting to your app
+right so you want to keep those two
+
+325
+00:33:03.000 --> 00:33:08.000
+tables that hot table in that warm table
+provision and eventually after some
+period of time you deep provision the
+
+326
+00:33:08.000 --> 00:33:14.000
+warmth able to a cold table or you drop
+it or you do whatever you want with it
+right I like this design pattern because
+
+327
+00:33:14.000 --> 00:33:19.000
+it allows you to deal with data in bulk
+and have some sort of data life cycle
+around how am I going to manage this
+
+328
+00:33:19.000 --> 00:33:24.000
+data right most of these types
+applications they want to archive that
+data at some point for some period of
+
+329
+00:33:24.000 --> 00:33:29.000
+time and it's a nice way to be able to
+bucket that data up by time period and
+be able to at the end of this whole
+
+330
+00:33:29.000 --> 00:33:37.000
+thing you can run a data pipeline or an
+EMR job just pipe it off to s3 store it
+off and glacier you're done right so
+
+331
+00:33:37.000 --> 00:33:42.000
+this is a great strategy for dealing
+with that static time series data that's
+why the data that where the time stamp
+
+332
+00:33:42.000 --> 00:33:50.000
+never changes right the entry is made
+into the table and that TTL so to speak
+timestamp attribute would never be
+
+333
+00:33:50.000 --> 00:33:58.000
+updated so pre create those tables on a
+weekly monthly whatever basis you need
+it's important to create a future table
+
+334
+00:33:58.000 --> 00:34:03.000
+when I create a new hot table what I'm
+really doing is I'm enabling the future
+table I'm provisioning the future table
+
+335
+00:34:03.000 --> 00:34:09.000
+the reason why is because when i go to
+provision a table and DynamoDB it might
+take a little while so if my
+
+336
+00:34:09.000 --> 00:34:15.000
+applications running I don't want to
+have to wait some arbitrary time frame
+that's in determining in order be a role
+
+337
+00:34:15.000 --> 00:34:21.000
+that table I want to have a future table
+all hot up and ready and maybe take the
+capacity and dial it all down that way
+
+338
+00:34:21.000 --> 00:34:26.000
+when you're ready to roll up you spin
+the capacity up on the future table you
+make it your hot table switch the
+
+339
+00:34:26.000 --> 00:34:34.000
+application over to write to that table
+create a new future table d provision
+the preexisting hot table and just keep
+
+340
+00:34:34.000 --> 00:34:40.000
+going right it just becomes a process of
+rolling that table over on a regular
+interval to keep the thing from getting
+
+341
+00:34:40.000 --> 00:34:46.000
+bigger and bigger and bigger and
+splitting and creating that throughput
+dilution problem that we talked about so
+
+342
+00:34:46.000 --> 00:34:53.000
+the other type of data we look at what
+time series is I when I call dynamic TTL
+right maybe I have a table full of data
+
+343
+00:34:53.000 --> 00:34:57.000
+it might be some session data or could
+be user data and every time the user
+touches the data I'm going to update the
+
+344
+00:34:57.000 --> 00:35:04.000
+time stamp on that because you know
+that's basically after 30 days of the
+last touch is when I wanted to lead it
+
+345
+00:35:04.000 --> 00:35:10.000
+so if I have this type of workflow the
+data on the table gets pretty much
+spread out all over the place right some
+
+346
+00:35:10.000 --> 00:35:16.000
+data is hot some data is cold I don't
+know which data needs to go so I have to
+build what we call TTL index alright so
+
+347
+00:35:16.000 --> 00:35:21.000
+the way to do that in dynamo DB is
+pretty straightforward
+what I do is I create this attribute on
+
+348
+00:35:21.000 --> 00:35:26.000
+there on every item when I insert the
+event or the the object onto the table
+every item gets an attribute that's a
+
+349
+00:35:26.000 --> 00:35:32.000
+GSI key and that GSI key is a random
+range between 0 to n right so depending
+on how many items you have on the table
+
+350
+00:35:32.000 --> 00:35:37.000
+how big your table is that might be a
+pretty big number it could be a thousand
+or so what you're doing is you're right
+
+351
+00:35:37.000 --> 00:35:44.000
+sharding the GSI because what I'm going
+to do is I'm going to create a GSI on
+that GSI key attribute and I'm going to
+
+352
+00:35:44.000 --> 00:35:50.000
+arrange it on the timestamp of all your
+items so by doing this now what I've
+done is I've taken the entire table and
+
+353
+00:35:50.000 --> 00:35:57.000
+I've rotated into a single index on one
+attribute and I now can execute a range
+query via scatter gather against that
+
+354
+00:35:57.000 --> 00:36:04.000
+TTL index and get a very selective query
+set result set back that's not going to
+burn a lot of capacity I don't have to
+
+355
+00:36:04.000 --> 00:36:09.000
+troll the whole table I don't have to
+run table scan and look at every item I
+can very quickly retrieve the items that
+
+356
+00:36:09.000 --> 00:36:14.000
+have expired i do this with the AWS
+lambda running as a scheduled process so
+we talked a little bit about how you can
+
+357
+00:36:14.000 --> 00:36:20.000
+use lambdas a stored procedure this is a
+perfect way to do that so this process
+just runs on regular basis scatter
+
+358
+00:36:20.000 --> 00:36:26.000
+gather queries the GSI gets your expired
+items it takes them off the table it's
+really neat way to do that and then on
+
+359
+00:36:26.000 --> 00:36:32.000
+top of that I can hook up streams if I
+want I can run a secondary lambda script
+to actually archive that data into a
+
+360
+00:36:32.000 --> 00:36:38.000
+second table or rotate it out into a
+data lake or whatever it is I want to do
+right so excellent way to be able to
+
+361
+00:36:38.000 --> 00:36:44.000
+take multiple AWS services and build
+this kind of complex workflow to manage
+your data from one table to the other
+
+362
+00:36:44.000 --> 00:36:49.000
+and this takes that right sharding
+design pattern it leverages lambda as a
+stored procedure and gives you a very
+
+363
+00:36:49.000 --> 00:36:54.000
+efficient mechanism to be able to build
+that kind of TTL infrastructure around
+your own tables for this kind of dynamic
+
+364
+00:36:54.000 --> 00:37:01.000
+t-tail time stamp so use that right
+sharted GSI to selectively query those
+expired items create that stored
+
+365
+00:37:01.000 --> 00:37:07.000
+procedure in lambda to delete those
+items and migrate that data using
+triggers off in the stream it's a pretty
+
+366
+00:37:07.000 --> 00:37:13.000
+effective solution i've worked with a
+few customers to put in place alright
+next one we'll talk about is a product
+
+367
+00:37:13.000 --> 00:37:20.000
+catalog product catalog is an
+interesting scenario we've seen this
+just recently with Black Friday Cyber
+
+368
+00:37:20.000 --> 00:37:28.000
+Monday on the retail space obviously
+when you have those types of activity
+high volume sales activities you've got
+
+369
+00:37:28.000 --> 00:37:32.000
+people looking at a select number of
+items in your product catalog
+right there there there these are the
+
+370
+00:37:32.000 --> 00:37:36.000
+deals all right so thousands and
+thousands of users tens of thousand
+users coming to making these requests it
+
+371
+00:37:36.000 --> 00:37:41.000
+gives us that kind of hot key scenario
+we don't like that that's what this
+looks like right we've got a very
+
+372
+00:37:41.000 --> 00:37:48.000
+imbalanced to access pattern across the
+key space what we want to do in this
+kind of situation is implemented cash
+
+373
+00:37:48.000 --> 00:37:54.000
+right cash is a pretty straightforward
+solution you're going to put those high
+velocity items in that cash and you'll
+
+374
+00:37:54.000 --> 00:38:00.000
+read from cash first if it's not there
+you go ahead and read out DynamoDB push
+it into the cash you can leverage lambda
+
+375
+00:38:00.000 --> 00:38:07.000
+and streams again if you put a right
+onto the table you can leverage the
+lambda streams I interaction to be able
+
+376
+00:38:07.000 --> 00:38:15.000
+to take that data and update your cash
+right so you don't necessarily need to
+manage the the cast consistency at the
+
+377
+00:38:15.000 --> 00:38:22.000
+application tier you can do this using
+that kind of stored procedure framework
+again if we do that that's what this
+
+378
+00:38:22.000 --> 00:38:29.000
+looks like much much better right we
+have cash hits upfront cash hits are
+free you can use your own cash you can
+
+379
+00:38:29.000 --> 00:38:35.000
+use elastic cash we have services are
+available for you with Retta store em
+cash memcache d instances there self
+
+380
+00:38:35.000 --> 00:38:41.000
+that are managed by AWS you can use the
+self-managed instance whatever you'd
+like to do but this is the kind of
+
+381
+00:38:41.000 --> 00:38:47.000
+result set here that you get from
+looking from implementing this solution
+in that design pattern in that design
+
+382
+00:38:47.000 --> 00:38:56.000
+scenario and you get more cash it's less
+table hits it's going to be cheaper
+overall much more performant okay let's
+
+383
+00:38:56.000 --> 00:39:01.000
+talk a little bit about multi version
+concurrency in no SQL or transactional
+no SQL right we hear a lot about how I
+
+384
+00:39:01.000 --> 00:39:06.000
+need acid as a matter of fact there's
+some of you may be familiar with the
+transaction library that's available for
+
+385
+00:39:06.000 --> 00:39:12.000
+dynamo dB so these things are going to
+be out there for you as you know users
+want these things that we're going to
+
+386
+00:39:12.000 --> 00:39:16.000
+build them i wouldnt even say that the
+service team is building these things
+but the essay community puts these
+
+387
+00:39:16.000 --> 00:39:21.000
+things out in response to use a request
+and we're actually seeing a lot of
+activity in the know SQL market in
+
+388
+00:39:21.000 --> 00:39:29.000
+general to provide you know
+transactional frameworks and relational
+types of of you know control structures
+
+389
+00:39:29.000 --> 00:39:34.000
+in know SQL I will talk a little bit
+about how you might be able to do some
+of these things do you really need acid
+
+390
+00:39:34.000 --> 00:39:40.000
+or what do you really need is multi
+version concurrency right acid is not
+something that's really used a lot in
+
+391
+00:39:40.000 --> 00:39:44.000
+distributed systems all right when I
+have a
+bank transaction people talk about acid
+
+392
+00:39:44.000 --> 00:39:50.000
+but the reality is Wells Fargo & B of A
+don't operate on the same database I'm
+not going to able to put a distributed
+
+393
+00:39:50.000 --> 00:39:55.000
+acid transaction across those two
+systems so what do they do they do a
+multi-phase commit right and really
+
+394
+00:39:55.000 --> 00:40:01.000
+that's what we're going to talk about
+with Noah's ql so how did the oltp how
+to use the data mostly hierarchical
+
+395
+00:40:01.000 --> 00:40:08.000
+structures right as we talked about a
+product catalogue write a book an album
+write a movie and assembly orders by
+
+396
+00:40:08.000 --> 00:40:15.000
+customer what you know items by order
+you know visits by client whatever
+there's always some sort of hierarchical
+
+397
+00:40:15.000 --> 00:40:21.000
+structure aren't trying to build in an
+oil TP application and they use entity
+driven workflows right we create these
+
+398
+00:40:21.000 --> 00:40:28.000
+top-level entities in the application
+layer a customer product you know
+whatever it may be right these entities
+
+399
+00:40:28.000 --> 00:40:35.000
+are built using properties that live on
+multiple tables in a relational database
+right the orders of a customer don't
+
+400
+00:40:35.000 --> 00:40:39.000
+live on the same table as the customer
+they certainly don't live in the same
+item as the customer record so this is
+
+401
+00:40:39.000 --> 00:40:45.000
+the driver for acid right when I build
+an application layer object and I need
+to update it then I need to make sure
+
+402
+00:40:45.000 --> 00:40:53.000
+that that object is updated in its
+entirety or not at all and this is where
+asset applies in relational so NoSQL
+
+403
+00:40:53.000 --> 00:40:56.000
+we're doing something a little different
+right we'll talk about how we might be
+able to manage that type of
+
+404
+00:40:56.000 --> 00:41:02.000
+transactional workflow and no SQL in the
+example we'll use as a warehousing
+scenario so in this particular case I've
+
+405
+00:41:02.000 --> 00:41:09.000
+got a picker automated warehouse
+DynamoDB table is relatively simple
+schema a bunch of parts that make up an
+
+406
+00:41:09.000 --> 00:41:13.000
+assembly an order comes in for a
+particular assembly the picker pulls the
+list of parts it goes running around the
+
+407
+00:41:13.000 --> 00:41:19.000
+warehouse and it pulls out the parts
+right very straightforward now let's say
+that along comes the purchasing
+
+408
+00:41:19.000 --> 00:41:23.000
+department they find a new vendor they
+start loading new items into the table
+the equivalent parts for this particular
+
+409
+00:41:23.000 --> 00:41:31.000
+assembly this could be problematic if my
+picker is running in this tables needs
+to be available 7 24 and the pickers
+
+410
+00:41:31.000 --> 00:41:36.000
+just going to start all of a sudden it's
+going to get a bunch of orders that have
+some old parts in some new parts and it
+
+411
+00:41:36.000 --> 00:41:41.000
+doesn't know which ones are which all of
+a sudden it's got six parts instead of
+three which ones do I use all right
+
+412
+00:41:41.000 --> 00:41:47.000
+let's say maybe in the six-part have you
+been added yet so I've only got five ok
+so now which one do I go right and the
+
+413
+00:41:47.000 --> 00:41:54.000
+way to go about this is to create what I
+call partition locks and you do this
+with a metadata item you insert some
+
+414
+00:41:54.000 --> 00:41:58.000
+metadata item or you tag attributes onto
+the end of an
+existing item that you use to control a
+
+415
+00:41:58.000 --> 00:42:04.000
+transactional workflow and in essence
+what happens the first process it needs
+to update this table comes in it takes a
+
+416
+00:42:04.000 --> 00:42:10.000
+lock on that metadata item by using
+conditional update alright set that lock
+value equals 0 if the lock value equals
+
+417
+00:42:10.000 --> 00:42:17.000
+1 all right now if that update succeeds
+I know I have the lock I can go ahead
+add my new items I can create a version
+
+418
+00:42:17.000 --> 00:42:24.000
+set attribute on that metadata item
+right so that's what that little item
+list is right that's an a JSON array
+
+419
+00:42:24.000 --> 00:42:31.000
+just in its an array of arrays and those
+first the first array is one two three
+that's version one you know the
+
+420
+00:42:31.000 --> 00:42:36.000
+application is interpreting this Iranian
+nose version one's going to be the first
+version 2 is going to be the next you
+
+421
+00:42:36.000 --> 00:42:41.000
+know four five six that's version two if
+the picker comes along and it selects
+from the table and I haven't yet
+
+422
+00:42:41.000 --> 00:42:47.000
+inserted all the items it's going to get
+what I call fat read it can determine
+how to deal with that fat read if it
+
+423
+00:42:47.000 --> 00:42:52.000
+knows hey I've got a new version I don't
+have all the items it's an incomplete
+update you can decide I want to go back
+
+424
+00:42:52.000 --> 00:42:58.000
+and read again and get the full version
+or I can say I have it I have a valid
+version it's 1 2 3 i'll use those three
+
+425
+00:42:58.000 --> 00:43:04.000
+items right either way the picker can
+decide the application can decide very
+easily whether i want to use the old set
+
+426
+00:43:04.000 --> 00:43:10.000
+or the new set what have i done i've
+created a versioning type of system here
+by using this metadata object i can add
+
+427
+00:43:10.000 --> 00:43:15.000
+additional attributes onto the metadata
+object things like timeout right i have
+15 minute time out on this particular
+
+428
+00:43:15.000 --> 00:43:20.000
+transaction or five minute time out
+whatever other process is coming in
+trying to establish a lock on this
+
+429
+00:43:20.000 --> 00:43:27.000
+partition could check the timeout value
+if it's expired they can execute some
+sort of a rollback workflow in
+
+430
+00:43:27.000 --> 00:43:34.000
+relational technology when you roll back
+a transaction that's not the end of it
+right we're always going to have to do
+
+431
+00:43:34.000 --> 00:43:39.000
+some sort of work in the application
+layer some failure mode workflow is
+going to have to fire when that
+
+432
+00:43:39.000 --> 00:43:44.000
+transaction doesn't go through in the
+database right so this is something that
+you allows you to basically control that
+
+433
+00:43:44.000 --> 00:43:49.000
+in your own application and and and
+using the same logic that you're going
+to have to code into your relational app
+
+434
+00:43:49.000 --> 00:43:55.000
+anyways right so using these metadata
+items or these metadata attributes on
+existing items is a great way to be able
+
+435
+00:43:55.000 --> 00:44:00.000
+to lock those partitions and create
+these kinds of transactional workflows
+and use its kind of multi version
+
+436
+00:44:00.000 --> 00:44:09.000
+concurrency control for no SQL without
+having to have a transaction framework
+like a JTA or some sort of a relational
+
+437
+00:44:09.000 --> 00:44:16.000
+database
+acid construct so manage versioning
+across those items with the metadata use
+
+438
+00:44:16.000 --> 00:44:22.000
+those metadata items to lock the
+partition you can tag the attributes
+when you're done with the transaction
+
+439
+00:44:22.000 --> 00:44:26.000
+you don't have to keep all those items
+on the partition you can clean them off
+and keep only the current ones or you
+
+440
+00:44:26.000 --> 00:44:31.000
+can actually add that versioning
+information to the sort key so I can
+have a selective query for a particular
+
+441
+00:44:31.000 --> 00:44:39.000
+version of a particular assembly by
+using a begins with type of query
+construct and say get me version 14
+
+442
+00:44:39.000 --> 00:44:43.000
+assembly to get me version 2 for
+assembly two and I get only the items
+associated with that version or you can
+
+443
+00:44:43.000 --> 00:44:48.000
+read the whole partition right all
+depends on what your application
+workflow is but it's very useful when
+
+444
+00:44:48.000 --> 00:44:54.000
+you need those types of transactional
+rights across items you can also use
+this construct control transactions that
+
+445
+00:44:54.000 --> 00:45:01.000
+run across disparate systems right I
+have workflows dependencies on
+third-party systems or other systems
+
+446
+00:45:01.000 --> 00:45:07.000
+outside of DynamoDB you can use these
+metadata items to kind of control how
+processes interact or lock that
+
+447
+00:45:07.000 --> 00:45:16.000
+transaction space all right messaging
+app this is really about large items and
+what they can do to your table I will
+
+448
+00:45:16.000 --> 00:45:21.000
+talk a little bit about filtering and
+indexing and whatnot in here as well but
+the idea here is that you've got a
+
+449
+00:45:21.000 --> 00:45:26.000
+messaging app let's think email this
+could be it may be a video game or
+something where I have a messaging
+
+450
+00:45:26.000 --> 00:45:31.000
+application infrastructure but I've got
+some messages table and I want views off
+that table my inbox view I don't want to
+
+451
+00:45:31.000 --> 00:45:37.000
+outbox view so pretty straightforward
+select you know star from messages table
+where the recipients David there's my
+
+452
+00:45:37.000 --> 00:45:43.000
+inbox you know where the sender's David
+there's my outbox sounds pretty good the
+first way I go about this might be to
+
+453
+00:45:43.000 --> 00:45:49.000
+actually build one of those
+relationships into the primary table
+right where I have a messages table
+
+454
+00:45:49.000 --> 00:45:56.000
+that's hashed on recipient or
+partitioned on recipient and sorted on
+date there's my inbox now i can create
+
+455
+00:45:56.000 --> 00:46:02.000
+gsi that's you know sorted on or you
+know partition on sender and sort it on
+date so have table GSI that sounds great
+
+456
+00:46:02.000 --> 00:46:12.000
+you know what's the problem here well
+let's do some math if the average
+message size is 256 kilobytes and you
+
+457
+00:46:12.000 --> 00:46:18.000
+know I go and I select 50 items and
+let's say we apply our eventually
+consistent read which is half the cost
+
+458
+00:46:18.000 --> 00:46:24.000
+I'm still going to be eating up 1,600 RC
+use every time the user goes to
+their inbox why is that because I'm
+
+459
+00:46:24.000 --> 00:46:29.000
+reading these items that are big but you
+know when you think about the view of
+the inbox what do I really what am i
+
+460
+00:46:29.000 --> 00:46:36.000
+interested in I'm not interested in the
+the message body right when I look at my
+summary view I'm only interested in the
+
+461
+00:46:36.000 --> 00:46:43.000
+metadata that describes the message the
+subject the sender the date right so
+maybe a better idea would be to take a
+
+462
+00:46:43.000 --> 00:46:48.000
+page from the relational book and to
+vertically partition this table right
+this is an old strategy we've always
+
+463
+00:46:48.000 --> 00:46:57.000
+used to try and reduce the the ayaat
+burden on the storage array is to you
+know query what you need don't query for
+
+464
+00:46:57.000 --> 00:47:01.000
+what you don't need right when I when I
+go to the detail view on an email that's
+when I need the message body okay so
+
+465
+00:47:01.000 --> 00:47:08.000
+let's create a GSI off of that messages
+table and that gsi is not going to
+contain the body attribute it's going to
+
+466
+00:47:08.000 --> 00:47:15.000
+contain only the attributes I need for
+my summer review whether that's an inbox
+and outbox out to GS is right now when I
+
+467
+00:47:15.000 --> 00:47:22.000
+query the GS I use a lot less RCU to get
+the information that I need to page draw
+my emails and when I select the one
+
+468
+00:47:22.000 --> 00:47:27.000
+email that I'm interested in reading
+then I'll go back and get that data off
+the table right so instead paying that
+
+469
+00:47:27.000 --> 00:47:33.000
+RCU cost every time I check the inbox
+let's vertically partition the table get
+the big items off away from the small
+
+470
+00:47:33.000 --> 00:47:40.000
+items and maintain pointers you know the
+GSI really does maintain that pointer
+back to that message table so you can go
+
+471
+00:47:40.000 --> 00:47:47.000
+get the body if you need it now I got a
+messages table I've got two secondary
+indexes one for my global secondary 11
+
+472
+00:47:47.000 --> 00:47:53.000
+for my inbox one for my outbox I've got
+very straightforward system here and
+what I've done is I've distributed those
+
+473
+00:47:53.000 --> 00:48:02.000
+large items across two constructs gsi
+for my small metadata that describes my
+view and the table that I go back to
+
+474
+00:48:02.000 --> 00:48:09.000
+look up for that big data so useful
+design pattern when you're querying many
+large items but you don't really need
+
+475
+00:48:09.000 --> 00:48:15.000
+all those the large attributes associate
+with those items I just need to know you
+know the descriptors around that item
+
+476
+00:48:15.000 --> 00:48:23.000
+let's talk a little bit about
+multiplayer online gaming in this
+particular situation let's say I've got
+
+477
+00:48:23.000 --> 00:48:29.000
+a table here and I've got you know user
+invites two games right so we've got a
+bunch of games that are done but buncher
+
+478
+00:48:29.000 --> 00:48:35.000
+and progress punch are pending what not
+what I want here is to be able get all
+the pending advice or pick your user
+
+479
+00:48:35.000 --> 00:48:40.000
+within
+particular time frame right so let's
+talk about how we might do that so we
+
+480
+00:48:40.000 --> 00:48:47.000
+select star from game where the
+opponent's Bob we're going to order by
+date and we want to filter on the status
+
+481
+00:48:47.000 --> 00:48:54.000
+right so this is a great way to be able
+to take the NOC the records out that I
+don't need by filtering on extended
+
+482
+00:48:54.000 --> 00:49:00.000
+attribute we talked a little bit about
+how you can execute complex range
+queries against sort key attributes this
+
+483
+00:49:00.000 --> 00:49:07.000
+is now what we've done here is we've
+added in an extended attribute it's not
+the sort key the difference here is that
+
+484
+00:49:07.000 --> 00:49:13.000
+the sort key gives us a very selective
+query set right I can range on that sort
+key I can get a definitive list of items
+
+485
+00:49:13.000 --> 00:49:21.000
+right the filter condition only knocks
+items out after they've been read okay
+so you're paying the RCU of reading
+
+486
+00:49:21.000 --> 00:49:28.000
+three records you're paying the band
+width of sending to you know why is this
+important well because maybe I want
+
+487
+00:49:28.000 --> 00:49:32.000
+actually more selective query if I've
+got thousands of items in this
+partitioning I'm filtering for only two
+
+488
+00:49:32.000 --> 00:49:37.000
+it might be better to use a different
+key structure that gives me more
+selective query because I'm going to pay
+
+489
+00:49:37.000 --> 00:49:43.000
+a lot of our see you to use the filter
+expression on every query so you kinda
+getting the idea here depending on your
+
+490
+00:49:43.000 --> 00:49:48.000
+access pattern depends on how you want
+to structure the data and it's kind of
+saying with all new SQL databases this
+
+491
+00:49:48.000 --> 00:49:52.000
+is kind of the needle in the haystack
+approach i'm going to take the haystack
+i'm going to filter through it and shake
+
+492
+00:49:52.000 --> 00:50:00.000
+until the needles come out a better
+approach might be to take that index and
+create what we call a composite key
+
+493
+00:50:00.000 --> 00:50:05.000
+alright in this particular case I'm
+gonna take the status I'm going to
+concatenate it to the date and I'm going
+
+494
+00:50:05.000 --> 00:50:11.000
+to create a new key called status date
+alright what have I done here I've
+created what we nail in MongoDB this
+
+495
+00:50:11.000 --> 00:50:16.000
+would be a compound index right I've
+created an index on two attributes I can
+query this index from left to right I've
+
+496
+00:50:16.000 --> 00:50:23.000
+got items now sorted not only by status
+but by date it's a nested sort kind of
+going on in here now I can execute a
+
+497
+00:50:23.000 --> 00:50:31.000
+much much more selective query who get
+back there and I can basically create
+just a key condition and says where
+
+498
+00:50:31.000 --> 00:50:36.000
+status date begins with pending and I
+know that I'm going to get everything
+ordered by time you know that has a
+
+499
+00:50:36.000 --> 00:50:42.000
+status of pending right so this is a
+much better query a much more selective
+query now when would I use one over the
+
+500
+00:50:42.000 --> 00:50:50.000
+other well if I have a situation where
+my every item in the in the partition is
+less than 4k total then I might as well
+
+501
+00:50:50.000 --> 00:50:55.000
+go ahead and use a filter condition
+because I'm going to pay one RCU whether
+I read the whole partition or whether I
+
+502
+00:50:55.000 --> 00:51:03.000
+read just a subset of the items it's
+still one RCU so if it's if the if the
+trade-off is to build a GSI to get that
+
+503
+00:51:03.000 --> 00:51:09.000
+selective query and use the composite
+key or query the table partition I'd say
+just query the table partition because
+
+504
+00:51:09.000 --> 00:51:13.000
+the GSI is going to cost you every time
+you update an item on the table you're
+going to have to pay w see you on the
+
+505
+00:51:13.000 --> 00:51:20.000
+GSI as well so again it's that it's the
+idea here is to understand what is it
+you're looking for in the application
+
+506
+00:51:20.000 --> 00:51:26.000
+what is the structure of your data on
+disk what is the right answer for you
+might not be the right answer for me
+
+507
+00:51:26.000 --> 00:51:32.000
+right so we've got to sit there and and
+and it's really tuned you know no SQL in
+general very tuned to that access
+
+508
+00:51:32.000 --> 00:51:38.000
+pattern so if we take this approach now
+we've got that needle in a sorted
+haystack right I've gone out and I've
+
+509
+00:51:38.000 --> 00:51:43.000
+taken this more like taking the magnet
+covering over the hay and pulling those
+needles right out of it right so that's
+
+510
+00:51:43.000 --> 00:51:48.000
+kind of the approach won't take so the
+other thing you can do with dynamo DB
+which is kind of cool as you can
+
+511
+00:51:48.000 --> 00:51:54.000
+leverage sparse indexes all right sparse
+indexes give us the ability to index
+items that don't necessarily have or
+
+512
+00:51:54.000 --> 00:51:59.000
+that have attributes that other items
+don't have why would I do this in this
+particular case we'll save let's say I
+
+513
+00:51:59.000 --> 00:52:07.000
+want an award gsi who won in my user
+domain right and the users that have won
+awards might have an award attribute and
+
+514
+00:52:07.000 --> 00:52:13.000
+they would be then appear in the index
+users that don't have an award attribute
+they well they don't appear in the index
+
+515
+00:52:13.000 --> 00:52:19.000
+so now I can query that index I could
+scan that index and get a very very
+short list of users that actually have
+
+516
+00:52:19.000 --> 00:52:28.000
+won awards right I can also allocate a
+hell of a lot less wcu to that gsi
+because it is not consuming nearly as
+
+517
+00:52:28.000 --> 00:52:32.000
+much because most of the items on the
+table and ivory are never getting there
+right because that's what we call it
+
+518
+00:52:32.000 --> 00:52:38.000
+sparse index so that's a great way to be
+able to you know support highly
+selective queries so replace those
+
+519
+00:52:38.000 --> 00:52:46.000
+filters with indexes concatenate those
+keys to create those nested sorts more
+selective queries again it all depends
+
+520
+00:52:46.000 --> 00:52:50.000
+on your access pattern what you're
+trying to do with the application but
+it's really important to think about
+
+521
+00:52:50.000 --> 00:52:57.000
+these things when you're trying to
+optimize that query cost as much as you
+possibly can okay so talk a little bit
+
+522
+00:52:57.000 --> 00:53:03.000
+of a reference architecture here
+DynamoDB is a backplane so
+is like many backplane services in AWS
+
+523
+00:53:03.000 --> 00:53:09.000
+we have the ability to execute a variety
+of work flows through a variety of
+constructs for you as we talked about
+
+524
+00:53:09.000 --> 00:53:17.000
+today you have AWS lambda and streams
+these are very effective tools to use as
+stored procedures and triggers off of
+
+525
+00:53:17.000 --> 00:53:22.000
+the table but there's a whole ecosystem
+of services as a matter of fact dynamodb
+according to this chart you can see as
+
+526
+00:53:22.000 --> 00:53:27.000
+the center of the universe it's right in
+front of the middle of all of them but
+you know the idea here is to give you a
+
+527
+00:53:27.000 --> 00:53:32.000
+set of tools that you can use to build
+the applications without having deploy
+dedicated infrastructure and this is a
+
+528
+00:53:32.000 --> 00:53:38.000
+very good example of that this is an
+example of an app that we built for the
+solutions architecture team it's what we
+
+529
+00:53:38.000 --> 00:53:46.000
+call our any time feedback application
+we have the ability to do typically with
+an essay at AWS when you engage and you
+
+530
+00:53:46.000 --> 00:53:53.000
+get an email from that essay at least in
+the AMIA region you will see a link and
+says how did I do when you click on that
+
+531
+00:53:53.000 --> 00:53:59.000
+link what happens is the little form
+gets served up from an s3 bucket in that
+forum when you hit post on that forum it
+
+532
+00:53:59.000 --> 00:54:06.000
+hits API Gateway API gateway then calls
+up a lambda function logs a little bit
+of data as far as the access and that
+
+533
+00:54:06.000 --> 00:54:11.000
+lambda function triage is to form the
+form results some of that form data is
+PII personally identifiable information
+
+534
+00:54:11.000 --> 00:54:17.000
+we don't want to store that unencrypted
+right for this particular application we
+didn't really want to do client-side
+
+535
+00:54:17.000 --> 00:54:23.000
+encryption so we actually upload that
+PII to a encrypted s3 bucket as a JSON
+documents it's up there we push the
+
+536
+00:54:23.000 --> 00:54:32.000
+searchable metadata into DynamoDB right
+this application was built for less than
+the cost of my lunch literally okay it's
+
+537
+00:54:32.000 --> 00:54:40.000
+hosted for pennies a month and it could
+scale to support a million users
+tomorrow if they came so this is the
+
+538
+00:54:40.000 --> 00:54:44.000
+power of server list when people start
+to look at server list they say oh you
+know might be more expensive you know
+
+539
+00:54:44.000 --> 00:54:50.000
+the reality is no this is it's it's
+pennies until the users come so even if
+it's more expensive while the users are
+
+540
+00:54:50.000 --> 00:54:56.000
+there and I would argue that it's
+probably not in most cases even if it is
+more expensive while the users are there
+
+541
+00:54:56.000 --> 00:55:01.000
+as soon as they're gone you can tone
+down the entire infrastructure to
+support that application and and it's
+
+542
+00:55:01.000 --> 00:55:07.000
+you know it's better than cloud right
+it's the next generation of cloud so we
+talked about ec2 a lot a lot of our
+
+543
+00:55:07.000 --> 00:55:12.000
+competitors talked about how they're
+going to beat us with ec2 and I look at
+them and say you guys are fighting
+
+544
+00:55:12.000 --> 00:55:19.000
+yesteryears battle right
+this is where we're off we're off in the
+future with serverless and there's
+
+545
+00:55:19.000 --> 00:55:24.000
+amazing things you can do with this
+technology so you know again this k
+application is a perfect example of that
+
+546
+00:55:24.000 --> 00:55:31.000
+scales Danny sighs host for pennies a
+month was built in a matter of days and
+was really has been a phenomenal success
+
+547
+00:55:31.000 --> 00:55:39.000
+so with that that's what I've got thank
+you all for coming and taking the time
+to hear me and hopefully you got
+
+548
+00:55:39.000 --> 00:55:44.000
+something out today's presentation again
+I remember of complete your evaluations
+and if you liked what you saw this is
+dat 304 DynamoDB if you didn't well I
+don't know what the session was alright
+thanks guys

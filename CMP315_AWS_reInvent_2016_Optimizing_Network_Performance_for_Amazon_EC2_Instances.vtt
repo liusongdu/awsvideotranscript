@@ -1,0 +1,1269 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:09.000
+hello my name is Brian Barrett I'm a
+principal software engineer in AWS
+specifically ec2 and I'm going to be
+
+2
+00:00:09.000 --> 00:00:16.000
+talking about optimizing network
+performance for Amazon ec2 instances
+I'll actually be co-presenting my
+
+3
+00:00:16.000 --> 00:00:24.000
+co-presenter Nick Matthews will come up
+he's a solution architects Cuse me a
+solutions architect in AWS and he'll be
+
+4
+00:00:24.000 --> 00:00:32.000
+talking a little bit more about the
+customer facing customer benefits of
+using enhanced networking in ec2 so what
+
+5
+00:00:32.000 --> 00:00:38.000
+to expect from this session we're going
+to talk a little bit about
+high-performance networking applications
+
+6
+00:00:38.000 --> 00:00:47.000
+particularly enhanced networking how it
+works some performance numbers what
+we're going to do next most specifically
+
+7
+00:00:47.000 --> 00:00:54.000
+in the next is something called elastic
+network adapter or ena which is a
+feature we launched earlier this year
+
+8
+00:00:54.000 --> 00:01:02.000
+with the x1 instance type and will
+become our new way of doing enhanced
+networking as we go forward and lots
+
+9
+00:01:02.000 --> 00:01:11.000
+more instant types so networking on AWS
+as most of you guys have probably
+figured out we have a we have a network
+
+10
+00:01:11.000 --> 00:01:24.000
+and it has a and one of our under modern
+network type is a virtual private cloud
+or VPC it's a um excuse me it has some
+
+11
+00:01:24.000 --> 00:01:29.000
+features in it that you guys have all
+probably figured out the bigger the
+instant size the better the performance
+
+12
+00:01:29.000 --> 00:01:39.000
+our network itself provides full
+bisection bandwidth in a placement group
+select caveat for uniformly random
+
+13
+00:01:39.000 --> 00:01:48.000
+traffic but so it's a it's a very large
+network with a lot of bandwidth um and
+customers tend not to see
+
+14
+00:01:48.000 --> 00:01:54.000
+oversubscription effects that might see
+on a smaller network a couple years ago
+we launched a product called enhanced
+
+15
+00:01:54.000 --> 00:02:03.000
+networking enhanced networking provides
+over 1 million packets per second ah
+input it started at a 10 gig instance
+
+16
+00:02:03.000 --> 00:02:11.000
+type we've since increased that fairly
+significantly we'll talk about that in a
+minute one of the first things enhanced
+
+17
+00:02:11.000 --> 00:02:19.000
+networking did was lower
+instance instance Layton sees and we did
+this initially using something an intel
+
+18
+00:02:19.000 --> 00:02:28.000
+nic called the a259 9 which supports us
+single root io virtualization and so we
+were able to pass that intel nic
+
+19
+00:02:28.000 --> 00:02:39.000
+directly to the customer instance um
+we've since changed with ena to use a
+in-house device that will talk about so
+
+20
+00:02:39.000 --> 00:02:46.000
+how we did a ec2 networking before
+enhanced networking was of course you
+can see we have an instance it has to be
+
+21
+00:02:46.000 --> 00:02:54.000
+thur net devices eat zeroeth one both of
+them are connected to our hypervisor
+infrastructure that makes all the magic
+
+22
+00:02:54.000 --> 00:03:04.000
+happen via the Zen para virtualized
+device and so if you send a packet out
+of 80 it flows through the instance
+
+23
+00:03:04.000 --> 00:03:12.000
+networking stack through the Zen para
+virtualized ring devices into the
+virtualization layer where it goes
+
+24
+00:03:12.000 --> 00:03:19.000
+through some network processing that
+kind of jaggedy line there and then
+eventually leaves the the host and goes
+
+25
+00:03:19.000 --> 00:03:25.000
+on its merry way to the other side the
+other draw um host words received and
+kind of the reverse path happens and the
+
+26
+00:03:25.000 --> 00:03:35.000
+packet ends up in your other instance uh
+with enhanced networking particularly in
+this case the until eight 2599 you don't
+
+27
+00:03:35.000 --> 00:03:45.000
+have a Zen para virtualized device you
+have a pci virtual function and so this
+looks like just any other pci device you
+
+28
+00:03:45.000 --> 00:03:53.000
+can run lspci and it shows up and it has
+a bus number and all of those things
+you'd expect you can use these tool and
+
+29
+00:03:53.000 --> 00:04:00.000
+look at it just like you'd expect for
+any network device you'd have in any
+linux or windows box um and when you
+
+30
+00:04:00.000 --> 00:04:08.000
+send a packet out rather than going
+through the virtualization layer your
+driver in in your instance sends a
+
+31
+00:04:08.000 --> 00:04:17.000
+packet across this virtual virtual
+function it gets sent out on the wire
+and then we talk or we do all the
+
+32
+00:04:17.000 --> 00:04:24.000
+network processing to make our virtual
+private cloud offering work somewhere
+else
+
+33
+00:04:24.000 --> 00:04:30.000
+and that somewhere else if you want more
+details on this somewhere else James
+Hamilton gave a keynote last night
+
+34
+00:04:30.000 --> 00:04:37.000
+that's now available online talking in
+detail about exactly how this works the
+hardware that we use to make the magic
+
+35
+00:04:37.000 --> 00:04:44.000
+happen I highly recommend his his
+keynote it's always entertaining and in
+this case it has an awful lot to do
+
+36
+00:04:44.000 --> 00:04:57.000
+about how this magic works um so we
+launched with the x1 this year i
+enhanced networking adapter or ene our
+
+37
+00:04:57.000 --> 00:05:06.000
+sorry elastic network adapter or ene
+it's a new pci device developed
+especially for ec2 we found one of the
+
+38
+00:05:06.000 --> 00:05:13.000
+disadvantages with the until eight 2599
+is it's a 10 gigabit nic and if we
+wanted to provide more than 10 gigabit
+
+39
+00:05:13.000 --> 00:05:19.000
+we had to provide a different nick and
+if we looked at the roadmaps if we
+wanted to provide more than 20 gigabit
+
+40
+00:05:19.000 --> 00:05:25.000
+we had to do yet another nick and we
+were just going to play this game of
+every time we wanted to increase speed
+
+41
+00:05:25.000 --> 00:05:31.000
+we'd have to make all of you guys get a
+new driver and change your
+configurations and twiddle some other
+
+42
+00:05:31.000 --> 00:05:41.000
+bits and that didn't seem particularly
+customer friendly so we stepped back and
+said well why don't we build one Nick
+
+43
+00:05:41.000 --> 00:05:51.000
+that can operate over a variety of
+speeds from the 10 gig we offer today to
+the 20 gauge you see an X 12 40 gig to a
+
+44
+00:05:51.000 --> 00:05:59.000
+hundred gig to 400 gig um we're not
+going to do 400 gig next year just not
+to rain on anyone's parade but the the
+
+45
+00:05:59.000 --> 00:06:07.000
+device driver and the device itself were
+designed to keep up until we get to that
+point and probably beyond that point it
+
+46
+00:06:07.000 --> 00:06:16.000
+uses a lot of lessons learned from
+modern PCI devices like nvme in terms of
+which is on the storage side inserts in
+
+47
+00:06:16.000 --> 00:06:25.000
+terms of all of the control API is used
+to talk to the device can live in
+cacheable memory so that you get the
+
+48
+00:06:25.000 --> 00:06:33.000
+best performance out of the Intel
+processors that are running your
+instance um it also unlike one of the
+
+49
+00:06:33.000 --> 00:06:41.000
+common complaints about our enhanced
+networking with the 825 99
+was like a see 38 x large or see 48 x
+
+50
+00:06:41.000 --> 00:06:50.000
+large the Ichi ni that was placed got to
+transmit queues and to receive queues
+for most web applications this wasn't a
+
+51
+00:06:50.000 --> 00:06:57.000
+big deal you got all the bandwidth that
+you needed all the performance you
+needed but if you were doing custom
+
+52
+00:06:57.000 --> 00:07:04.000
+processing and nickel talk about one
+particular case where this is very true
+where you are doing lots of network
+
+53
+00:07:04.000 --> 00:07:12.000
+processing on every packet that minimum
+queue size can start to make the OS run
+fairly slow and it's hard to use all the
+
+54
+00:07:12.000 --> 00:07:21.000
+network that we're providing and so one
+of the things we did with ena is greatly
+increase the number of requests queues
+
+55
+00:07:21.000 --> 00:07:30.000
+per device so today at launch on on the
+platforms that support it so the x1 the
+p2 the m416 x-large today we can add our
+
+56
+00:07:30.000 --> 00:07:41.000
+four and f1 to that and eventually c5
+once it's released um with those you get
+8 q's per device whether you're on the
+
+57
+00:07:41.000 --> 00:07:53.000
+m416 XL or the c5 extra large when that
+when that becomes available you'll have
+eight queues and will actually be
+
+58
+00:07:53.000 --> 00:08:00.000
+increasing that overtime to keep scale
+with the number of cores that we're
+adding to the instance types and so
+
+59
+00:08:00.000 --> 00:08:07.000
+those customers who have had pains with
+the number of cues that we provided with
+the 825 99 we think we've solved that
+
+60
+00:08:07.000 --> 00:08:14.000
+particular problem and you'll have the
+queues you need the other thing that's
+important for customers who have had
+
+61
+00:08:14.000 --> 00:08:23.000
+trouble with the until eight 2599
+because it's a hardware device that we
+don't entirely we didn't design in-house
+
+62
+00:08:23.000 --> 00:08:30.000
+we didn't do all those things we do have
+trouble seeing sometimes exactly what's
+happening with the customers virtual
+
+63
+00:08:30.000 --> 00:08:36.000
+function and and when they have that for
+most customers that's not a problem they
+don't have problems everything just
+
+64
+00:08:36.000 --> 00:08:42.000
+works but occasionally things go wrong
+and we've had visibility problems and
+one of the things we get with DNA is we
+
+65
+00:08:42.000 --> 00:08:49.000
+can tell exactly what the state of the
+nick is when a customer comes and says
+hey I'm seeing this really odd
+
+66
+00:08:49.000 --> 00:08:56.000
+performance problem and
+I'm having trouble understanding what's
+happening and so with ena we're actually
+
+67
+00:08:56.000 --> 00:09:02.000
+going to be able to have some
+introspection into the vice and be able
+to say oh you know it looks like you're
+
+68
+00:09:02.000 --> 00:09:09.000
+letting the cue the TX Q fill up before
+your before your ringing the doorbell so
+that we transmit are you sure that you
+
+69
+00:09:09.000 --> 00:09:15.000
+have all your DP DK settings exactly
+right or are you forgetting to call this
+poll function because the RX cube keeps
+
+70
+00:09:15.000 --> 00:09:21.000
+filling and it looks like maybe adding
+some cpu would help and that's things
+we've had trouble with that we'll be
+
+71
+00:09:21.000 --> 00:09:28.000
+able to do better with ena um so in
+addition to better performance we get
+better debug ability now on the
+
+72
+00:09:28.000 --> 00:09:37.000
+performance front this graph shows kind
+of the last four generations of enhanced
+networking and then prior to enhance
+
+73
+00:09:37.000 --> 00:09:46.000
+networking the the really tall bars and
+this is Layton sees and higher is worse
+as you'd expect with latency um so the
+
+74
+00:09:46.000 --> 00:09:56.000
+the high bars RCC 28 x large which was
+our last kind of hpc off-network
+offering that didn't have enhanced
+
+75
+00:09:56.000 --> 00:10:04.000
+networking and you can see you know our
+our average latency is our TP 50s were
+about 200 Mike microseconds these are
+
+76
+00:10:04.000 --> 00:10:14.000
+microseconds and if you looked at the TP
+99 it went fairly dramatically up and if
+you looked at the p100 it actually just
+
+77
+00:10:14.000 --> 00:10:22.000
+totally that the scale was so bad that
+everything else got lost in the noise
+that it it was a fairly noisy platform
+
+78
+00:10:22.000 --> 00:10:30.000
+arm in terms of Layton sees for a time
+it was amazing but with enhanced
+networking if you look we took you know
+
+79
+00:10:30.000 --> 00:10:38.000
+and it's the c3 x-large we took fifty
+percent over fifty percent of the
+latency off in one giant whack and more
+
+80
+00:10:38.000 --> 00:10:44.000
+importantly if you look at the TP 99 you
+don't see these dramatic increases and
+if you look at the TP 100 Layton sees
+
+81
+00:10:44.000 --> 00:10:51.000
+you really don't see these dramatic
+increases in Layton sees these outliers
+that cause applications so much problem
+
+82
+00:10:51.000 --> 00:11:01.000
+i see 48 x large do the hardware
+differences between c3 and c4 despite
+both being 8259 the
+
+83
+00:11:01.000 --> 00:11:11.000
+actually did use some different hardware
+to implement the VPC part of the whole
+magic it had better average case latency
+
+84
+00:11:11.000 --> 00:11:20.000
+and then a little worse case TP 99 it
+was a little bit more susceptible to
+outliers with m416 x-large where we went
+
+85
+00:11:20.000 --> 00:11:30.000
+to ena however what you see is not only
+did we take another chunk of average
+latency off and best case Layton sees
+
+86
+00:11:30.000 --> 00:11:37.000
+off but we were also able to improve the
+outlier performance and a lot of this
+has to do with instead of having to go
+
+87
+00:11:37.000 --> 00:11:43.000
+through kind of a loopback cable and
+some extra serialization delays and some
+extra processing everything is now
+
+88
+00:11:43.000 --> 00:11:52.000
+integrated into one pci device and again
+if you want to see how the the magic
+happens on ena i really recommend like
+
+89
+00:11:52.000 --> 00:11:59.000
+watching James Hamilton's video but one
+of the things we we did there with DNA
+was we were able to collaborate with
+
+90
+00:11:59.000 --> 00:12:06.000
+Anna poorna labs who's a subsidiary of
+Amazon who makes the pci device and we
+were able to really get down to the
+
+91
+00:12:06.000 --> 00:12:12.000
+nitty gritty details of how that all the
+interactions happened and control some
+of the outlier problems that we were
+
+92
+00:12:12.000 --> 00:12:24.000
+having um so better latency is always
+good on the bandwidth side a 10 gig is
+10 gig enhanced networking really meant
+
+93
+00:12:24.000 --> 00:12:32.000
+you could always get 10 gig where is
+with the zen pv devices you had to have
+a be having a really good day on to
+
+94
+00:12:32.000 --> 00:12:41.000
+actually get 10 gig of networking now if
+you look if you look at our specs page
+you see that M m416 x-large we say is a
+
+95
+00:12:41.000 --> 00:12:49.000
+20 gig instance type and yet on this
+graph the little blue line stops about
+10 gigabit and so what's up with that
+
+96
+00:12:49.000 --> 00:12:57.000
+well this is single stream bandwidth and
+one of the interesting things we're
+doing as part of our rollout of greater
+
+97
+00:12:57.000 --> 00:13:05.000
+than 10 gigabit instance types is we're
+providing 20 gig of aggregate bandwidth
+but any given TCP stream is still
+
+98
+00:13:05.000 --> 00:13:13.000
+limited to 10 gigabit and so if you look
+the green line is if we run multiple
+streams in this case three but you
+
+99
+00:13:13.000 --> 00:13:21.000
+you get it at two as well three tcp
+streams and you can see we're hitting 20
+gigabit um there's a couple of reasons
+
+100
+00:13:21.000 --> 00:13:30.000
+for this one it allows us to have a
+little bit better utilization of our
+network in general which is great for
+
+101
+00:13:30.000 --> 00:13:38.000
+you guys it saves you guys money it
+reduces your outlier performance
+problems for for bandwidth so and for us
+
+102
+00:13:38.000 --> 00:13:44.000
+it makes it a little bit easier to
+maintain the system and when we look at
+most of our customers their use cases
+
+103
+00:13:44.000 --> 00:13:51.000
+where i have lots i need lots of
+bandwidth but i also have lots of TCP
+flows and so this really covers that use
+
+104
+00:13:51.000 --> 00:13:57.000
+case fairly well it it is a little where
+it surprises people though is it you
+know the first thing you do when you get
+
+105
+00:13:57.000 --> 00:14:04.000
+a new instance type is you download
+iperf or whatever your bandwidth checker
+is of choice and the default is a single
+
+106
+00:14:04.000 --> 00:14:11.000
+TCP stream and you see you know this
+number and your kind of sad and you come
+talk to us and we say well you know if
+
+107
+00:14:11.000 --> 00:14:18.000
+you added this dash I three or whatever
+the option is for your test it'll look
+like this and you run it and it does and
+
+108
+00:14:18.000 --> 00:14:27.000
+everyone's happy um this is something
+we're going to continue doing where
+you'll see us have 10 gig flow limiters
+
+109
+00:14:27.000 --> 00:14:36.000
+inside an instance and then we'll keep
+increasing the aggregate bandwidth as we
+go forward on today the other place
+
+110
+00:14:36.000 --> 00:14:44.000
+that's a bit that tends to catch people
+with this bandwidth is this is all
+inside a placement group and a placement
+
+111
+00:14:44.000 --> 00:14:51.000
+group is basically our way of saying are
+letting you tell us you know at these
+two instances or these this set of
+
+112
+00:14:51.000 --> 00:14:58.000
+instances are going to be driving an
+awful lot of traffic to each other and
+and put them together in a way that they
+
+113
+00:14:58.000 --> 00:15:05.000
+can drive lots of bandwidth to each
+other and so the the 10 gigabit
+generally has only been inside a
+
+114
+00:15:05.000 --> 00:15:13.000
+placement group with the are for
+instance type that was launched today
+that 10 or 20 gigabit is inside a region
+
+115
+00:15:13.000 --> 00:15:20.000
+and whether you're quite in the same AZ
+in the same placement group as long as
+you're in the same region you'll be able
+
+116
+00:15:20.000 --> 00:15:27.000
+to drive that 10 or 20 or whatever
+number
+for the instant sighs you're running and
+
+117
+00:15:27.000 --> 00:15:33.000
+this will be true on all the platforms
+going forward is that instead of having
+kind of this different aggregate
+
+118
+00:15:33.000 --> 00:15:40.000
+bandwidth inside placement group and
+outside a placement group it'll be D
+bandwidth number and then what will
+
+119
+00:15:40.000 --> 00:15:48.000
+change is the side the maximum size of a
+single flow that you can run that you
+can drive and so if you're inside a
+
+120
+00:15:48.000 --> 00:15:54.000
+placement group you'll be able to drive
+a 10 gigabit flow and if you're crossing
+a ZZZ you'll be able to drive a 5
+
+121
+00:15:54.000 --> 00:16:03.000
+gigabit flow and so again looking at
+various Network contention points um and
+that's kind of why that happens but
+
+122
+00:16:03.000 --> 00:16:11.000
+again looking at the average use case
+for cross AZ traffic that it shouldn't
+be very impactful for most of our
+
+123
+00:16:11.000 --> 00:16:21.000
+customers excuse me so um if we look how
+do I use ene you know you've said it's
+great how do you use it um so the
+
+124
+00:16:21.000 --> 00:16:34.000
+easiest way is just grab the latest
+amazon linux am i and launch a x1a p 2
+and r 4 or an m416 XL um and everything
+
+125
+00:16:34.000 --> 00:16:42.000
+just works there are linux and windows
+drivers available for if you're using
+another linux on me or if you're using
+
+126
+00:16:42.000 --> 00:16:55.000
+windows the URL there and if you search
+on AWS docs AWS amazon com this URL is
+is available there is our Amazon Linux
+
+127
+00:16:55.000 --> 00:17:05.000
+drivers if you look on the the
+documentation website there's a link to
+the windows drivers as well we are up
+
+128
+00:17:05.000 --> 00:17:14.000
+streaming this so Linux 4.9 which will
+be shipping any day now it's in the RC
+series will include ene support out of
+
+129
+00:17:14.000 --> 00:17:26.000
+the box we will continue up up streaming
+changes as we go and there is DP DK
+support d pd a version 1604 included ene
+
+130
+00:17:26.000 --> 00:17:33.000
+drivers we made some enhancements over
+the last couple of months and so if you
+are looking to use d pdk we really
+
+131
+00:17:33.000 --> 00:17:39.000
+recommend you use 16 dot11 when it comes
+out you'll have a slightly better
+experience we found some bugs that kind
+
+132
+00:17:39.000 --> 00:17:47.000
+of thing and so we recommend upgrading
+and for those using freebsd which has
+has been a pain point for enhanced
+
+133
+00:17:47.000 --> 00:17:54.000
+networking because ixgbe VF driver that
+used with the intel card has never
+really worked well with freebsd in our
+
+134
+00:17:54.000 --> 00:18:04.000
+environment will have a native freebsd
+driver coming soon that that is actually
+tuned for for the amazon are for the AWS
+
+135
+00:18:04.000 --> 00:18:13.000
+environment and so that's kind of what
+the ene driver support looks like um
+with that I'm going to turn it over to
+
+136
+00:18:13.000 --> 00:18:27.000
+Nick who's going to talk about some of
+our customer stories and success stories
+with enhanced networking so we talked a
+
+137
+00:18:27.000 --> 00:18:32.000
+lot about networking and some of the
+details let's take a look what it
+actually looks like to our customers and
+
+138
+00:18:32.000 --> 00:18:36.000
+our partners so the first use case here
+that we're going to talk about is twilio
+a lot of you are probably familiar with
+
+139
+00:18:36.000 --> 00:18:46.000
+them they run a service on ABS that
+helps over a million users with their
+real-time communication requirements the
+
+140
+00:18:46.000 --> 00:18:54.000
+one of the challenges here is that
+whenever they route calls between
+regions that all happens over the 80s
+
+141
+00:18:54.000 --> 00:19:00.000
+network and so anyone that's ever been
+on a phone call with packet loss or high
+latency or jitter you know it doesn't
+
+142
+00:19:00.000 --> 00:19:08.000
+sound fun so how do you solve that
+problem and hence networking comes to
+the savior here so when they moved to
+
+143
+00:19:08.000 --> 00:19:15.000
+the h vm instances that include enhanced
+networking that allows them to one use
+10 gigabit per second interfaces which
+
+144
+00:19:15.000 --> 00:19:23.000
+speeds up the communication it allows
+higher packets per second for if you're
+familiar with doing a lot of real-time
+
+145
+00:19:23.000 --> 00:19:30.000
+streaming you use a lot of small UDP
+packets quite often and end result is
+you know have your customers and less
+
+146
+00:19:30.000 --> 00:19:41.000
+support calls as well a customer
+supercell you may know them from clash
+of clans they run an online game that
+
+147
+00:19:41.000 --> 00:19:48.000
+the way it works is they've got a large
+amount of TCP connections that are
+that are fully meshed and as part of
+
+148
+00:19:48.000 --> 00:19:54.000
+this as well as they started
+experiencing some challenges when they
+were scaling this game out and so they
+
+149
+00:19:54.000 --> 00:20:01.000
+found out they really need to move into
+BBC for a variety of reasons so they did
+a migration from easy to classic to BBC
+
+150
+00:20:01.000 --> 00:20:11.000
+one of the benefits in v pc is now
+they're able to use instance types that
+have enhanced networking enabled so
+
+151
+00:20:11.000 --> 00:20:19.000
+uneasy to classic one of the challenges
+they had was the amount of time it took
+for sessions to establish basically
+
+152
+00:20:19.000 --> 00:20:26.000
+there's a proxy server that you know
+there's hundreds of these and they have
+thousands of connections and so it was
+
+153
+00:20:26.000 --> 00:20:34.000
+taking you know 30 minutes for these TCP
+connections to stabilize and connect
+which you know obviously was was painful
+
+154
+00:20:34.000 --> 00:20:45.000
+when they move to enhance networking
+this took one minute as well you know
+TCP and sessions especially on databases
+
+155
+00:20:45.000 --> 00:20:52.000
+monitoring sometimes TCP does odd things
+you just hope its kind of self heels
+that's a benefit but it can be a little
+
+156
+00:20:52.000 --> 00:20:57.000
+bit annoying so one of the things I saw
+when I moved over to enhance networking
+is that you know they're monitoring
+
+157
+00:20:57.000 --> 00:21:01.000
+solutions that we're doing lots of TCP
+connections out to their infrastructure
+that became a lot more stable they just
+
+158
+00:21:01.000 --> 00:21:07.000
+have a lot less weird things happening
+as well as the databases whenever you
+know connections would reset every now
+
+159
+00:21:07.000 --> 00:21:14.000
+and then they would try to figure out
+that what was happening and apparently
+the answer was again enhance networking
+
+160
+00:21:14.000 --> 00:21:21.000
+so that that made the database
+connections become a lot more stable as
+well their message queues that the
+
+161
+00:21:21.000 --> 00:21:27.000
+shrinking in size so you know very very
+cool story the end result here is okay
+we've been talking a lot about
+
+162
+00:21:27.000 --> 00:21:33.000
+networking what does this actually mean
+to me as a customer my users especially
+the users in your customers for them
+
+163
+00:21:33.000 --> 00:21:39.000
+this allowed them to start doing
+maintenance and down times instead of
+taking an hour it now takes 20 minutes
+
+164
+00:21:39.000 --> 00:21:44.000
+so there's users that are playing and
+they don't even realize that there was a
+you know an outage or a downtime so
+
+165
+00:21:44.000 --> 00:21:54.000
+great result there I will change you
+know type of customer use case here so
+Cisco is a partner of ours they have the
+
+166
+00:21:54.000 --> 00:22:00.000
+the cloud services router or CSR
+so it's a you know the benefits
+customers you know you get to use the
+
+167
+00:22:00.000 --> 00:22:09.000
+same feeling if you know iOS on-premise
+or on abs and you know has does routing
+these kind of things it's a particular
+
+168
+00:22:09.000 --> 00:22:15.000
+interest to us because we built a
+solution with them called a transit VPC
+the transit VPC is something our
+
+169
+00:22:15.000 --> 00:22:22.000
+solutions biller team built uses lambda
+to automatically allow you to do
+transitive routing basically from
+
+170
+00:22:22.000 --> 00:22:29.000
+on-premise to multiple VP sees the part
+where this is kind of interesting is
+because it becomes a bottleneck the way
+
+171
+00:22:29.000 --> 00:22:34.000
+that we get the routing to work is by
+using VPN s so we use the virtual
+private gateways and the you know the
+
+172
+00:22:34.000 --> 00:22:43.000
+spoke V pcs which all terminate on the
+CSR and so then the CSRs then processing
+all that traffic and determining the
+
+173
+00:22:43.000 --> 00:22:51.000
+ipsec truck tunnels so you know we did
+some testing you know for the majority
+of use cases depending upon you know a
+
+174
+00:22:51.000 --> 00:22:57.000
+packet size and all those kinds of
+things you get anywhere from you know
+about 124 gigabits per second through
+
+175
+00:22:57.000 --> 00:23:05.000
+the CSR so it was really important for
+them to enable enhance networking so
+what they saw so so Steph is the basis
+
+176
+00:23:05.000 --> 00:23:12.000
+of acronym they use for their forwarding
+mechanism on the router they saw it over
+a hundred percent increase on that as
+
+177
+00:23:12.000 --> 00:23:19.000
+well from ipsec performance that went up
+again over one hundred percent we have
+some different numbers so it was kind of
+
+178
+00:23:19.000 --> 00:23:27.000
+hard to quantify an exact number but you
+know performance was doubling in all use
+cases so very very cool stuff there so
+
+179
+00:23:27.000 --> 00:23:34.000
+let's take a look at some of the other
+what do we need to do for enhance
+networking first the instance types are
+
+180
+00:23:34.000 --> 00:23:45.000
+up here so we've got C 3 C 4 d2 I to m4
+except for the 16 and then our three we
+have ene support on the m416 XL as well
+
+181
+00:23:45.000 --> 00:23:52.000
+as the p2 and the x1 is this is the
+there's two requirements you need in
+order to use enhanced networking you
+
+182
+00:23:52.000 --> 00:24:03.000
+need the driver support and then you
+also need to tag your army or build the
+tag into your army you'll need version 2
+
+183
+00:24:03.000 --> 00:24:13.000
+dot 14 2 or later to support the Intel
+8259 nine driver
+so let's take a look at how to do the
+
+184
+00:24:13.000 --> 00:24:20.000
+army tagging so in this scenario this is
+how you can find out whether or not your
+and supports enhanced networking or not
+
+185
+00:24:20.000 --> 00:24:28.000
+so this is an example using Avis CLI
+from here you can see that in the SR iov
+NetSupport you get a null result there's
+
+186
+00:24:28.000 --> 00:24:39.000
+nothing there if you do the same thing
+where it's supported that says you'll
+get the result with simple for ena
+
+187
+00:24:39.000 --> 00:24:47.000
+support use a slightly different version
+of the CLI using the reservations the
+parameter and for here it is a true for
+
+188
+00:24:47.000 --> 00:24:55.000
+when you support ena in terms of how you
+actually check if your army already has
+this baked in or not these are the two
+
+189
+00:24:55.000 --> 00:25:02.000
+it is CLI commands you'll use to check
+this so you can basically you check the
+image a tribute of your of your army and
+
+190
+00:25:02.000 --> 00:25:12.000
+it will for both of these it will either
+be SR Iovine s support for enhanced or
+482 5599 intel driver and then for ena
+
+191
+00:25:12.000 --> 00:25:21.000
+as just ena support if you want to build
+your own army that has enhanced
+networking enabled this is the process
+
+192
+00:25:21.000 --> 00:25:28.000
+it's the same standard process that you
+would use for building a normal on me
+that you can that's sold documented on
+
+193
+00:25:28.000 --> 00:25:36.000
+you know docks at abs on amazon com so
+basically you you start your instance up
+you incorporate the colonel changes or
+
+194
+00:25:36.000 --> 00:25:44.000
+again a fusion 4.9 or later it's already
+going to be built into the kernel and
+from there depending upon whether using
+
+195
+00:25:44.000 --> 00:25:50.000
+instance back storages or EBS back
+storages armies sorry you'll have two
+different ways to do this with the
+
+196
+00:25:50.000 --> 00:25:57.000
+instance back stores you'll just need to
+build a new army to do that with the EBS
+backed images you're able to you can
+
+197
+00:25:57.000 --> 00:26:03.000
+stop the image run this command here the
+modify instances tribute and then you
+can start it back up and you'll have
+
+198
+00:26:03.000 --> 00:26:10.000
+support one thing to note here that's
+important is that once you enable this
+there's no going back so if you go in
+
+199
+00:26:10.000 --> 00:26:16.000
+your EBS you go and tag it it's going to
+immediately start when you launch it
+back up its gonna try to do that so if
+
+200
+00:26:16.000 --> 00:26:21.000
+you have other changes you want to do or
+anything other testing you want to do we
+recommend for you to do that first
+
+201
+00:26:21.000 --> 00:26:28.000
+before you enable this tag
+so if you if you've done this and you
+want to see if it's working out what you
+
+202
+00:26:28.000 --> 00:26:36.000
+can do is you can run this eath tool
+command here dash I and then the the
+network interface and in the case worry
+
+203
+00:26:36.000 --> 00:26:43.000
+it's not running you'll you receive the
+the VIP driver you can do this is on
+windows as well you have to go through
+
+204
+00:26:43.000 --> 00:26:50.000
+the GUI and take a look at the driver
+details you should see the same results
+and if it is enabled you get the IX g b
+
+205
+00:26:50.000 --> 00:26:56.000
+VF I don't think I'm you guys are
+curious what that stands for it kind of
+drive drove me nuts the Intel expert n
+
+206
+00:26:56.000 --> 00:27:06.000
+then gigabit ethernet virtual function
+so now you guys can tell everyone you
+learn something today it's Judith I
+
+207
+00:27:06.000 --> 00:27:15.000
+think it's though I've had no idea how
+to present that if for ena it's very
+similar you'll run the same eath tool
+
+208
+00:27:15.000 --> 00:27:23.000
+command and from there again you'll see
+the ene driver there you'll see the
+versions change a little bit you don't
+
+209
+00:27:23.000 --> 00:27:31.000
+need to worry about the bus info or
+those types of details those will change
+potentially and that's what I've got so
+
+210
+00:27:31.000 --> 00:27:40.000
+I'll leave you with one closing kind of
+statement you know basically tiger
+instances and everything goes faster
+
+211
+00:27:40.000 --> 00:27:47.000
+alright that's kind of the call to
+action here so using hands networking
+it's easy it works you know so thank you
+guys for coming and I know it's getting
+late here so we'll take questions

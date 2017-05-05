@@ -1,0 +1,2354 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:05.000
+alright thank you very much for coming
+everyone my name is Alex Dunlap I'm the
+general manager for Amazon CloudFront
+
+2
+00:00:05.000 --> 00:00:18.000
+this is what a little bit different
+format than some of the other sessions
+what we're doing here is we called
+
+3
+00:00:18.000 --> 00:00:25.000
+internally lightning talks and the idea
+is let's get some of the engineers who
+have built CloudFront up on stage give
+
+4
+00:00:25.000 --> 00:00:31.000
+you some very practical tangible things
+that you can do bring back home and
+using your applications and your
+
+5
+00:00:31.000 --> 00:00:39.000
+workflow to make CloudFront perform
+better make it more make your websites
+more available improve your cache ability
+
+6
+00:00:39.000 --> 00:00:47.000
+so there was really an emphasis here in
+this talk on practical tangible things
+that you can take away so for that again
+
+7
+00:00:47.000 --> 00:00:54.000
+I'm Alex we've got clean Jared and
+Matthew so these are all members of the
+CloudFront team we're each going to
+
+8
+00:00:54.000 --> 00:01:02.000
+spend about 10 10 minutes or so going
+through one topic kind of passed to the
+next one about your cut front so
+
+9
+00:01:02.000 --> 00:01:08.000
+specifically what are the four topics
+we're in cover today the first topic
+we're going to cover is best practice
+
+10
+00:01:08.000 --> 00:01:16.000
+for setting up your origin CloudFront x
+is a cache the servers are the things
+behind that cache is what we call your
+
+11
+00:01:16.000 --> 00:01:22.000
+origin so we're going to walk through
+some back best practices for setting up
+your origin second jared is going to go
+
+12
+00:01:22.000 --> 00:01:30.000
+into getting better visibility into your
+distribution where's your traffic going
+who's downloading it what are they doing
+
+13
+00:01:30.000 --> 00:01:38.000
+it what are they watching third we're
+going to matthew is going to go through
+how to improve your cache ability we are
+
+14
+00:01:38.000 --> 00:01:43.000
+cached with CloudFront at least for the
+static assets we will cache static
+assets and there are things that you can
+
+15
+00:01:43.000 --> 00:01:49.000
+do as a developer that will lead to
+either better or worse caching let's
+understand what those things are and how
+
+16
+00:01:49.000 --> 00:01:55.000
+you can improve your cache ability and
+forth come back to me at the end I'll
+give you a little bit of our you about
+
+17
+00:01:55.000 --> 00:02:06.000
+various types of testing you can do I'm
+reading off the slides something there
+we go forth it's going to come back to
+
+18
+00:02:06.000 --> 00:02:12.000
+me we're going to go through
+look at various ways you can test your
+configuration how do you know that what
+
+19
+00:02:12.000 --> 00:02:21.000
+you have set up is going to work for
+your end users so with that let's start
+with clean talk about best practices for
+
+20
+00:02:21.000 --> 00:02:27.000
+setting up your origin right thank you
+Alex I think first let's practice make
+sure projected correctly which it looks
+
+21
+00:02:27.000 --> 00:02:34.000
+like we are thank you so we'll go ahead
+and get started so today I wanted to
+focus specifically on some items that
+
+22
+00:02:34.000 --> 00:02:41.000
+you can follow to improve your
+availability get better performance and
+make it easier to debug your application
+
+23
+00:02:41.000 --> 00:02:48.000
+as well as debugging any trouble you may
+have when running Cloud front so the
+five items I picked up specifically for
+
+24
+00:02:48.000 --> 00:02:56.000
+this talk are utilizing Ralph t3 help
+checking and DNS failover for your
+origin configuring multiple origins
+
+25
+00:02:56.000 --> 00:03:03.000
+securing your origin either if you're
+using an Amazon s3 origin or a custom
+origin such as an elastic load balancer
+
+26
+00:03:03.000 --> 00:03:09.000
+logging request IDs and these are the
+requested ease that cloud for instance
+or generating your own request IDs to
+
+27
+00:03:09.000 --> 00:03:18.000
+make it easier to find specific requests
+from your customers the fifth item I
+wanted to speak about is a setting on
+
+28
+00:03:18.000 --> 00:03:28.000
+Origin response headers and these are
+HTTP specific response centers so as you
+may know ral 53 amazon ref 23 hell
+
+29
+00:03:28.000 --> 00:03:35.000
+tracking and DNS failover is a service
+we currently offer that allows you to
+help check any HTTP endpoint on the
+
+30
+00:03:35.000 --> 00:03:43.000
+internet and based on the health of that
+endpoint you can fail over to another
+endpoint or you can be alerted if that
+
+31
+00:03:43.000 --> 00:03:50.000
+he'll check is unhealthy and you can use
+that information to make routing
+decisions at the DNS level and so in
+
+32
+00:03:50.000 --> 00:03:57.000
+this example we have a deployment with
+an elastic load balancer in our u.s.
+East one region and you can see we have
+
+33
+00:03:57.000 --> 00:04:04.000
+four edge locations all doing their
+origin fetches from us East one and so
+what what i can do is i can set up a
+
+34
+00:04:04.000 --> 00:04:12.000
+Loden see late excuse me a latency based
+routing configuration with in route 53
+that routes CloudFront to the least
+
+35
+00:04:12.000 --> 00:04:20.000
+latent AWS region so here you can see my
+edge locations in Europe and India are
+being routed to
+
+36
+00:04:20.000 --> 00:04:27.000
+us one and my edge locations in Brazil
+and the United States are being routed
+to USD Swan that just happened
+
+37
+00:04:27.000 --> 00:04:34.000
+seamlessly you never have to worry about
+updating any latency data that's all
+done for you so let's say someone
+
+38
+00:04:34.000 --> 00:04:42.000
+accidentally terminates all there are
+instances behind our load balancer in
+one of the region's so what happens
+
+39
+00:04:42.000 --> 00:04:49.000
+behind the scenes is the health checks
+we start to fail that endpoint will stop
+being returned to DNS and then call from
+
+40
+00:04:49.000 --> 00:04:55.000
+will start doing your origin fetches
+from the next avail one point and we'll
+be demoing that as well we're where I'll
+
+41
+00:04:55.000 --> 00:05:04.000
+accidentally terminate my instances and
+see what happens and here's a sample
+configuration that you can take a look
+
+42
+00:05:04.000 --> 00:05:12.000
+at so i have a origin at example.com
+configured where i have latency based
+routing between us east one again and us
+
+43
+00:05:12.000 --> 00:05:21.000
+one and i am checking the evaluate
+target health on my ALB so i get the
+benefits of getting the health checks
+
+44
+00:05:21.000 --> 00:05:26.000
+that are already built into my lb and
+property three can make decisions off of
+that as well and you can see all the
+
+45
+00:05:26.000 --> 00:05:35.000
+available AWS regions or my own see
+based routing great so now my the second
+best practice I wanted to talk about
+
+46
+00:05:35.000 --> 00:05:45.000
+maybe I'll stand right here okay is
+configuring multiple origins so here we
+have a whole website delivery sorry for
+
+47
+00:05:45.000 --> 00:05:54.000
+example calm and you can see what i'm
+doing is i'm configuring some cloud
+front cache behaviors that sends assets
+
+48
+00:05:54.000 --> 00:06:03.000
+or maybe my static error pages to s3 and
+my dynamic content to my elastic load
+balancer which it then I'm low latency
+
+49
+00:06:03.000 --> 00:06:11.000
+based routing between AWS regions so why
+would you want to do this so this allows
+you to decouple your assets such as
+
+50
+00:06:11.000 --> 00:06:19.000
+JavaScript CSS images from your
+application and let your application
+focus on generating dynamic content for
+
+51
+00:06:19.000 --> 00:06:26.000
+your customers and have just all your
+assets and s3 and so some of the
+benefits you get out of this is for
+
+52
+00:06:26.000 --> 00:06:30.000
+example let's say you have an
+application where users are uploading
+user-generated
+
+53
+00:06:30.000 --> 00:06:37.000
+now all those assets are going into s3
+and when you're easy to instances scale
+up and down you never have to wear yo do
+
+54
+00:06:37.000 --> 00:06:44.000
+I have all my assets on all my ec2
+instances and as you're generating a lot
+of content that starts to add up the
+
+55
+00:06:44.000 --> 00:06:50.000
+other benefit you have is if you have
+multiple properties or multiple games
+you can share those assets with all of
+
+56
+00:06:50.000 --> 00:06:58.000
+those properties and Matthew will
+actually talk about that a little bit
+more later third Beck's practice is
+
+57
+00:06:58.000 --> 00:07:04.000
+securing your origin so as you know we
+announced a wsof today so you want to
+make sure that all your requests are
+
+58
+00:07:04.000 --> 00:07:09.000
+being funneled through Amazon Cloud
+front and so the way you can do that is
+you can use our origin access identity
+
+59
+00:07:09.000 --> 00:07:17.000
+feature to protect your s3 origin so
+that only CloudFront or other
+authenticated requests can come through
+
+60
+00:07:17.000 --> 00:07:25.000
+for custom origins you can create a
+whitelist and we'll talk about how to do
+that keep that up to date without any
+
+61
+00:07:25.000 --> 00:07:33.000
+effort so to go into this little bit
+more detail when we have here as a user
+trying to access our s3 bucket directly
+
+62
+00:07:33.000 --> 00:07:39.000
+and they're denied access but if they
+access it through CloudFront and
+they're granted access through cloud
+
+63
+00:07:39.000 --> 00:07:47.000
+front then they're able to access the
+static content from s3 protecting your
+custom origin same thing except for with
+
+64
+00:07:47.000 --> 00:07:54.000
+IP whitelisting and so you can see here
+users trying to access for example let's
+say my elb directly they're going to get
+
+65
+00:07:54.000 --> 00:08:02.000
+denied if I go through CloudFront
+they're able to access the content and
+so how do you how do you keep your white
+
+66
+00:08:02.000 --> 00:08:09.000
+list up-to-date so as you know AWS
+publishes all of our IP ranges in a JSON
+file that you can download and consume
+
+67
+00:08:09.000 --> 00:08:17.000
+and so and it's broken down by service
+as well and CloudFront is one of those
+services that that's broken down and so
+
+68
+00:08:17.000 --> 00:08:24.000
+what the the ranges are broken down and
+so what you can do is you can create a
+lambda function that subscribed to an
+
+69
+00:08:24.000 --> 00:08:31.000
+SMS topic that we publish to whenever
+the ranges are updated you can get the
+IP addresses for the CloudFront service
+
+70
+00:08:31.000 --> 00:08:39.000
+and then call AWS authorized ec2 the ec2
+API to authorize the security
+herbs and then make sure that you always
+
+71
+00:08:39.000 --> 00:08:48.000
+have the latest up-to-date IP addresses
+authorized and you don't have to ever
+worry about am i following keeping them
+
+72
+00:08:48.000 --> 00:08:55.000
+up to date so long I made it fourth best
+practice I wanted to talk about is
+logging request IDs and so this is
+
+73
+00:08:55.000 --> 00:09:02.000
+important if you want to be able to
+correlate request made to your origin by
+Amazon Cloud front as well as logging
+
+74
+00:09:02.000 --> 00:09:09.000
+requests in your application when you
+make requests to CloudFront so both on
+the front and the back end and we find
+
+75
+00:09:09.000 --> 00:09:14.000
+this very helpful when customers are
+reporting trouble with claw front or
+wise conference doing this behavior but
+
+76
+00:09:14.000 --> 00:09:21.000
+I didn't expect it we can look up even
+though it's not an error we can find the
+event that of the customer's request
+
+77
+00:09:21.000 --> 00:09:27.000
+relatively easy so definitely recommend
+generating your own request IDs as well
+in your own applications you'll find it
+
+78
+00:09:27.000 --> 00:09:36.000
+a lot easier to find specific requests
+especially if you're generating a lot of
+walks right the last item I want to talk
+
+79
+00:09:36.000 --> 00:09:44.000
+about is sending HTTP response headers
+and so the for headers I wanted to talk
+about is strict Transport Security and
+
+80
+00:09:44.000 --> 00:09:51.000
+so this headers requires that you serve
+all your content over HTTPS for it to
+work correctly and so what this does is
+
+81
+00:09:51.000 --> 00:09:59.000
+it tells your browser only make requests
+over HTTPS and so this helps prevent
+downgrade attacks on your site so some
+
+82
+00:09:59.000 --> 00:10:05.000
+things to keep in mind when you are
+implementing this header is the max age
+as you can see is how long the browser
+
+83
+00:10:05.000 --> 00:10:11.000
+typically will cache that information
+for so you typically want to start with
+something small to make sure that you
+
+84
+00:10:11.000 --> 00:10:16.000
+don't break some functionality that you
+weren't aware that may break when you
+turn this on so that's something to keep
+
+85
+00:10:16.000 --> 00:10:27.000
+in mind
+the other benefit of the center is yep
+perked so the second header I want to
+
+86
+00:10:27.000 --> 00:10:34.000
+talk about is X frames options and so
+this is helpful to prevent your website
+from being rendered in other on iframes
+
+87
+00:10:34.000 --> 00:10:45.000
+and this is a common attack for
+cross-site scripting excuse me for
+enjoying it later the the third option
+
+88
+00:10:45.000 --> 00:10:53.000
+is xxs protection and so this is a
+header that activates a cross-site
+scripting module in browsers even though
+
+89
+00:10:53.000 --> 00:11:00.000
+a user may have turned it off the one
+other point I wanted to make about the
+strict Transport Security header is if
+
+90
+00:11:00.000 --> 00:11:05.000
+you turn this on sometimes when you go
+to a website you get a security warning
+saying the certificate doesn't match do
+
+91
+00:11:05.000 --> 00:11:10.000
+you want to proceed if you use this
+header it disables that functionality
+you you cannot proceed so that's
+
+92
+00:11:10.000 --> 00:11:16.000
+something to keep in mind as well when
+you do turn that on is a user will not
+be able to proceed if you generate a
+
+93
+00:11:16.000 --> 00:11:23.000
+certificate maybe that's expired there's
+not valid for the domain that you're
+serving the content and the fourth
+
+94
+00:11:23.000 --> 00:11:29.000
+header I wanted to talk about here is
+the cache control header and so that
+tells conferring to cache objects or as
+
+95
+00:11:29.000 --> 00:11:35.000
+well as any intermediary proxies or your
+end-user browsers and Matthew we'll talk
+about that a little bit more detail
+
+96
+00:11:35.000 --> 00:11:44.000
+later great so I'm going to go ahead and
+show some demos so let's see switch
+perfect so here you can see I have two
+
+97
+00:11:44.000 --> 00:11:51.000
+windows side by side just to explain
+what what you're seeing and at the very
+bottom of the window you'll see that i'm
+
+98
+00:11:51.000 --> 00:11:58.000
+generating the AWS availability zone
+that this instance is serving the
+content from so you can see on the left
+
+99
+00:11:58.000 --> 00:12:05.000
+it's same page as the right but it's a
+different ec2 instance so what I'm going
+to do is I'm going to go ahead and
+
+100
+00:12:05.000 --> 00:12:21.000
+terminate these one of these instances
+and US East one accidentally
+great so while those shut down terminate
+
+101
+00:12:21.000 --> 00:12:27.000
+my lb is going to evaluate that the help
+that the incidents are no longer healthy
+and then mark at the mezzo Nabil and
+
+102
+00:12:27.000 --> 00:12:37.000
+I'll come back in a second oh sorry I'll
+come back in a second to just to demo
+that we failed over the second thing I
+
+103
+00:12:37.000 --> 00:12:41.000
+want to talk about is the lambda
+function to update security groups so
+you can see here I of a CloudFront
+
+104
+00:12:41.000 --> 00:12:52.000
+security group in my BP see that has
+only two ranges allow to IP address
+ranges allowed for both port 443 and 480
+
+105
+00:12:52.000 --> 00:12:59.000
+so I'm going to do is I'm going to
+manually invoke the lambda function and
+it should update as you can see I'm just
+
+106
+00:12:59.000 --> 00:13:03.000
+going to go and manually invoke it it
+should update the security group with
+all the top front ranges from the IP
+
+107
+00:13:03.000 --> 00:13:13.000
+ranges JSON file so we got a 200 refresh
+and now we have all these ranges and
+that that lambda functions always
+
+108
+00:13:13.000 --> 00:13:20.000
+triggered whenever an event comes in
+because the ranges have been updated
+perfect the other thing I wanted to show
+
+109
+00:13:20.000 --> 00:13:26.000
+you real quick is the origin access
+identity and you can enable that in your
+origin you just restrict pocket accesses
+
+110
+00:13:26.000 --> 00:13:31.000
+check it to yes select your origin
+access identity if you want to
+automatically update your bucket policy
+
+111
+00:13:31.000 --> 00:13:42.000
+click yes clicks click yes so let's go
+back to our demo and see if we build
+over
+
+112
+00:13:42.000 --> 00:13:52.000
+perfect so you'll notice on the right
+says us East one beat sorry on my left
+USC's one be on the right us to see it
+
+113
+00:13:52.000 --> 00:14:06.000
+automatically filled over and once the
+auto scaling repeals and will fill back
+great we'll go ahead and switch us back
+
+114
+00:14:06.000 --> 00:14:13.000
+perfect so keep key takeaways definitely
+use route 53 health checks and Janice
+failover especially if you're using load
+
+115
+00:14:13.000 --> 00:14:19.000
+balancer you just have to check a box
+evaluate target health and configure
+your latency based routing policy that
+
+116
+00:14:19.000 --> 00:14:26.000
+you would like to use improve improve
+security by setting the custom headers
+that your origin enable logging up
+
+117
+00:14:26.000 --> 00:14:34.000
+headers likes to be labeled logging of
+request IDs specifically CloudFront or
+generate your own request IDs as well to
+
+118
+00:14:34.000 --> 00:14:41.000
+help find specific request form your end
+users serve you stack assets out of
+amazon s3 and definitely serve custom
+
+119
+00:14:41.000 --> 00:14:45.000
+error message out of it and was honest
+we should none of your origin become
+unavailable should I've excellently
+
+120
+00:14:45.000 --> 00:14:53.000
+terminated all my instances at the same
+time with that I'm going to go ahead and
+hand it over to Jerry Thank You queen
+
+121
+00:14:53.000 --> 00:15:07.000
+hello everyone how many of you use
+clapping how many of you are familiar
+with our reports and analytics that
+
+122
+00:15:07.000 --> 00:15:17.000
+we've been releasing the last year Wow
+ok now many so so what I'm going to show
+today is how you can gain visibility
+
+123
+00:15:17.000 --> 00:15:22.000
+into your distribution using some of the
+tools that we have native to cloud frame
+and using some other tools like cloud
+
+124
+00:15:22.000 --> 00:15:31.000
+watch and cloud trap
+well there are variety ways to give
+visibility to your distribution we're
+
+125
+00:15:31.000 --> 00:15:38.000
+going to cover for today using a DBS
+cloud trail for monitoring distribution
+configuration changes using your
+
+126
+00:15:38.000 --> 00:15:48.000
+real-time metrics provided by Amazon
+Cloud Print Amazon Cloud watch using
+Amazon CloudFront reports for analytics
+
+127
+00:15:48.000 --> 00:15:58.000
+and using Amazon Cloud watch logs for
+custom reporting so cloud trail is a
+service as a native a service that
+
+128
+00:15:58.000 --> 00:16:09.000
+tracks API activity across services lbe
+C 2 s 3 CloudFront it allows you to
+basically audit any API activity that
+
+129
+00:16:09.000 --> 00:16:18.000
+occurs in this case you can set an alarm
+when they're our configuration changes
+on your distribution such as a
+
+130
+00:16:18.000 --> 00:16:25.000
+distribution being a disabled trust
+designers being disabled or custom TLS
+certificate changes will go into a
+
+131
+00:16:25.000 --> 00:16:37.000
+little bit more on that in the demo
+another way to gain visibility into your
+distributions is using Amazon CloudFront
+
+132
+00:16:37.000 --> 00:16:46.000
+near real-time metrics this is the
+Amazon Cloud watch currently you can
+allow on 6 metrics and I forget to
+
+133
+00:16:46.000 --> 00:16:51.000
+mention that these metrics are within
+one to two minutes of the actual
+activity that maybe two to three minutes
+
+134
+00:16:51.000 --> 00:17:00.000
+of the actual activity that occurred of
+the request for your content currently
+you can allow in six metrics includes
+
+135
+00:17:00.000 --> 00:17:09.000
+requests by scale mode eight bytes
+uploaded those are usually come from put
+post requests for 400 series error rates
+
+136
+00:17:09.000 --> 00:17:15.000
+500 series error rates and total error
+rates an example of something you might
+want them on for 400 series error rate
+
+137
+00:17:15.000 --> 00:17:26.000
+let's say that you've released grid new
+assets on your website or cred new
+version air website you see you create
+
+138
+00:17:26.000 --> 00:17:33.000
+an alarm on 400 series their rating you
+get notified you realize that you have a
+problem a lot of those newly released
+
+139
+00:17:33.000 --> 00:17:38.000
+assets
+or getting air raid so you actually
+allows you to roll back or you can roll
+
+140
+00:17:38.000 --> 00:17:45.000
+back make the decision roll back same
+with the 500 500 series Gatorade so if
+you have errors to distribution you can
+
+141
+00:17:45.000 --> 00:17:54.000
+get notified of those errors and then
+dig into what's occurring either using
+logs or some of the other reports for
+
+142
+00:17:54.000 --> 00:18:02.000
+that's going to now some of these
+reports these reports that I'm about to
+show you are actually delayed a little
+
+143
+00:18:02.000 --> 00:18:11.000
+bit they're delayed by up to an hour and
+we have released over I think close to
+20 reports to share so any of you that
+
+144
+00:18:11.000 --> 00:18:18.000
+has it hasn't had the opportunity to
+look at them yet and we'll demo them but
+you can also take a look at them and
+
+145
+00:18:18.000 --> 00:18:26.000
+today and some of these reports include
+cache hit miss report incomplete
+downloads top countries mobile users
+
+146
+00:18:26.000 --> 00:18:31.000
+popular objects report we're actually
+going to go into those I'm going to
+actually demo those and take you through
+
+147
+00:18:31.000 --> 00:18:42.000
+those and show you how you can use them
+another way that you can get visible in
+your distributions is through Amazon
+
+148
+00:18:42.000 --> 00:18:49.000
+CloudFront XO slugs well Amazon
+CloudFront access logs you can subscribe
+to and they can get delivered to your s3
+
+149
+00:18:49.000 --> 00:19:02.000
+bucket multiple times within an hour so
+one really cool thing you can do with
+Amazon CloudFront axle slobs is generate
+
+150
+00:19:02.000 --> 00:19:13.000
+custom metrics the way you do that is
+you can once you can create a s3
+notification or actually sm via SNS
+
+151
+00:19:13.000 --> 00:19:21.000
+notify you every time you get log files
+delivered to your s3 bucket and then
+that can trigger a lambda function to
+
+152
+00:19:21.000 --> 00:19:33.000
+take those files downloaded upload them
+to cloud watch and then you can create a
+variety of custom metrics such as been
+
+153
+00:19:33.000 --> 00:19:42.000
+notified
+they notified of bots if you get a
+larger number of bots you can create a
+
+154
+00:19:42.000 --> 00:19:51.000
+custom metric on granular response codes
+like 4 x.x you can create excuse me 400
+series you can also create a custom
+
+155
+00:19:51.000 --> 00:20:10.000
+metric on certain URLs yeah eos versions
+so we're going to go into a demo so
+earlier we mentioned how you get
+
+156
+00:20:10.000 --> 00:20:17.000
+notified when there are configuration
+changes made to your cloud planck
+distribution so we want to show you what
+
+157
+00:20:17.000 --> 00:20:27.000
+this looks like so this is a this is via
+cloud watch and here's a CloudFront
+default log grip so we're going to show
+
+158
+00:20:27.000 --> 00:20:35.000
+you what this looks like how to set a
+CloudFront notification or clogged trail
+notified watch notification for cloud
+
+159
+00:20:35.000 --> 00:20:48.000
+trail sorry I clicked on the wrong thing
+so this is what it's like to set an
+event for that you contract via cloud
+
+160
+00:20:48.000 --> 00:20:57.000
+trail excuse me this is a fog watch
+event its cloud trail group attract via
+cloud watch so what you're doing here is
+
+161
+00:20:57.000 --> 00:21:08.000
+your tracking on a certain API activity
+so for example here you're setting event
+source is is CloudFront that's the
+
+162
+00:21:08.000 --> 00:21:21.000
+service the event sources CloudFront AWS
+Amazon need oh yes the request parameter
+is is the distribution and the request
+
+163
+00:21:21.000 --> 00:21:26.000
+parameter distribution configuration
+enabled is false basically what this is
+is a rule that's telling you that
+
+164
+00:21:26.000 --> 00:21:33.000
+anytime your configuration is disabled
+it's going to you're going to actually
+it's going to log a response or log a
+
+165
+00:21:33.000 --> 00:21:44.000
+metric so i go here i log the metric but
+I go in to see if anything's actually
+occurred let me see here so I'm seeing
+
+166
+00:21:44.000 --> 00:21:49.000
+that there was a disablement disabled
+here and
+here well that's not good i didn't
+
+167
+00:21:49.000 --> 00:22:01.000
+disable my distribution so i need to set
+alarm so that I'm notified once we met
+the distribution is disabled so you can
+
+168
+00:22:01.000 --> 00:22:12.000
+create an alarm here it basically shows
+you it tells you that will tell you any
+time that's disabled for example if when
+
+169
+00:22:12.000 --> 00:22:18.000
+cloud Frank disabled is greater than
+equal to one in this case you're going
+to be wanting to notified be notified
+
+170
+00:22:18.000 --> 00:22:25.000
+anytime this occurs so greater than
+equal to one you're creating at 41
+consecutive period you just want to know
+
+171
+00:22:25.000 --> 00:22:34.000
+any time that a CloudFront distribution
+is disabled need to create the alarm
+here so this is basically setting a
+
+172
+00:22:34.000 --> 00:22:45.000
+cloud a alarm on a cloud trail activity
+and again cloud trail is a service that
+tracks API activity or logs API
+
+173
+00:22:45.000 --> 00:22:55.000
+activities so it allows you to log on
+all these different events that occur in
+API and the the platform you guys so now
+
+174
+00:22:55.000 --> 00:23:01.000
+I'm going to go and talk a little bit
+about CloudFronts some of the reports
+we've released this year so you can see
+
+175
+00:23:01.000 --> 00:23:08.000
+all these reports on the Left nav here
+these are all the reports the cache
+statistics the popular objects the top
+
+176
+00:23:08.000 --> 00:23:14.000
+referrers and the usage reports are all
+reports that are available within about
+an hour of the event happening the
+
+177
+00:23:14.000 --> 00:23:21.000
+modern burning alarming these are
+available within two to three minutes so
+I'm going to briefly go through these
+
+178
+00:23:21.000 --> 00:23:27.000
+I'm going to show you how these reports
+can be made actionable so on the cache
+statistics reports some interesting
+
+179
+00:23:27.000 --> 00:23:36.000
+things here so we have a total requests
+percentage of viewer request by result
+type the show's hates mrs. errors bytes
+
+180
+00:23:36.000 --> 00:23:42.000
+transferred to viewers that shows you
+basically how many bytes are being
+delivered and then you have status codes
+
+181
+00:23:42.000 --> 00:23:51.000
+the type status goes 200 series for a
+nursery is 400 500 series of the status
+codes that are being delivered as a
+
+182
+00:23:51.000 --> 00:23:57.000
+result the requests and then you have
+this is an interesting report we have
+the number of get requests that didn't
+
+183
+00:23:57.000 --> 00:24:05.000
+finish downloading so this report is
+important because it shows you not only
+the the objects that aren't excuse me
+
+184
+00:24:05.000 --> 00:24:13.000
+the number requests that aren't that are
+coming for objects that aren't being
+finished downloading but the problem
+
+185
+00:24:13.000 --> 00:24:21.000
+here is that if a object isn't ability
+downloaded it affects Amazon's cache
+Amazon CloudFront scalability so that in
+
+186
+00:24:21.000 --> 00:24:30.000
+turn affects the latency of that object
+now in this case I look at this report
+how do I make this actionable okay so
+
+187
+00:24:30.000 --> 00:24:36.000
+I've got I'm seeing these requests so
+then I I want to go into my popular
+object so I can use this report called
+
+188
+00:24:36.000 --> 00:24:44.000
+popular objects and I can try to
+correlate which objects might be causing
+the incomplete gallons so if i go here i
+
+189
+00:24:44.000 --> 00:24:58.000
+see this object here oops it's got 19 19
+incomplete downloads and there's been
+40-foot 48 requests so little about
+
+190
+00:24:58.000 --> 00:25:04.000
+forty percent of the requests coming for
+that object aren't completely or not
+downloaded completely so all that means
+
+191
+00:25:04.000 --> 00:25:11.000
+is someone might be downloading the
+video file and then leaving before
+completely downloads for example let's
+
+192
+00:25:11.000 --> 00:25:18.000
+say you have a training site and you're
+surveying training videos some of your
+customers money that might not be stay
+
+193
+00:25:18.000 --> 00:25:25.000
+until the end of the video so they're
+exiting that's resulting in a incomplete
+download now what's actionable here is
+
+194
+00:25:25.000 --> 00:25:36.000
+you can take that file in this case is
+an mp4 and you can have it basically
+converting them to a segmented format so
+
+195
+00:25:36.000 --> 00:25:43.000
+that via you can do that via lots of
+transmitter so they it's a smaller file
+set so it's it's segmented so someone
+
+196
+00:25:43.000 --> 00:25:48.000
+downloads it they're getting a segment
+that way will cache it when you see all
+the other files here these these are
+
+197
+00:25:48.000 --> 00:25:56.000
+actually segmented where this one isn't
+so that's an example now a couple other
+examples i want to show that i mentioned
+
+198
+00:25:56.000 --> 00:26:04.000
+viewers i talked about locations here's
+a locations report this shows you
+again this is demo account so it's not
+
+199
+00:26:04.000 --> 00:26:14.000
+completely doesn't have a that much
+activity but this shows the top
+locations by by country and here for
+
+200
+00:26:14.000 --> 00:26:21.000
+example you'll see Sweden let's say in
+this case wow I'm getting a lot of
+people from Sweden that's a surprise to
+
+201
+00:26:21.000 --> 00:26:26.000
+me I might want to vary my content so
+that Swedish customers get a more
+personalized experience so you can
+
+202
+00:26:26.000 --> 00:26:32.000
+configure it in a way that using the
+same URL Amazon CloudFront can vary the
+content delivered customers who come
+
+203
+00:26:32.000 --> 00:26:45.000
+from that location and then one last you
+want to show here top devices so there's
+also a device report we provide as well
+
+204
+00:26:45.000 --> 00:26:56.000
+and on this one it's on this tab sorry
+so you can see the devices your
+customers are coming from now what's
+
+205
+00:26:56.000 --> 00:27:01.000
+actionable here if the large percentage
+of your customers are coming via mobile
+as in the case here you're going to want
+
+206
+00:27:01.000 --> 00:27:07.000
+to make sure that your site is optimized
+for mobile users so that's something
+you'd want to do if you hadn't done know
+
+207
+00:27:07.000 --> 00:27:21.000
+already so the last item that I mere
+talked about here is using cloud watch
+for custom metrics so this is what I
+
+208
+00:27:21.000 --> 00:27:28.000
+mentioned earlier about using Amazon
+CloudFront to Amazon CloudFront access
+logs these are delivered to your cloud
+
+209
+00:27:28.000 --> 00:27:38.000
+front s3 or accuse me to your Amazon s3
+bucket and then you can create an SMS
+notification to trigger a lambda
+
+210
+00:27:38.000 --> 00:27:47.000
+function to download those files and
+upload them to cloud watch logs once
+they're up to up to cloud watch logs
+
+211
+00:27:47.000 --> 00:27:53.000
+that's where you can create any variety
+metrics on anything in the in the log
+files i'm going to show you what these
+
+212
+00:27:53.000 --> 00:28:10.000
+log files look like
+that's me stop
+because they're basically what these
+
+213
+00:28:10.000 --> 00:28:16.000
+large files look like once you're in
+five watch each one of these represents
+a request each one of these line items
+
+214
+00:28:16.000 --> 00:28:24.000
+is a request you can run any kind of
+creating any kind of custom metric based
+on any item in the fields here so this
+
+215
+00:28:24.000 --> 00:28:29.000
+gives you a lot of flexibility so you
+can alarm on any one of these and I'm
+going to show you some of the ones we've
+
+216
+00:28:29.000 --> 00:28:40.000
+logged on here remember to get back how
+to get back so here we've created a
+couple filters one this was a bot we're
+
+217
+00:28:40.000 --> 00:28:45.000
+tracking the number of bots that are
+coming because let's say you want to be
+notified if you get a lot of butts
+
+218
+00:28:45.000 --> 00:28:51.000
+because you know there are some good
+bots and there's bad BOTS and you want
+to be notified so you can look into what
+
+219
+00:28:51.000 --> 00:28:59.000
+kind of bots these are so this gives you
+the ability to do this you can see how
+many bots are visiting daily and you can
+
+220
+00:28:59.000 --> 00:29:08.000
+also dig in and look at what kind of
+bots are and you can block specific bots
+and again using our AWS laughs service
+
+221
+00:29:08.000 --> 00:29:15.000
+that we announced yesterday there's a
+lot of functionality that you can use on
+that to block certain requests another
+
+222
+00:29:15.000 --> 00:29:25.000
+one is sslv3 one of the items here so
+you can count the number of requests
+you're getting for sslv3 let's say
+
+223
+00:29:25.000 --> 00:29:33.000
+you've you're using Amazon Cloud France
+custom SSL future and you've enabled
+sslv3 which means you're serving sslv3
+
+224
+00:29:33.000 --> 00:29:41.000
+then you're like well that's not exactly
+the most secure thing so I want to turn
+that off so you can actually monitor how
+
+225
+00:29:41.000 --> 00:29:49.000
+many your customers are visiting your
+site using sslv3 so you can see what
+kind of impact you're going to have if
+
+226
+00:29:49.000 --> 00:30:07.000
+you turn that off so go back to
+so key takeaways enable AWS cloud trail
+so you can track configuration changes
+
+227
+00:30:07.000 --> 00:30:15.000
+so they say distribution gets disabled
+you're immediately notified you can take
+corrective action monitor your Amazon
+
+228
+00:30:15.000 --> 00:30:19.000
+CloudFront reports that's where we
+talked about if you have a writer than
+to freak out if you get a bunch of
+
+229
+00:30:19.000 --> 00:30:26.000
+income free downloads you're going to
+want to investigate how you can resolve
+that create alarms error rates requests
+
+230
+00:30:26.000 --> 00:30:34.000
+whatever you think is important if for
+example you might want to create an
+alarm on David transfer because you're
+
+231
+00:30:34.000 --> 00:30:42.000
+sensitive your price sensitive or cost
+sensitive so you can create alarms to
+trigger when you have over a certain
+
+232
+00:30:42.000 --> 00:30:47.000
+amount of data transfer subscribe the
+Amazon CloudFront access access logs
+again you can do that just to get the
+
+233
+00:30:47.000 --> 00:30:56.000
+value of digging into logs or you can
+also use a lambda function to push the
+lodge to Amazon Cloud watch where you
+
+234
+00:30:56.000 --> 00:31:02.000
+really have a lot of freedom to rent any
+kind of reports you want so I'm going to
+turn it over to Matt Baldwin a senior
+
+235
+00:31:02.000 --> 00:31:14.000
+software engineer Thank You Jared I'm
+Matthew Baldwin a senior software
+development engineer on the CloudFront
+
+236
+00:31:14.000 --> 00:31:21.000
+team I'm going to talk to you today
+about some best practices on improving
+the cache ability of your content so
+
+237
+00:31:21.000 --> 00:31:28.000
+there are four and a half best practices
+I want to talk to you out the first one
+is versioning your website assets cache
+
+238
+00:31:28.000 --> 00:31:35.000
+cache headers and cache control headers
+to instruct our front other intermediary
+caches and browser cache is on how long
+
+239
+00:31:35.000 --> 00:31:42.000
+to keep your objects in cache for now we
+talked about shared distributions
+forwarded values and the half best
+
+240
+00:31:42.000 --> 00:31:48.000
+practices path prefix invalidations the
+idea being that v4 if you follow the
+best practices like giving you a before
+
+241
+00:31:48.000 --> 00:31:55.000
+that we won't ever have to use our in
+violation tool but it's there if you do
+need it so let's get started versioning
+
+242
+00:31:55.000 --> 00:32:05.000
+website assets this is simply include a
+version number in the URL every time you
+publish new versions of your assets and
+
+243
+00:32:05.000 --> 00:32:14.000
+this is this is useful for example the
+Jared talk just now about monitoring the
+4 x.x error rate after a new deployment
+
+244
+00:32:14.000 --> 00:32:22.000
+if you've versioned your your assets and
+you've included you change the URL to
+them when you brought out the new the
+
+245
+00:32:22.000 --> 00:32:30.000
+new deployment you see your Forex xr8
+spike you can roll back your
+the content that's referencing those
+
+246
+00:32:30.000 --> 00:32:37.000
+assets and know that the of the
+previous version of the assets are still
+in cache either in the browser cache of
+
+247
+00:32:37.000 --> 00:32:45.000
+the on the end users and or in the CloudFront
+cache and we see two two different
+ways that customers per typically do
+
+248
+00:32:45.000 --> 00:32:53.000
+this the first one including some
+version key in the in the URL here we've
+included a simple version number but you
+
+249
+00:32:53.000 --> 00:32:59.000
+might want to improv you skate that
+maybe you make that the size of the file
+so it's not guessable so people can try
+
+250
+00:32:59.000 --> 00:33:06.000
+and guess where all your asset you are
+as our and the other way is to include
+the md5 sum out of the content as a
+
+251
+00:33:06.000 --> 00:33:16.000
+query string parameter at the end of end
+of the URL most static assets or most
+file stores will ignore query strings
+
+252
+00:33:16.000 --> 00:33:23.000
+and serving files that you can include
+the query string in your cache key in
+CloudFront giving you a different way a
+
+253
+00:33:23.000 --> 00:33:34.000
+different mechanism to version my assets
+our second best practice is to utilize
+cache control and expires headers to to
+
+254
+00:33:34.000 --> 00:33:40.000
+give you fine grained control over how
+long you want your assets all your
+content to stay in cache before CloudFront
+
+255
+00:33:40.000 --> 00:33:46.000
+or intermediary caches will
+revalidate them so cache control the
+very powerful header will we'll talk a
+
+256
+00:33:46.000 --> 00:33:53.000
+little bit more about that in a moment
+and it expires is another header that
+also tells CloudFront and caches that
+
+257
+00:33:53.000 --> 00:33:58.000
+this object expires at this point in
+time and that's when you need to go and
+revalidate with the origin CloudFront
+
+258
+00:33:58.000 --> 00:34:06.000
+also offers a feature called
+minimum maximum and default TTL we shall
+now you to override these values as
+
+259
+00:34:06.000 --> 00:34:12.000
+they're applied to the CloudFront cache
+and this only affects the camphor in
+cache it does not affect the browser
+
+260
+00:34:12.000 --> 00:34:20.000
+cache as it did not change any
+as they're served out the door. so count
+cache control as I mentioned very
+
+261
+00:34:20.000 --> 00:34:25.000
+powerful header lots of different
+directive you can include net and
+depending on the type of content you're
+
+262
+00:34:25.000 --> 00:34:34.000
+caching when serving you may want to set
+very specific settings so for our CSS
+our JavaScript and our images which
+
+263
+00:34:34.000 --> 00:34:39.000
+we've versioned we're confident are
+they're never going to change we're
+going to set a one-year expiry time oh
+
+264
+00:34:39.000 --> 00:34:46.000
+so our max age is a really big number
+which is one year in seconds and that's
+going to tell CloudFront and browser
+
+265
+00:34:46.000 --> 00:34:54.000
+caches to try and catch that as long as
+possible a different use case might be
+if your index page or a landing page you
+
+266
+00:34:54.000 --> 00:35:03.000
+might want to set a lower cache-control
+header expiry time Erick Dampier is 30
+seconds it may be content this refresh
+
+267
+00:35:03.000 --> 00:35:11.000
+fairly frequently but used to want to
+leverage caching of that content so that
+you know users do get the benefit of the
+
+268
+00:35:11.000 --> 00:35:18.000
+performance benefit of Caltrans and in
+our example here we've also included a
+no cache directive which says no cache
+
+269
+00:35:18.000 --> 00:35:24.000
+equals set cookie and what this tells
+CloudFront to do and other intermediary
+caches is to strip the set cookie header
+
+270
+00:35:24.000 --> 00:35:33.000
+on cache hits and this is important for
+landing pages, login pages, indexed pages
+and so on if your application is
+
+271
+00:35:33.000 --> 00:35:40.000
+generating a session cookie for every
+unique visitor you don't want to leak
+that session across users so you
+
+272
+00:35:40.000 --> 00:35:47.000
+want to instruct the cache any caches
+juice to strip a set cookie Heather and
+I third use cases for live streaming
+
+273
+00:35:47.000 --> 00:35:56.000
+with live streaming you might create a
+cache behavior in CloudFront for your
+manifest file m3u8 for a HLS live stream
+
+274
+00:35:56.000 --> 00:36:04.000
+and ideally your origin will be
+presented cache control public max-age
+equals two so that the manifest is
+
+275
+00:36:04.000 --> 00:36:11.000
+constantly being refreshed which allows
+your users to follow your live stream to
+protect against origins not sending that
+
+276
+00:36:11.000 --> 00:36:15.000
+header what you might want to do in your
+CloudFront distribution is to configure
+the minimum maximum
+
+277
+00:36:15.000 --> 00:36:21.000
+and default TTL for that one cache
+behavior to be equal to two seconds and
+what this does is gives you some
+
+278
+00:36:21.000 --> 00:36:29.000
+confidence that CloudFront isn't going
+to cache your dynamic prefect of your
+dynamic manifest for too long.
+
+279
+00:36:29.000 --> 00:36:34.000
+worst case scenario you don't return anything in
+the deep out the the out-of-the-box
+defaults with caffeine apply and
+
+280
+00:36:34.000 --> 00:36:40.000
+CloudFront will cache that for 86,400 seconds
+or one day and your users are going to
+see the first segment of your live
+
+281
+00:36:40.000 --> 00:36:50.000
+stream and nothing else so minimum
+maximum 10 default TTL a useful feature
+to help you protecting is that the third
+
+282
+00:36:50.000 --> 00:36:56.000
+best practice I'm going to talk to you
+about is shared distributions and this
+is something that clean mentioned in his
+
+283
+00:36:56.000 --> 00:37:05.000
+talk and this is a use case where you
+may have several website properties
+perhaps you're running a CMS or a
+
+284
+00:37:05.000 --> 00:37:11.000
+blogging platform where there's a common
+set of shared assets it could be
+JavaScript it could be CSS it could be
+
+285
+00:37:11.000 --> 00:37:18.000
+images and what you might want to do is
+create a account for distribution here
+we've got assets for example com is at
+
+286
+00:37:18.000 --> 00:37:25.000
+caltrain distribution serving all those
+static assets from s3 and we have two
+different website properties example.com
+
+287
+00:37:25.000 --> 00:37:32.000
+and example.org which are pulling
+their shared assets from that shared
+distribution this is beneficial to you
+
+288
+00:37:32.000 --> 00:37:38.000
+because you are now going to get a
+better cache hit rate ratio if users are
+switching between multiple of your
+
+289
+00:37:38.000 --> 00:37:45.000
+website properties assets may already be
+in their local browser cache good chance
+they can remain in the CloudFront edge
+
+290
+00:37:45.000 --> 00:37:50.000
+location caches because now the
+popularity of your objects which
+determines effectively how likely they
+
+291
+00:37:50.000 --> 00:37:57.000
+are to stay in cache is magnified by the
+number of different properties
+referencing them and this is a technique
+
+292
+00:37:57.000 --> 00:38:04.000
+that's used by the amazon.com retail
+website and the regional variants of
+that the Amazon logo is the same whether
+
+293
+00:38:04.000 --> 00:38:15.000
+you're in the United States or Canada
+for example so amazon.com uses a shared
+distribution to server images the fourth
+
+294
+00:38:15.000 --> 00:38:23.000
+best practice I'm going to talk about is
+forwarded values CloudFront allows you
+to configure various different forwarded
+
+295
+00:38:23.000 --> 00:38:29.000
+values on for your different cache
+behaviors which is a powerful ways for
+you to deliver unique
+
+296
+00:38:29.000 --> 00:38:36.000
+personalized content to users but the
+effect is that these values are not only
+forwarded back to your origin but
+
+297
+00:38:36.000 --> 00:38:41.000
+they're also form part of your card for
+in cache key so if you're forwarding a
+lot of values and that's going to impact
+
+298
+00:38:41.000 --> 00:38:51.000
+the potentially impact the cache hit
+ratio and last week Trusted Advisor
+launched two new checks one of which
+
+299
+00:38:51.000 --> 00:38:58.000
+integrates with cloud contents can enjoy
+distribution configuration it checked to
+see if you're forwarding values which
+
+300
+00:38:58.000 --> 00:39:04.000
+have a great impact on the cache hit
+rate ratios such as user agent and it'll
+actually make recommendations to you so
+
+301
+00:39:04.000 --> 00:39:12.000
+you can be notified of changes you can
+make to improve them improve the cache
+efficacy of conference and my half best
+
+302
+00:39:12.000 --> 00:39:23.000
+practice if we followed all the
+versioning versioning and cache control
+and forwarded values best practices we
+
+303
+00:39:23.000 --> 00:39:29.000
+won't have to ition you any
+invalidations but you can use it as a
+last resort it only applies to the
+
+304
+00:39:29.000 --> 00:39:36.000
+CloudFront cache it you can't invalidate and
+purge things from end-user caches and
+the easiest way to do this is to use the
+
+305
+00:39:36.000 --> 00:39:44.000
+path prefix invalidation feature that we
+launched earlier this year which allows
+you to use a wild card at the end of a
+
+306
+00:39:44.000 --> 00:39:52.000
+path and say everything that matches
+this path prefix invalidated and every
+the next access to that will be a Miss
+
+307
+00:39:52.000 --> 00:40:00.000
+on the cap reg location and we'll go and
+pull the new version from your origin
+let's go to a demo and I'll take you
+
+308
+00:40:00.000 --> 00:40:10.000
+through some of the things we just
+talked about ok so here we have our the
+CloudFront console and we have a
+
+309
+00:40:10.000 --> 00:40:22.000
+distribution for our demonstration
+website and you can see here we have
+multiple cache behaviors each calf
+
+310
+00:40:22.000 --> 00:40:35.000
+behaviour is a different different thing
+let's take a look at the the cookie
+cache behavior and one of the
+
+311
+00:40:35.000 --> 00:40:41.000
+one of the things we've done here is
+we've whitelisted some cookies that we
+want to forward to the origin and make
+
+312
+00:40:41.000 --> 00:40:49.000
+part of our cloud from kashki any cookie
+that matches CloudFront dash star and
+the jsessionid our web application is a
+
+313
+00:40:49.000 --> 00:40:55.000
+java application and we want to make
+sure that the session ID for of our
+users is forwarded to the origin on this
+
+314
+00:40:55.000 --> 00:41:09.000
+cache behavior if we switch back to
+assets cache behavior where our static
+assets are coming from from s3 we can
+
+315
+00:41:09.000 --> 00:41:16.000
+scroll down here and we see here we're
+not forwarding any cookies let it make
+any sense for our assets so we're going
+
+316
+00:41:16.000 --> 00:41:28.000
+to maximize the chance of cache hits at
+the edge by reducing the cache key space
+effectively here we go here are here our
+
+317
+00:41:28.000 --> 00:41:40.000
+assets is and so we talked a little bit
+about the minimum maximum and default
+TTL earlier so on this cache behavior is
+
+318
+00:41:40.000 --> 00:41:46.000
+our live stream cache behavior we've set
+our minimum TTL 20 we said I'm Mac
+maximum TT over 300 our default TTL 260
+
+319
+00:41:46.000 --> 00:41:56.000
+and what that's going to do is any any
+the minimum TTL comes into effect when a
+an origin may return a cache control
+
+320
+00:41:56.000 --> 00:42:01.000
+header with the value that's less than
+the minimum the configuring account rank
+and CloudFront is going to clamp the
+
+321
+00:42:01.000 --> 00:42:09.000
+age in the car and cache this let's take
+an example here so we change this to 210
+an Origin returns cache control five
+
+322
+00:42:09.000 --> 00:42:17.000
+conference going to apply a ten-second
+TTL the maximum TC all works in the same
+way it applies if the origin returns
+
+323
+00:42:17.000 --> 00:42:24.000
+with a cache control 600 we're going to
+clamp it to 300 in the count for each
+location and the default TTL comes into
+
+324
+00:42:24.000 --> 00:42:30.000
+play when your origin doesn't provide
+any cache control or expires header and
+gives us no idea of how long you want to
+
+325
+00:42:30.000 --> 00:42:37.000
+cache things for so we we have to make a
+decision and we apply in the default TTL
+in this case and these values justify to
+
+326
+00:42:37.000 --> 00:42:43.000
+the cloud prankish we don't modify any
+headers as they're served out to the
+viewer
+
+327
+00:42:43.000 --> 00:42:54.000
+also the key takeaways version your
+assets and a view to quickly roll
+forward and roll back use multiple cache
+
+328
+00:42:54.000 --> 00:43:02.000
+behaviors separate the forwarded values
+and the mid appropriate minimum maximum
+and default TTLs forward only the
+
+329
+00:43:02.000 --> 00:43:09.000
+required headers that make sense for the
+different parts of your web application
+and ideally only use right in violations
+
+330
+00:43:09.000 --> 00:43:14.000
+as a last resort as I said that only
+applies to the count for and Kasia does
+not apply to browser caches or other
+
+331
+00:43:14.000 --> 00:43:25.000
+intermediary caches thank you very much
+I'm gonna hand over to Alex to take you
+through testing your configuration cool
+
+332
+00:43:25.000 --> 00:43:30.000
+I'm going to go quickly through some
+best practices around basically how do
+you know all this stuff actually worked
+
+333
+00:43:30.000 --> 00:43:38.000
+so specifically we're going to look at a
+pseudo development mode that you can use
+to test your CloudFront and
+
+334
+00:43:38.000 --> 00:43:46.000
+configuration how you ensure caching how
+do you know that your stuff is going to
+be cached correctly how do you perform
+
+335
+00:43:46.000 --> 00:43:51.000
+its test how do you load tests and how
+do you validate your SSL settings so
+those are the five things I'm going to
+
+336
+00:43:51.000 --> 00:44:00.000
+walk through pretty quickly so
+development mode there's no switch to
+turn on development mode in CloudFront
+
+337
+00:44:00.000 --> 00:44:07.000
+but basically there are some things that
+you can do that allow you to validate
+that your CloudFront distribution is
+
+338
+00:44:07.000 --> 00:44:14.000
+set up correctly without exposing your
+site to the whole world so the
+first thing to do is to set the maximum
+
+339
+00:44:14.000 --> 00:44:21.000
+TTL to 0 so that was this feature that
+Matthew just showed this will basically
+ensure that CloudFront doesn't catch
+
+340
+00:44:21.000 --> 00:44:28.000
+anything that allows you to you know
+sort of experiment work in your
+development environment without having
+
+341
+00:44:28.000 --> 00:44:33.000
+to find cache objects for a very long
+time and without actually changing the
+headers on the object so that's very
+
+342
+00:44:33.000 --> 00:44:43.000
+useful also without having to wait for
+invalidations to apply the second is you
+also lets you not have to change
+
+343
+00:44:43.000 --> 00:44:47.000
+forwarding headers so you can do this
+all with the forward header behavior
+that you're going to use for your live
+
+344
+00:44:47.000 --> 00:44:56.000
+site you can also whitelist your IP
+address using AWS so that an
+application is only accessible via your
+
+345
+00:44:56.000 --> 00:45:03.000
+your internal network and then finally
+you can use sign cookies to use our
+private content future again to further
+
+346
+00:45:03.000 --> 00:45:14.000
+restrict access so it's only valid for a
+certain period of time one of the things
+that jared showed you was looking at the
+
+347
+00:45:14.000 --> 00:45:22.000
+ratio of hits and misses from a 
+CloudFront cache you can also see on an
+individual object whether an object is a
+
+348
+00:45:22.000 --> 00:45:29.000
+cache hit or a cache miss by looking at
+the headers returned by CloudFront
+associate this is in demos for the
+
+349
+00:45:29.000 --> 00:45:36.000
+headers to look at in the developer
+console in Chrome or Firefox or the Age
+header, the X-Cache header,
+
+350
+00:45:36.000 --> 00:45:44.000
+the Cache-Control headers, and the HSTS header 
+that clean show you earlier so in the demo
+we'll look at the developer console and
+
+351
+00:45:44.000 --> 00:45:52.000
+see how you can see those headers.
+performance testing. performance testing
+is super hard I'll start with being
+
+352
+00:45:52.000 --> 00:45:58.000
+honest with you that is not easy to get
+an accurate perspective of what your end
+users see in terms of performance you
+
+353
+00:45:58.000 --> 00:46:05.000
+can get one view which is your
+performance from your site but how do
+you get an overall view of your
+
+354
+00:46:05.000 --> 00:46:11.000
+performance so when we start a CloudFront
+most customers use what are called
+backbone tests these are tests that are
+
+355
+00:46:11.000 --> 00:46:18.000
+run by third-party services that run in
+data centers and test CloudFront from
+those data centers and they get a fairly
+
+356
+00:46:18.000 --> 00:46:27.000
+good view of availability but they don't
+feel great in terms of performance
+because you don't have a whole lot of
+
+357
+00:46:27.000 --> 00:46:34.000
+end users that access your site from
+data centers your users don't live in
+data centers they live in homes and they
+
+358
+00:46:34.000 --> 00:46:41.000
+have ISPs or they're in businesses that
+have ISPs that aren't represented by
+backbone tests so the the next
+
+359
+00:46:41.000 --> 00:46:47.000
+generation of performance testing what
+we've seen customers uses last mile
+testing last mile testing is still thin
+
+360
+00:46:47.000 --> 00:46:54.000
+synthetic so it's running asset test
+downloading an object or testing a
+website using a pre-programmed script or
+
+361
+00:46:54.000 --> 00:47:03.000
+script or other synthetic monitoring but
+it's doing it for more consumer grade
+ISPs again good but it can be incomplete
+
+362
+00:47:03.000 --> 00:47:10.000
+so the way we recommend as sort of for
+best practice to give a most complete
+view of performance
+
+363
+00:47:10.000 --> 00:47:18.000
+and availability is real user testing
+what real user testing does is it takes
+instrumentation from the same end users
+
+364
+00:47:18.000 --> 00:47:26.000
+that are actually downloaded content
+from your site so basically instruments
+your webpages and records information
+
+365
+00:47:26.000 --> 00:47:31.000
+around availability and performance from
+the same people who are actually coming
+to your site this is the gold standard
+
+366
+00:47:31.000 --> 00:47:38.000
+for free porns performance testing there
+are actually several real user testing
+on companies that are on the exhibit
+
+367
+00:47:38.000 --> 00:47:45.000
+floor here at reinvent so I encourage
+you to check those out load testing load
+testing is another thing that is fairly
+
+368
+00:47:45.000 --> 00:47:55.000
+tricky to do with a CDN what traditional
+load testing tools do is they take in I
+single IP address from a single client
+
+369
+00:47:55.000 --> 00:48:01.000
+and they run it super hard what that
+does is it circumvents a bunch of the
+load balancing that we've built into
+
+370
+00:48:01.000 --> 00:48:08.000
+CloudFront and it doesn't actually
+simulate a real real user environment so
+if you have say a load test script
+
+371
+00:48:08.000 --> 00:48:15.000
+running from an ec2 instance that pulls
+down one CloudFront IP address what
+that do will do is test a single
+
+372
+00:48:15.000 --> 00:48:21.000
+CloudFront edge location and a limited set of
+servers within that implication just the
+set of servers that happen to be behind
+
+373
+00:48:21.000 --> 00:48:32.000
+that one IP address an ideal low testing
+system tests from multiple client
+locations using independent DNS
+
+374
+00:48:32.000 --> 00:48:38.000
+resolutions so that's the key thing
+CloudFront uses DNS in order to
+accomplish a large portion of its load
+
+375
+00:48:38.000 --> 00:48:47.000
+balancing so effective load test will
+simulate the DNS behavior that end-users
+do use different dns resolvers to make
+
+376
+00:48:47.000 --> 00:48:54.000
+independent DNS requests that's the best
+practice and then the last thing we will
+show you there's a cool tool that's out
+
+377
+00:48:54.000 --> 00:49:02.000
+there they will verify your SSL config
+so it goes through a this is a test from
+SSL labs goes through a series of tests
+
+378
+00:49:02.000 --> 00:49:10.000
+on your SSL configuration and ensures
+that it hits on the various marks that
+are important for securing your your
+
+379
+00:49:10.000 --> 00:49:21.000
+content while in transit let me very
+quickly just go through i'm going to
+show you a couple of things so
+
+380
+00:49:21.000 --> 00:49:29.000
+this is the developer console and so
+this is a site that we put up at edge
+reinvent and if you enable the developer
+
+381
+00:49:29.000 --> 00:49:36.000
+console on using chrome here but there's
+a similar version in Firefox you can
+look at what we see here in the response
+
+382
+00:49:36.000 --> 00:49:42.000
+headers so here you see the age you'll
+see the cache control directives that
+are set by your origin and then here's
+
+383
+00:49:42.000 --> 00:49:49.000
+that strict Transport Security header
+that your that clean talked about and so
+that is saying that hey we want to make
+
+384
+00:49:49.000 --> 00:50:02.000
+sure that only content is available from
+over an SSL connection and then lastly
+sort of wrapping up very quickly you can
+
+385
+00:50:02.000 --> 00:50:10.000
+see here is cual sis's SSL labs report
+on edge reinvent calm and you can see
+that it goes through a variety of
+
+386
+00:50:10.000 --> 00:50:24.000
+different tests and in this case we got
+any plus which is pretty cool come back
+and so key takeaways switch off cacheing
+
+387
+00:50:24.000 --> 00:50:30.000
+in development that's going to make your
+testing much more productive allow you
+to iterate more quickly second use real
+
+388
+00:50:30.000 --> 00:50:35.000
+user metrics for performance tests
+that's going to get you a end-user view
+of what performance and availability
+
+389
+00:50:35.000 --> 00:50:43.000
+really look like and finally if you do
+do a load test, do it from multiple
+locations, do independent DNS lookups, so
+
+390
+00:50:43.000 --> 00:50:49.000
+you get a wide set of IP addresses you
+don't just test a single set of servers
+in a single edge location, you really test
+
+391
+00:50:49.000 --> 00:50:55.000
+CloudFront as a network thank you very
+much I hope that you've taken some
+things away that are going to really
+
+392
+00:50:55.000 --> 00:51:00.000
+help you configure CloudFront better
+the group here will stay behind and
+answer any questions that you might have
+but thank you for coming

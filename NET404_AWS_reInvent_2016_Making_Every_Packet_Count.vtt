@@ -1,0 +1,2871 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:05.000
+so thank you everyone for coming to the
+session my name is Mike fur I'm an
+engineer with AWS in the ec2
+
+2
+00:00:05.000 --> 00:00:13.000
+organization and today i will be talking
+to you about network performance so this
+is a 400 level talk so we're going to go
+
+3
+00:00:13.000 --> 00:00:19.000
+pretty deep we're going to be talking
+about TCP performance I will give you a
+little bit of a gentle ramp up to kind
+
+4
+00:00:19.000 --> 00:00:26.000
+of get your minds engaged and kind of in
+that networking mode and after we kind
+of start talking about TCP we have
+
+5
+00:00:26.000 --> 00:00:31.000
+talked about what makes it go you know
+what are some of the things that is
+going on kind of under the covers when
+
+6
+00:00:31.000 --> 00:00:38.000
+TCP is is running underneath your
+application then we'll look at some
+tools to try to inspect what decision is
+
+7
+00:00:38.000 --> 00:00:45.000
+TCP is making these tools can can kind
+of pull back the wool on the black box
+which can be the network and they give
+
+8
+00:00:45.000 --> 00:00:51.000
+us really good insights and then I will
+show some examples of how we can change
+some of the parameters of TCP to alter
+
+9
+00:00:51.000 --> 00:00:59.000
+our performance a lot of the talk a lot
+of the examples in this talk are going
+to be in Linux but of course TCP is a
+
+10
+00:00:59.000 --> 00:01:05.000
+cross-platform technology all of these
+examples port equally well to Windows
+but just to keep the tall concise today
+
+11
+00:01:05.000 --> 00:01:10.000
+every all the examples i'm gonna show on
+the slides are actually linux-based and
+then the last part of my talk i'm going
+
+12
+00:01:10.000 --> 00:01:15.000
+to have some sample applications or i'm
+going to demonstrate what happens when
+we start tuning tcp under various
+
+13
+00:01:15.000 --> 00:01:21.000
+different conditions the example
+applications are not necessarily meant
+to be exact replications of real-world
+
+14
+00:01:21.000 --> 00:01:29.000
+scenarios they're really more here to
+demonstrate what affects these tuning
+techniques have and what I hope you take
+
+15
+00:01:29.000 --> 00:01:33.000
+away from this talk is actually a new
+set of tools in your tool kit rather
+than an exact you know performance
+
+16
+00:01:33.000 --> 00:01:39.000
+analysis of these particular
+applications so it's a little bit of a
+spoiler and to keep you in your seats
+
+17
+00:01:39.000 --> 00:01:44.000
+because I know it's Friday one of the
+applications i'm gonna be showing at the
+end is actually going to increase its
+
+18
+00:01:44.000 --> 00:01:51.000
+performance 537 percent and this is a
+change i'm going to be making without
+touching the application itself so i'm
+
+19
+00:01:51.000 --> 00:01:57.000
+not going to be touching the code i'm
+not going to changing the application
+you know in any way i'm just going to be
+
+20
+00:01:57.000 --> 00:02:03.000
+manipulating the the linux system are
+going to be running it on and just
+playing with some of the tcp tuning
+
+21
+00:02:03.000 --> 00:02:12.000
+parameters there so i've been working at
+amazon for a little over seven years now
+I really love working on the cloud and
+
+22
+00:02:12.000 --> 00:02:18.000
+I've spent almost all my time in that
+duration in the east to networking
+organization and so I've really come to
+
+23
+00:02:18.000 --> 00:02:26.000
+love TCP too so TCP of course is the
+transmission control protocol it's the
+protocol that underlines most not all
+
+24
+00:02:26.000 --> 00:02:31.000
+but most kind of application layer
+protocols out there so you know if
+you're remotely administrating an ec2
+
+25
+00:02:31.000 --> 00:02:40.000
+instance over ssh that's of course going
+over TCP same with browsing the web or
+sending an email from your phone all
+
+26
+00:02:40.000 --> 00:02:46.000
+running on top of TCP right and then gcb
+while it's the it's the dominant one of
+course you have other options such as
+
+27
+00:02:46.000 --> 00:02:52.000
+you know UDP and others but the reason
+tcp I think is so popular for a couple
+of reasons one is that it gives you kind
+
+28
+00:02:52.000 --> 00:02:59.000
+of a streaming delivery kind of
+abstraction for your application so when
+you in stancu the tcp connection your
+
+29
+00:02:59.000 --> 00:03:05.000
+application gets a socket where it can
+read and write bytes to write the
+application doesn't have to concern
+
+30
+00:03:05.000 --> 00:03:11.000
+itself with what happens to those bites
+after it rise to the socket it's TCPS
+job to make sure all the bites are
+
+31
+00:03:11.000 --> 00:03:18.000
+delivered to the other side that none of
+them are dropped none of them are
+duplicated and they aren't reordered in
+
+32
+00:03:18.000 --> 00:03:25.000
+any way the second thing that tcp does
+for us is dynamically adjusts to the
+current networking conditions right so
+
+33
+00:03:25.000 --> 00:03:31.000
+if the network has a shift in behavior
+TCP will adjust its behavior and was
+always trying to maximize its throughput
+
+34
+00:03:31.000 --> 00:03:39.000
+based on what it perceives to be the
+current network condition so let's let's
+start talking a little bit about what
+
+35
+00:03:39.000 --> 00:03:46.000
+TCP looks like kind of from a high level
+right so when I when you ask most people
+about TCP the first thing they say is
+
+36
+00:03:46.000 --> 00:03:52.000
+well there's a three-way handshake right
+and the three-way handshake is there to
+establish a connection right so TCP is a
+
+37
+00:03:52.000 --> 00:03:58.000
+connection-oriented protocol and the
+instruction we oftentimes think about is
+after you establish this connection you
+
+38
+00:03:58.000 --> 00:04:04.000
+have a two-way bi-directional pipe
+between two endpoints so here let's say
+I have to Linux instances Jack and Jill
+
+39
+00:04:04.000 --> 00:04:10.000
+and after establishing the three-way
+handshake they don't have a
+bi-directional communication pipe to
+
+40
+00:04:10.000 --> 00:04:16.000
+send this pipe is fully duplex you know
+jack and jill can both send and receive
+simultaneously and it's kind of a nice
+
+41
+00:04:16.000 --> 00:04:22.000
+abstraction for you know application
+programmers to view however when we
+start looking at actual TCP performance
+
+42
+00:04:22.000 --> 00:04:27.000
+itself
+often helps to kind of go level deeper
+and not think of this is one connection
+
+43
+00:04:27.000 --> 00:04:36.000
+but rather a pair of unidirectional
+connections the reason this is important
+is the path that packets take from Jack
+
+44
+00:04:36.000 --> 00:04:44.000
+to get to Jill might be a very different
+path than Jill takes get to back to Jack
+they might take paths in that they
+
+45
+00:04:44.000 --> 00:04:49.000
+Traverse different routers or that they
+might go through the same router is put
+the particular interface buffers they
+
+46
+00:04:49.000 --> 00:04:54.000
+hit might have very different properties
+for example if you're sending a stream
+and there's a lot of people who are
+
+47
+00:04:54.000 --> 00:05:00.000
+concurrently streaming a live video
+stream there might be a lot of
+contention in one side of this transfer
+
+48
+00:05:00.000 --> 00:05:07.000
+but not on the other the other big
+reason it's important to kind of view
+TCP connections kind of as two separate
+
+49
+00:05:07.000 --> 00:05:15.000
+unidirectional sides is the main control
+mechanism we have is actually at the
+sender when a receiver receives a packet
+
+50
+00:05:15.000 --> 00:05:20.000
+it has a very limited state machine to
+figure out what to do next but on the
+sender side it actually has quite a bit
+
+51
+00:05:20.000 --> 00:05:29.000
+of opportunity to figure out when and
+how often it should put packets on the
+wire so when you're thinking about TCP
+
+52
+00:05:29.000 --> 00:05:35.000
+and performance the number of bytes that
+are actually applied at any given time
+is turns out to be one of the most
+
+53
+00:05:35.000 --> 00:05:42.000
+important things to tune when trying to
+optimize the flow of a TCP connection
+there's two main factors that go into
+
+54
+00:05:42.000 --> 00:05:52.000
+the number are the performance of TCP
+and these are the received window and
+the congestion window hopefully this
+
+55
+00:05:52.000 --> 00:05:57.000
+isn't a blast too much for the past but
+just to give you a little bit of a ramp
+up on these so the receive window
+
+56
+00:05:57.000 --> 00:06:04.000
+represents a buffer on the receiver side
+it's managed by the receiver and it's
+signaled to the sender and the point of
+
+57
+00:06:04.000 --> 00:06:10.000
+this buffer is that it's maintained kind
+of in the colonel in the TCP stack so as
+bytes are coming off the wire they're
+
+58
+00:06:10.000 --> 00:06:15.000
+put into this buffer in the kernel and
+then it's up to the application from
+time to time to reach down into the
+
+59
+00:06:15.000 --> 00:06:21.000
+kernel and do a read system call and
+read those bytes up into the application
+so of course what this means is that if
+
+60
+00:06:21.000 --> 00:06:26.000
+the application is not reading those
+buff those bites out of the buffer the
+buffer can fill up and if the buffer is
+
+61
+00:06:26.000 --> 00:06:33.000
+full there's no point in Jack sending
+any more data to jail if Jill's buffers
+full right so that's one of the reasons
+
+62
+00:06:33.000 --> 00:06:39.000
+why it kind of signals this this buffer
+size back and forth
+the other important thing that's keep in
+
+63
+00:06:39.000 --> 00:06:44.000
+mind with this with this receive window
+is we need to keep in mind the
+round-trip time between these two
+
+64
+00:06:44.000 --> 00:06:50.000
+instances and the reason that's
+important is that when you're talking
+about you know bites on the wire and and
+
+65
+00:06:50.000 --> 00:06:56.000
+and round trip times the usual equation
+we have is what's known as the bandwidth
+delay product right the bandwidth delay
+
+66
+00:06:56.000 --> 00:07:02.000
+product says if I have a particular
+bandwidth at a particular round trip
+time if I multiply those two together I
+
+67
+00:07:02.000 --> 00:07:09.000
+get a total number of bytes I can have
+in flight at any given time now what
+I've done here on this slide is I've
+
+68
+00:07:09.000 --> 00:07:16.000
+taken that equation and I kind of solved
+for a different field which is that if I
+know my my receive window if I know the
+
+69
+00:07:16.000 --> 00:07:22.000
+number of bytes I'm gonna have in flight
+at a given time let's say 100 kilobytes
+and I know my round trip time I can't
+
+70
+00:07:22.000 --> 00:07:29.000
+really change the speed of light very
+often so let's say I have a round trip
+time of 2 milliseconds then the maximum
+
+71
+00:07:29.000 --> 00:07:36.000
+effective bandwidth I can get on this
+TCP connection is only 400 megabits
+foreigner megabits is actually pretty
+
+72
+00:07:36.000 --> 00:07:43.000
+good right a lot of applications will do
+very well with 400 megabits right but of
+course if this not all applications have
+
+73
+00:07:43.000 --> 00:07:50.000
+the luxury of a to denilla second round
+trip time if I took this same number of
+bytes on the wire and I changed it to a
+
+74
+00:07:50.000 --> 00:07:56.000
+system with that were separated by a
+hundred milliseconds then the throughput
+that I could effectively get on his
+
+75
+00:07:56.000 --> 00:08:02.000
+connection with dropped all the way down
+to eight megabits so nothing else has
+changed in the system although the
+
+76
+00:08:02.000 --> 00:08:08.000
+round-trip time and of course 100
+milliseconds is not that unreasonable
+it's about the time a packet would take
+
+77
+00:08:08.000 --> 00:08:15.000
+from the east coast to the west coast
+and back again across the United States
+so again this is not related to how big
+
+78
+00:08:15.000 --> 00:08:21.000
+of a piece of fiber I have how many
+waves were on it there could be a lot of
+available bandwidth but my effective
+
+79
+00:08:21.000 --> 00:08:27.000
+bandwidth is limited by how many bytes
+are in flight so it's really important
+that we stay on top of what's going into
+
+80
+00:08:27.000 --> 00:08:33.000
+these decisions that T speeds making to
+make sure it's maximizing and is able to
+fully utilize the bandwidth that might
+
+81
+00:08:33.000 --> 00:08:40.000
+be there and not artificially limited
+itself so here's a here's a couple
+examples from from Linux these are
+
+82
+00:08:40.000 --> 00:08:45.000
+actually I run all these on Amazon Linux
+if you're trying to run them at home but
+these are pretty standard across almost
+
+83
+00:08:45.000 --> 00:08:52.000
+all linux distributions these days so
+this first sis CTL
+is setting the maximum received window
+
+84
+00:08:52.000 --> 00:09:02.000
+for kind of all IP protocols across the
+box the second sis CTL there is doing it
+specifically for TCP and TCP actually
+
+85
+00:09:02.000 --> 00:09:11.000
+takes a three tuple values it takes a
+minimum a default and a maximum and so
+if you have a maximum TCP received
+
+86
+00:09:11.000 --> 00:09:18.000
+window that's too small no matter how
+hard T spew tries it might never be able
+to take full advantage of available
+
+87
+00:09:18.000 --> 00:09:28.000
+bandwidth ok let's talk about the
+congestion window the congestion window
+is a little bit trickier the congested
+
+88
+00:09:28.000 --> 00:09:34.000
+the role of the congestion window in TCP
+is that it's trying to figure out if
+there's congestion somewhere in the
+
+89
+00:09:34.000 --> 00:09:43.000
+middle of the network it's maintained by
+the sender and it's trying to figure out
+you know how fast should I send data
+
+90
+00:09:43.000 --> 00:09:49.000
+across the wire because if there's
+congestion and I send too much data it's
+very luckily some of that data will be
+
+91
+00:09:49.000 --> 00:09:56.000
+dropped so it's trying to play a game to
+figure out how fast can I send and kind
+of optimize my chances that all the data
+
+92
+00:09:56.000 --> 00:10:03.000
+will eventually arrive at the other end
+point the inputs to try to figure out
+what to set the congestion window to
+
+93
+00:10:03.000 --> 00:10:10.000
+kind of vary based on what
+implementation of the congestion control
+algorithm that is in use there's a few
+
+94
+00:10:10.000 --> 00:10:17.000
+different inputs out there that use that
+these different algorithms use but most
+of them use two different inputs as
+
+95
+00:10:17.000 --> 00:10:23.000
+they're kind of primarily signals one is
+lost so in other words if I'm sending a
+stream of packets across the wire if one
+
+96
+00:10:23.000 --> 00:10:28.000
+of the packets doesn't arrive then I
+know something might be going wrong in
+the middle of network the second one
+
+97
+00:10:28.000 --> 00:10:36.000
+that these algorithms use is latency so
+how long does it take for my packet to
+maybe go from one side to the connection
+
+98
+00:10:36.000 --> 00:10:42.000
+to the other and perhaps back again
+these aren't the only inputs that
+algorithms use there's there's some
+
+99
+00:10:42.000 --> 00:10:48.000
+other ones out there some of the
+algorithms will use explicit signaling
+which kind of more directly signal back
+
+100
+00:10:48.000 --> 00:10:53.000
+and forth what both sides think about
+congestion and there's some algorithms
+out there and I'm going to mention this
+
+101
+00:10:53.000 --> 00:10:59.000
+late a little bit later that uh I'll
+actually try to figure out the spacing
+between the packets to try to guess just
+
+102
+00:10:59.000 --> 00:11:07.000
+how congested the network is
+so when trying to set the congestion
+window the TCP congestion control
+
+103
+00:11:07.000 --> 00:11:15.000
+algorithms have a difficult job when
+they start out they have no idea what
+the state of the network is they have no
+
+104
+00:11:15.000 --> 00:11:21.000
+idea if there's loss they have no idea
+what the latency is all they know is
+they have this destination address that
+
+105
+00:11:21.000 --> 00:11:26.000
+they would like to send some packets to
+so the way it starts out is it uses
+what's called an initial congestion
+
+106
+00:11:26.000 --> 00:11:32.000
+window and the initial congestion window
+is the number of packets that it puts on
+the wire before waiting for its first
+
+107
+00:11:32.000 --> 00:11:39.000
+acknowledgement so with the initial
+congestion window of three it'll put
+three packets on the wire and let's
+
+108
+00:11:39.000 --> 00:11:47.000
+assume we have a 15 bite and 1,500 bite
+MTU that means each packet is gonna be
+about 14 48 bytes and our total number
+
+109
+00:11:47.000 --> 00:11:53.000
+of lights on the wire before waiting for
+our first response is only about 4,300
+bytes so I send out 4,300 bites I wait
+
+110
+00:11:53.000 --> 00:12:00.000
+for a response and then I then after I
+get a successful response hopefully the
+TCP algorithms will typically ramp up
+
+111
+00:12:00.000 --> 00:12:06.000
+very very quickly to try to figure out
+just how big of a congestion I can
+window I can use before I start to see
+
+112
+00:12:06.000 --> 00:12:15.000
+impact from the network now three is a
+default but there's no reason we can't
+change it and the way we change it is
+
+113
+00:12:15.000 --> 00:12:21.000
+actually on a per route basis so if we
+would like to change the route or excuse
+me if you like to change the initial
+
+114
+00:12:21.000 --> 00:12:27.000
+congestion window for one of our routes
+we can do it with these this command
+here so this IP route change command
+
+115
+00:12:27.000 --> 00:12:34.000
+will when appended with the initial
+condition window value will update it
+and again this number is in packets and
+
+116
+00:12:34.000 --> 00:12:39.000
+so as you can find and when you do the
+math it's really the number of maximum
+segment sizes that will allow to go into
+
+117
+00:12:39.000 --> 00:12:46.000
+the network and then if I show by if I
+print out my routes again but by default
+it won't print it if it if it hasn't
+
+118
+00:12:46.000 --> 00:12:52.000
+been altered but once I do change it you
+can see that it now shows up in the
+updated output of listing my routes and
+
+119
+00:12:52.000 --> 00:13:00.000
+now I've updated that initial congestion
+window 16 packets and at 16 packets I've
+now gone from instead of 4,300 bytes for
+
+120
+00:13:00.000 --> 00:13:07.000
+waiting for my first packet to almost 23
+/ 23 k before I wait for that first
+acknowledgment so this is going to be a
+
+121
+00:13:07.000 --> 00:13:12.000
+really important difference especially
+if you have very short-lived connections
+that transfer a small amount of data
+
+122
+00:13:12.000 --> 00:13:19.000
+right think about web pages
+HTML files thumbnails a lot of
+connections have this property that only
+
+123
+00:13:19.000 --> 00:13:25.000
+lasts for very short amount of time and
+only transfer a relatively small amount
+of data and so this can actually really
+
+124
+00:13:25.000 --> 00:13:31.000
+have a meaningful impact to this and
+we're going to look at this in one of
+the example applications at the end of
+
+125
+00:13:31.000 --> 00:13:41.000
+the talk so let's talk some more about
+loss so this is a graph that shows what
+happens when you start to have loss on a
+
+126
+00:13:41.000 --> 00:13:49.000
+TCP connection the y-axis here is kind
+of your percent of idealized throughput
+so at zero percent loss you're getting a
+
+127
+00:13:49.000 --> 00:13:56.000
+hundred percent of your you know
+idealized throughput as you start to see
+more and more loss of the network the
+
+128
+00:13:56.000 --> 00:14:02.000
+throughput of the connection will drop
+off dramatically you know I think you
+know this it's almost counterintuitive
+
+129
+00:14:02.000 --> 00:14:09.000
+you know if you ask someone hey I've had
+this TCP connection and one percent of
+my packets are dropped which means 99%
+
+130
+00:14:09.000 --> 00:14:17.000
+of my packets are actually getting there
+what percent of my throughput what I
+expect maybe not 99 maybe I'd say 95 or
+
+131
+00:14:17.000 --> 00:14:22.000
+90 but that's not the case at all right
+it actually drops tiles very very
+quickly and part of that is the actual
+
+132
+00:14:22.000 --> 00:14:29.000
+TCP algorithm itself when it detects
+loss itself throttles itself it really
+pulls back and tries not to kind of pile
+
+133
+00:14:29.000 --> 00:14:40.000
+on and make the situation worse so loss
+has a very very important role in just
+how fast our applications can run the
+
+134
+00:14:40.000 --> 00:14:46.000
+other take away from this graph is some
+of the inverse which is to say if you
+have an application and suddenly that
+
+135
+00:14:46.000 --> 00:14:53.000
+application starts performing very very
+poorly one potential candidate that
+could cause that would be lost on the
+
+136
+00:14:53.000 --> 00:15:00.000
+network so let's look at some tools that
+we can use to try to figure out am I
+seeing loss and is that contributing why
+
+137
+00:15:00.000 --> 00:15:06.000
+my application is actually slowing down
+so the first too long to talk about here
+is the netstat tool this is probably the
+
+138
+00:15:06.000 --> 00:15:14.000
+most well-known tool that I'm gonna talk
+about today netstat is pretty standard
+you'll find it on just about every Linux
+
+139
+00:15:14.000 --> 00:15:20.000
+situation out there installed by default
+and it gives you lots and lots and lots
+of data about a lot of different things
+
+140
+00:15:20.000 --> 00:15:28.000
+related to sockets so I'm showing some
+output where I'm just prepping out the
+number of retransmissions so in TCP or a
+
+141
+00:15:28.000 --> 00:15:35.000
+retransmission a
+is when I send some packets and I fail
+to get a response and within a
+
+142
+00:15:35.000 --> 00:15:41.000
+particular window and so what that means
+is that either the packets I sent to the
+receiver got dropped or the response
+
+143
+00:15:41.000 --> 00:15:47.000
+they sent back to me got dropped in
+either case I don't know what happened
+and so I have no choice but to resend
+
+144
+00:15:47.000 --> 00:15:53.000
+the packets that did not arrive and so
+this is what we call a retransmission so
+if you ever see a retransmission what
+
+145
+00:15:53.000 --> 00:16:01.000
+that means is that your tcp stack thinks
+that the packets it sent the first time
+did not arrive now that's that while
+
+146
+00:16:01.000 --> 00:16:08.000
+it's very useful is also very
+coarse-grained it actually these
+counters are for all your sockets across
+
+147
+00:16:08.000 --> 00:16:13.000
+the entire box and so you won't be able
+to differentiate which connection is
+actually seeing these during
+
+148
+00:16:13.000 --> 00:16:20.000
+transmissions these counters are also
+initialized when Linux boots so even
+though you might see 58,000
+
+149
+00:16:20.000 --> 00:16:25.000
+retransmission you don't know if that
+happened ten seconds ago or ten weeks
+ago and so to be useful you're going to
+
+150
+00:16:25.000 --> 00:16:33.000
+have to pull this tool and look for
+shifts in the number to try to correlate
+when you might be seeing loss based on 1
+
+151
+00:16:33.000 --> 00:16:39.000
+the number of retransmissions changes so
+we can do a little bit better than
+netstat another tool that's a little bit
+
+152
+00:16:39.000 --> 00:16:45.000
+less known but is also commonly
+installed is called the socket statistic
+tool or just SS so this tool is a bunch
+
+153
+00:16:45.000 --> 00:16:52.000
+of options I showed a few here and it
+gives you a wealth of information and
+the socket statistic tool what it does
+
+154
+00:16:52.000 --> 00:16:57.000
+is it actually gives you / socket
+information I'm not going to go through
+all these but I'm going to touch on a
+
+155
+00:16:57.000 --> 00:17:03.000
+few of them so the first one we can see
+here is the state of the connection so
+if you're interested in looking just at
+
+156
+00:17:03.000 --> 00:17:11.000
+established connections or one in a
+particular TCP state you can certainly
+grep those out excuse me the second
+
+157
+00:17:11.000 --> 00:17:20.000
+number here is the sin q right so the
+sin q is a buffer on the sender side
+from when the application puts a dozen
+
+158
+00:17:20.000 --> 00:17:26.000
+right system call down to the TCP sack
+until those bites are actually
+transmitted on the wire so if you see
+
+159
+00:17:26.000 --> 00:17:32.000
+this number just take continually at
+zero but that tells you is that your
+application just isn't writing any data
+
+160
+00:17:32.000 --> 00:17:39.000
+so it's very healthy to see this number
+kind of constantly being at a good value
+because that means the thing that's
+
+161
+00:17:39.000 --> 00:17:43.000
+blocking your system is not your
+application but it's actually something
+in the network so you kind of expect to
+
+162
+00:17:43.000 --> 00:17:48.000
+see
+this number on an active TCP connection
+to be continually you know greater than
+
+163
+00:17:48.000 --> 00:17:57.000
+zero next we have this list this word
+cubic it's a little bit of a you know
+odd word right in the middle of this
+
+164
+00:17:57.000 --> 00:18:02.000
+text of this wall of text cubic is
+actually the TCP congestion control
+algorithm that this particular
+
+165
+00:18:02.000 --> 00:18:08.000
+connection is using we're going to talk
+a little bit more about that in just a
+second and then we have the
+
+166
+00:18:08.000 --> 00:18:15.000
+retransmission timeout so when you when
+you don't when you don't get
+acknowledgement at some point you have
+
+167
+00:18:15.000 --> 00:18:21.000
+to make a decision about how long to
+wait because the acknowledgment might be
+on its way right the acknowledgement you
+
+168
+00:18:21.000 --> 00:18:27.000
+may not have been dropped it might just
+be experienced some latency on the links
+and it might not have a shown up yet so
+
+169
+00:18:27.000 --> 00:18:33.000
+this number is the number of
+milliseconds that this TCP connection
+will wait until it initiates a
+
+170
+00:18:33.000 --> 00:18:41.000
+retransmission for a packet that has not
+yet been acknowledged next we have the
+congestion window so this TCP connection
+
+171
+00:18:41.000 --> 00:18:48.000
+is ramped up to 138 packets again this
+numbers and packets not bytes and then
+finally the number of retransmissions
+
+172
+00:18:48.000 --> 00:18:55.000
+for this particular TCP connection so
+this pd action is actually seeing about
+11,000 retransmissions so it is probably
+
+173
+00:18:55.000 --> 00:19:03.000
+experiencing some loss somewhere on the
+network we can actually do a little bit
+better than SS there's some really great
+
+174
+00:19:03.000 --> 00:19:12.000
+open source tools out there this one is
+by Brendan Greg so Brendan is a engineer
+at Netflix it is a really amazing a
+
+175
+00:19:12.000 --> 00:19:18.000
+performance blog i highly recommend you
+check it out and what Brendan's tool
+does here is it actually uses the
+
+176
+00:19:18.000 --> 00:19:27.000
+colonel instrumentation framework to
+actually instrument the tcp retransmit
+skb function in the kernel to gather
+
+177
+00:19:27.000 --> 00:19:34.000
+some information when every transmission
+happens so this is advantageous for a
+couple of reasons one is that because
+
+178
+00:19:34.000 --> 00:19:40.000
+we're actually instrumenting the
+particular kernel function call it only
+gets cold when there's an actual
+
+179
+00:19:40.000 --> 00:19:46.000
+retransmission which basically means you
+get a trigger right every you can run
+this command and you'll see you know as
+
+180
+00:19:46.000 --> 00:19:52.000
+retransmissions happen they'll start
+showing up on your screen the other nice
+thing about this is that because you're
+
+181
+00:19:52.000 --> 00:19:57.000
+in the kernel you I you have easy access
+to more information you can actually
+turn it you can actually information
+
+182
+00:19:57.000 --> 00:20:02.000
+just this this is kind of a default but
+right away we can see that we've already
+got the process ID which is a really
+
+183
+00:20:02.000 --> 00:20:09.000
+helpful to track back this particular
+TCP connection was initiated by this
+particular process running on my box and
+
+184
+00:20:09.000 --> 00:20:17.000
+so it can be very helpful if you know
+that's the process ID of my web server
+or maybe my mail client or whatever and
+
+185
+00:20:17.000 --> 00:20:23.000
+so you know having additional
+information at our disposal really helps
+us kind of try to triangulate what's
+
+186
+00:20:23.000 --> 00:20:29.000
+going on so definitely take a look at
+this tool and play around that has a lot
+of really cool options the other nice
+
+187
+00:20:29.000 --> 00:20:34.000
+thing about it beat is because it's
+instrumenting the kind of the exception
+path so it's menteng the retransmit
+
+188
+00:20:34.000 --> 00:20:41.000
+function that means it's only called
+when the retransmits happens which means
+the overhead of the instrumentation is
+
+189
+00:20:41.000 --> 00:20:47.000
+only paid when you have a retransmission
+so it wouldn't affect the performance of
+your TCP connection on kind of the
+
+190
+00:20:47.000 --> 00:20:52.000
+normal happy path only when you actually
+see returns mission does it actually
+execute this instrumented code which is
+
+191
+00:20:52.000 --> 00:21:00.000
+a little bit nice okay let's take some
+more into the congestion control
+algorithm so the congestion control
+
+192
+00:21:00.000 --> 00:21:10.000
+algorithm really is the magic in TCP and
+it's magical because it has to make
+almost an impossible decision the TCP
+
+193
+00:21:10.000 --> 00:21:19.000
+congestion control algorithm is looking
+at just local information it's trying to
+figure out you know it's looking at the
+
+194
+00:21:19.000 --> 00:21:24.000
+different packets that are arriving and
+it's trying to make an inference about
+what's going on kind of in the global
+
+195
+00:21:24.000 --> 00:21:31.000
+network at a particular point in time of
+course the state of the global network
+is going to be changing over time and so
+
+196
+00:21:31.000 --> 00:21:38.000
+the congestion control algorithm has a
+very difficult job in that it has to
+kind of take clues and use heuristics to
+
+197
+00:21:38.000 --> 00:21:44.000
+come up with a decision about what to do
+next so if you look at the history of
+the congestion control algorithm on
+
+198
+00:21:44.000 --> 00:21:50.000
+Linux you can see it's actually changed
+several times over the years so back
+before 268 it was actually an
+
+199
+00:21:50.000 --> 00:21:59.000
+implementation called New Reno starting
+at 268 it actually switch to something
+called bik and now the modern builds the
+
+200
+00:21:59.000 --> 00:22:03.000
+kernel actually use something called
+cubic which we saw before with the SS
+tool there's a bunch of other
+
+201
+00:22:03.000 --> 00:22:10.000
+implementations out there it's actually
+a fascinating area of research if you
+want to learn more about TCP and and and
+
+202
+00:22:10.000 --> 00:22:14.000
+what goes
+to building these algorithms I
+definitely recommend digging in and
+
+203
+00:22:14.000 --> 00:22:20.000
+reading some papers about what are the
+design decisions behind each of these
+algorithms but one of the nice things
+
+204
+00:22:20.000 --> 00:22:26.000
+that looks gives us is it has a
+pluggable architecture so that we can
+swap out which algorithm we want to use
+
+205
+00:22:26.000 --> 00:22:32.000
+and that's really important because you
+know just because there's a default
+algorithm it doesn't necessarily mean
+
+206
+00:22:32.000 --> 00:22:38.000
+that that default is going to apply to
+our particular use case and the other
+thing you know you can take away from
+
+207
+00:22:38.000 --> 00:22:44.000
+this when i see you know a fundamental
+aspect of my of my operating system
+change several times over a time period
+
+208
+00:22:44.000 --> 00:22:49.000
+you know you can take a kind of take
+step back and think well why is it why
+can't we get this right and i think the
+
+209
+00:22:49.000 --> 00:22:53.000
+first reason which is what i already
+touched on is that it's a hard problem
+and so we're going to continually
+
+210
+00:22:53.000 --> 00:22:58.000
+iterate on trying to solve this problem
+with better heuristics the other things
+happened is you know the network itself
+
+211
+00:22:58.000 --> 00:23:06.000
+looks very very different over the years
+it's really transformed several times if
+you think back to you know 10 20 years
+
+212
+00:23:06.000 --> 00:23:14.000
+ago there was broad band before that
+there was dial-up you know then we had
+Wi-Fi and now there's there's a huge
+
+213
+00:23:14.000 --> 00:23:21.000
+mobile you know a set of devices out
+there that are running TCP applications
+and so when you think about all these
+
+214
+00:23:21.000 --> 00:23:27.000
+different kinds of network topologies
+it's really a very different perspective
+for these algorithms to have to handle
+
+215
+00:23:27.000 --> 00:23:33.000
+if I'm on a mobile network versus a
+broadband network and since you're a
+particular application might be
+
+216
+00:23:33.000 --> 00:23:39.000
+targeting customers in one other
+segments and maybe not both it might
+behoove you to try to investigate are
+
+217
+00:23:39.000 --> 00:23:47.000
+there different TCP congestion control
+algorithms that can take advantage of my
+specific situation so if we want to tune
+
+218
+00:23:47.000 --> 00:23:54.000
+exactly which algorithm are going to use
+the first thing we can do is see what
+are our options so here's a cyst CTL and
+
+219
+00:23:54.000 --> 00:24:01.000
+this is just asking the colonel what tcp
+control algorithms are available to me
+on this box so on this particular
+
+220
+00:24:01.000 --> 00:24:09.000
+instance I have cubic and Reno but
+there's actually a large number of these
+algorithms that actually come
+
+221
+00:24:09.000 --> 00:24:15.000
+precompiled in a lot of the standard
+kind of Colonel images for linux
+distributions and we can just find those
+
+222
+00:24:15.000 --> 00:24:20.000
+in the in the kernel tree just by using
+that fine command there so anything kind
+of prefix with TCP underscore is
+
+223
+00:24:20.000 --> 00:24:24.000
+probably going to be a congestion
+control algorithm
+and so if we want to try out a new one
+
+224
+00:24:24.000 --> 00:24:30.000
+let's try it let's try at one called
+Illinois that sounds fun so we're going
+to modprobe Illinois so that just loads
+
+225
+00:24:30.000 --> 00:24:36.000
+that kernel module into the kernel and
+then lastly we're going to update our
+use that CTL to update the list of
+
+226
+00:24:36.000 --> 00:24:43.000
+available congestion control algorithms
+to include Illinois now this point
+Illinois is simply a choice it's not
+
+227
+00:24:43.000 --> 00:24:50.000
+what network processes are going to use
+going forward without a little bit of
+help and when you look at what a lot of
+
+228
+00:24:50.000 --> 00:24:57.000
+applications out there do very few of
+them excuse me very few of them actually
+expose this configuration knob you know
+
+229
+00:24:57.000 --> 00:25:03.000
+it's a very low level detail to pick
+what congestion control algorithm you
+want to use when you set up a TCP
+
+230
+00:25:03.000 --> 00:25:10.000
+connection right it's not your general
+you know result when you when you first
+learning how to open a TCP connection
+
+231
+00:25:10.000 --> 00:25:15.000
+when you're first learning how to
+program and in fact even the most
+advanced servers out there typically
+
+232
+00:25:15.000 --> 00:25:20.000
+don't expose this all the way through
+like to configuration files so one way
+for us to play around with this however
+
+233
+00:25:20.000 --> 00:25:25.000
+is this just to update the system-wide
+default and therefore any new
+connections going forward after we
+
+234
+00:25:25.000 --> 00:25:32.000
+update the system by default well then
+start using our new algorithm so that's
+what these commands do here this the CTL
+
+235
+00:25:32.000 --> 00:25:39.000
+at the top is updating the in-memory
+kernel with to set the Illinois
+congestion control algorithm to be our
+
+236
+00:25:39.000 --> 00:25:45.000
+default of course the downside of using
+that command is that it only lasts as
+long as your instance is running if it
+
+237
+00:25:45.000 --> 00:25:51.000
+ever reboots you lose that parameter so
+the second for the second command there
+is what you can use to persist it across
+
+238
+00:25:51.000 --> 00:25:58.000
+reboots and then lastly of course this
+is only new connections going forward so
+if you're trying to do some experiments
+
+239
+00:25:58.000 --> 00:26:02.000
+and want to see the effects of this you
+wanted to make sure you bounce all your
+network processes to make sure they're
+
+240
+00:26:02.000 --> 00:26:11.000
+all taking advantage of a new setting
+that you just set up ok so let's talk a
+little bit more about the retransmission
+
+241
+00:26:11.000 --> 00:26:17.000
+timer so the retransmission timer is
+another one of these kind of finicky
+values that you have to take some care
+
+242
+00:26:17.000 --> 00:26:27.000
+in selecting the retransmission timer is
+important because it's it's the sender's
+perspective of when it has received an
+
+243
+00:26:27.000 --> 00:26:35.000
+acknowledgement so if you put the
+retransmission time out to low let's say
+I stick it at 100 milliseconds and I'm
+
+244
+00:26:35.000 --> 00:26:41.000
+communicating over TCP connection
+has a round-trip time of 95 milliseconds
+then it's very likely that a response
+
+245
+00:26:41.000 --> 00:26:48.000
+will be on its way and just experience a
+little bit of jitter and my RTO timer
+will fire and so I'll initiate a
+
+246
+00:26:48.000 --> 00:26:54.000
+retransmission just before the packet
+there the acknowledgement packet
+actually arrives and so we're wasting
+
+247
+00:26:54.000 --> 00:26:59.000
+work and we're you know not doing the
+the network any favor because we're
+adding packets that are ultimately going
+
+248
+00:26:59.000 --> 00:27:04.000
+to be useless and we'll add a little bit
+of congestion to the network to of
+course on the flip side you don't to
+
+249
+00:27:04.000 --> 00:27:12.000
+send it too high if you set the RTO
+timer to say a second and you have two
+instances which are right next to each
+
+250
+00:27:12.000 --> 00:27:18.000
+other and maybe they have you know a sub
+1 millisecond round-trip time and if one
+of those packets does happen to get
+
+251
+00:27:18.000 --> 00:27:25.000
+dropped those instances are just going
+to sit there for the other 999
+milliseconds waiting just in case for
+
+252
+00:27:25.000 --> 00:27:31.000
+this packet to show up one day and so if
+you set it too high you can have these
+really long stalls in your network
+
+253
+00:27:31.000 --> 00:27:39.000
+connection which is you know almost the
+almost as bad right so it's a little bit
+of an art to add about how to set this
+
+254
+00:27:39.000 --> 00:27:50.000
+on linux on linux the default is 200
+milliseconds and it's set again on a
+pro-rata basis when you when you list
+
+255
+00:27:50.000 --> 00:27:58.000
+your routes it's not going to show you
+the 200 because it is the default but we
+can certainly update it so let's update
+
+256
+00:27:58.000 --> 00:28:04.000
+it to a smaller value for our local
+subnet so if you're running two
+instances in the same subnet and say a
+
+257
+00:28:04.000 --> 00:28:10.000
+VPC those two instances will always be
+in the same availability zone which
+means i'd expect you know very low round
+
+258
+00:28:10.000 --> 00:28:16.000
+trip time you know on the order of one
+or maybe two milliseconds around trip
+time between those instances so let's
+
+259
+00:28:16.000 --> 00:28:23.000
+update just that it's just that one
+route there which is the the link local
+route which is applies to all the
+
+260
+00:28:23.000 --> 00:28:31.000
+instances in my kind of my broadcast
+domain so again here's our route list we
+can see what we're starting out with as
+
+261
+00:28:31.000 --> 00:28:39.000
+i'm going to IP route change and set my
+retransmission minimum to 10
+milliseconds so this should be a pretty
+
+262
+00:28:39.000 --> 00:28:45.000
+comfortable you know buffer so that if i
+see a little bit of jitter you know it
+does happen and
+
+263
+00:28:45.000 --> 00:28:51.000
+time to time I shouldn't have any
+spurious retransmissions but at the same
+time I will actually react fairly
+
+264
+00:28:51.000 --> 00:28:57.000
+quickly because I'm i expected
+round-trip time is still low and then
+again if i list my routes after the fact
+
+265
+00:28:57.000 --> 00:29:07.000
+we can see the RT them in there has been
+applied so one of the things that
+actually can kind of contribute to
+
+266
+00:29:07.000 --> 00:29:16.000
+retransmissions is what's called queuing
+on the network path and so what when you
+send a packet between two endpoints what
+
+267
+00:29:16.000 --> 00:29:23.000
+happens is it traverses some set of
+routers before it finally reaches its
+destination now when a packet reaches a
+
+268
+00:29:23.000 --> 00:29:28.000
+router in the middle of your network
+path what happens is it arrives on an
+incoming network interface and it sits
+
+269
+00:29:28.000 --> 00:29:35.000
+in a queue the router then has a data
+plane which takes the packet off the
+queue makes a routing decision as
+
+270
+00:29:35.000 --> 00:29:42.000
+quickly as it can and then sticks it on
+an outbound queue on the outbound
+interface so we have 2 q's here on this
+
+271
+00:29:42.000 --> 00:29:51.000
+router and what we've discovered is that
+these cues can be subject to kind of
+micro bursts of activity so if you have
+
+272
+00:29:51.000 --> 00:29:57.000
+a bunch of packets all show up exactly
+the same time and get pulled off the
+wire very very close together the
+
+273
+00:29:57.000 --> 00:30:02.000
+routing engine can only process them at
+a certain speed and so if you're at the
+back of the queue you can observe
+
+274
+00:30:02.000 --> 00:30:09.000
+latency increases simply by sitting that
+queue for just a little bit of time it
+doesn't necessarily mean the link itself
+
+275
+00:30:09.000 --> 00:30:16.000
+is saturated it means that a lot of
+packets showed up exactly the same times
+it's a really quick microburst and this
+
+276
+00:30:16.000 --> 00:30:21.000
+can contribute to kind of the end and
+latency of your system of course when
+that happens you can trigger
+
+277
+00:30:21.000 --> 00:30:28.000
+retransmission timeouts now and again
+this has not become from congestion but
+it's from this kind of queueing behavior
+
+278
+00:30:28.000 --> 00:30:33.000
+so there's been a really interesting
+body of work that kind of looks into
+this problem to try to figure out is
+
+279
+00:30:33.000 --> 00:30:41.000
+there anything we can do about it and
+turns out there is it's called active
+queue management and what active queue
+
+280
+00:30:41.000 --> 00:30:47.000
+management does it has this observation
+that you know the problem here is
+actually that microburst so if I'm in a
+
+281
+00:30:47.000 --> 00:30:54.000
+situation where I have routers whose
+interfaces might have kind of lengthy
+queues it behooves me to try to insert
+
+282
+00:30:54.000 --> 00:30:59.000
+just a little tiny bit of delay in
+between a few of my packets to try to
+spread them out
+
+283
+00:30:59.000 --> 00:31:07.000
+right if you if you think about what
+happens a lot of times from and then the
+end perspective of what's going on the
+
+284
+00:31:07.000 --> 00:31:14.000
+network you oftentimes have big buffers
+which are copied in bulk processed and
+then another big ball is applied so with
+
+285
+00:31:14.000 --> 00:31:19.000
+this the idea behind some of these
+algorithms is you want to try to take
+smaller chunks and put a little bit of
+
+286
+00:31:19.000 --> 00:31:24.000
+spacing so the end-to-end kind of
+bandwidth will be approximately the same
+but the actual spacing between the
+
+287
+00:31:24.000 --> 00:31:32.000
+packets is just enough to try to kind of
+allied this queuing problem so the
+implementation i'm going to use here is
+
+288
+00:31:32.000 --> 00:31:37.000
+called the coddle algorithm coddle
+actually stands for controlled delay
+because that's effectively what it's
+
+289
+00:31:37.000 --> 00:31:44.000
+doing is putting in some very controlled
+very selective bits of delay into the
+network and this particular algorithm
+
+290
+00:31:44.000 --> 00:31:53.000
+was it comes standard on a lot of
+installations of Linux it certainly is
+on amazon Linux and many others really
+
+291
+00:31:53.000 --> 00:31:59.000
+and so the way we're going to turn this
+on is using what's called the traffic
+control mechanism of Linux so the TC
+
+292
+00:31:59.000 --> 00:32:06.000
+command so the TC command is one of
+these tools which is extremely powerful
+and is really rivaled by its learning
+
+293
+00:32:06.000 --> 00:32:11.000
+curve I mean like it's a very hard tool
+to kind of figure out if you're just
+getting started but the good news is
+
+294
+00:32:11.000 --> 00:32:17.000
+there's a lot of good documentation and
+particularly good examples out there for
+doing particular things with the TC
+
+295
+00:32:17.000 --> 00:32:24.000
+command even if you don't fully grok
+every little bit of its of its power so
+here what I'm doing is I'm actually
+
+296
+00:32:24.000 --> 00:32:28.000
+looking at what's called a queueing
+discipline so I'm going to list my
+queueing disciplines and the important
+
+297
+00:32:28.000 --> 00:32:34.000
+line is that is that second one with the
+with the pound sign which is I'm going
+to add a new entry in my queueing
+
+298
+00:32:34.000 --> 00:32:40.000
+discipline which says add this coddle
+algorithm that's what this is going to
+do is that every time a packet leaves my
+
+299
+00:32:40.000 --> 00:32:47.000
+linux instance it will be subject to
+this queueing discipline and it will go
+through this coddle implementation and
+
+300
+00:32:47.000 --> 00:32:54.000
+so coddled is is actually kind of neat
+there's there's more information here at
+that web page and what cuddle actually
+
+301
+00:32:54.000 --> 00:33:00.000
+tries to do is it tries to not make you
+make any decisions it doesn't really
+have very many tuning parameters and one
+
+302
+00:33:00.000 --> 00:33:06.000
+of its strengths is that it just tries
+to be smart and tries to use a lot of
+heuristics to figure out things for you
+
+303
+00:33:06.000 --> 00:33:12.000
+and so we're going to look at this some
+more again once we get to our
+applications at the end
+
+304
+00:33:12.000 --> 00:33:20.000
+okay one other thing to keep in mind
+with tcp performance is of course the
+size of your packets a lot of systems
+
+305
+00:33:20.000 --> 00:33:29.000
+along the network path are ultimately
+limited by their packet per second
+performance not necessarily their byte
+
+306
+00:33:29.000 --> 00:33:34.000
+per second performance so if you
+thinking about making a routing decision
+on a packet the routing decision just
+
+307
+00:33:34.000 --> 00:33:41.000
+looks at the headers and then moves the
+entire packet all at once and so what
+that means is that if we want to
+
+308
+00:33:41.000 --> 00:33:48.000
+increase our throughput of the system
+for given packet per second it behooves
+us to increase our payload so that we
+
+309
+00:33:48.000 --> 00:33:54.000
+can get a higher ratio of kind of bytes
+that were ultimately from the
+application into each packet so if we
+
+310
+00:33:54.000 --> 00:33:59.000
+start out with kind of a 1500 byte
+packet which is what your which would
+what you would have kind of standard on
+
+311
+00:33:59.000 --> 00:34:06.000
+the internet you get about three and a
+half percent of overhead just from the
+IP and TCP you know all the two three
+
+312
+00:34:06.000 --> 00:34:15.000
+four layer headers that are on this
+packet that contribute to just waste
+right so what a lot of more recent
+
+313
+00:34:15.000 --> 00:34:22.000
+networks use is 9000 one byte packets
+this is what we used in VPC so you'll
+actually get explicit signaling within
+
+314
+00:34:22.000 --> 00:34:30.000
+your BP see that you can go up to 9000
+one bites and we're going to look at
+some actual implications of these packet
+
+315
+00:34:30.000 --> 00:34:37.000
+sizes in just a minute but let's say we
+want to actually tweak it and play
+around a little bit so if we look at our
+
+316
+00:34:37.000 --> 00:34:46.000
+if you look at our local link using this
+IP link command what we can see is that
+it's actually set to 9001 which is what
+
+317
+00:34:46.000 --> 00:34:52.000
+we want and if we show our route list it
+doesn't it doesn't really tell us much
+because it's kind of defaulting to its
+
+318
+00:34:52.000 --> 00:34:58.000
+default and it will actually use you
+know path MTU discovery to figure out
+what MTU size to use but let's say we
+
+319
+00:34:58.000 --> 00:35:04.000
+want to change it anyway we want to set
+it to something that we want to override
+we can do that again on the route so
+
+320
+00:35:04.000 --> 00:35:11.000
+let's say we want to update our default
+route to our tour default gateway to
+explicitly always use an MTU of 1,500 so
+
+321
+00:35:11.000 --> 00:35:17.000
+we can do that with that IP route change
+command and then once we list that we
+can see the overeating output in the
+
+322
+00:35:17.000 --> 00:35:26.000
+route list okay couple more things
+before we can dive into some of the
+applications when it comes to packet per
+
+323
+00:35:26.000 --> 00:35:29.000
+second
+performance one of the really important
+things when working in a virtualization
+
+324
+00:35:29.000 --> 00:35:37.000
+environment is to eliminate overhead in
+processing each packet and so a couple
+years ago we launched a feature called
+
+325
+00:35:37.000 --> 00:35:45.000
+enhanced networking which is available
+on a lot of the new VPC instance types
+and what enhanced networking does is it
+
+326
+00:35:45.000 --> 00:35:53.000
+allows the user the kind of the guest
+operating systems like you know your ec2
+instance to bypass the host operating
+
+327
+00:35:53.000 --> 00:35:59.000
+system like the hypervisor and the and
+the system that runs of the different
+guest operating systems it allows them
+
+328
+00:35:59.000 --> 00:36:07.000
+to bypass those host operating systems
+and send packets directly to the neck so
+it basically exposes the hardware Nick
+
+329
+00:36:07.000 --> 00:36:16.000
+directly to your vm image and the
+advantage of this is that you get a lot
+less code touching the packet which
+
+330
+00:36:16.000 --> 00:36:21.000
+means there's a lot less latency and
+almost more importantly there's a lot
+less jitter and so what this translates
+
+331
+00:36:21.000 --> 00:36:26.000
+into in a virtualization environment is
+hire packet per second performance and
+so anytime you're going to be running
+
+332
+00:36:26.000 --> 00:36:32.000
+experiments within VPC definitely make
+sure that you're using enhanced
+networking it's been around for a couple
+
+333
+00:36:32.000 --> 00:36:38.000
+years now so it's it's the default
+almost almost everywhere certainly it's
+on the window zombies and the Amazon
+
+334
+00:36:38.000 --> 00:36:43.000
+Linux amies but a lot of the other
+armies out there have have switched to
+using it by default if you want to learn
+
+335
+00:36:43.000 --> 00:36:47.000
+some more about it there's a there's a
+there's really good documentation on the
+internet and there's a couple years ago
+
+336
+00:36:47.000 --> 00:36:53.000
+that dove into how it works and how you
+can make sure that your instance is
+actually taking advantage of it because
+
+337
+00:36:53.000 --> 00:37:03.000
+it does actually require a particular
+driver to to activate okay let's talk
+about how we can use these new tools
+
+338
+00:37:03.000 --> 00:37:11.000
+that have been going over today I'm
+going to stand up a couple instances
+these are pretty beefy instances and for
+
+339
+00:37:11.000 --> 00:37:18.000
+ten XL's and I'm going to run amazon
+linux on them and i'm going to perform a
+series of application kind of
+
+340
+00:37:18.000 --> 00:37:24.000
+experiments to try to you know you know
+analyze what some of these tuning
+parameters can actually do for us so all
+
+341
+00:37:24.000 --> 00:37:31.000
+these applications are going to be
+http-based and all but one of them are
+actually going to use SSL SSL is you
+
+342
+00:37:31.000 --> 00:37:37.000
+know the kind of the new standard you
+know almost all connections these days
+should be using SSL so it really makes
+
+343
+00:37:37.000 --> 00:37:41.000
+sense I think whenever you're doing
+benchmarking for
+you know for traffic is you should
+
+344
+00:37:41.000 --> 00:37:49.000
+always be including ssl in the equation
+I try to take a little bit of you know
+care in eliminating other variables in
+
+345
+00:37:49.000 --> 00:37:54.000
+these experiments again the goal the
+goal was not exactly to produce an exact
+replica of a particular production
+
+346
+00:37:54.000 --> 00:37:59.000
+environment they're a little bit
+contrived and so your mileage will
+probably vary depending on you know what
+
+347
+00:37:59.000 --> 00:38:06.000
+different you know outcomes you would
+get with tunings and these parameters
+and so the point here is again here's
+
+348
+00:38:06.000 --> 00:38:15.000
+here's a way we can test things and if
+you can reproduce your own environment
+in a environment like VPC you can do
+
+349
+00:38:15.000 --> 00:38:22.000
+these tests as well with your particular
+applications and see what effect these
+tools have on those so I'm I'm not
+
+350
+00:38:22.000 --> 00:38:27.000
+storing the data anywhere the client
+just just throws it away as soon as it
+receives it i'm using a ram file system
+
+351
+00:38:27.000 --> 00:38:34.000
+so the web server doesn't ever actually
+have to hit any kind of storage device
+and all the bits are randomized so
+
+352
+00:38:34.000 --> 00:38:43.000
+there's no potential compression going
+on at any stage ok so the apache bench
+tool is going to be my client it gives
+
+353
+00:38:43.000 --> 00:38:48.000
+you a whole bunch of statistics whenever
+you run it and so this is an example
+output which is which is what's going to
+
+354
+00:38:48.000 --> 00:38:55.000
+be fueling some of the numbers on these
+sharing on the next few slides you know
+it's a really fun tool and actually if
+
+355
+00:38:55.000 --> 00:39:02.000
+you're doing any kind of web-based
+benchmarking it's a really great place
+to start because it's it's it's prayer
+
+356
+00:39:02.000 --> 00:39:10.000
+least fairly straightforward to use ok
+so let's talk about an application that
+might be experiencing loss so in the
+
+357
+00:39:10.000 --> 00:39:17.000
+beginning the talk I talked about just
+how bad loss is for a TCP connection
+right because the T speed control a
+
+358
+00:39:17.000 --> 00:39:24.000
+connection control algorithm really
+tries to back off very aggressively
+because it thinks it can't send more
+
+359
+00:39:24.000 --> 00:39:32.000
+traffic and the way it backs off has a
+very large impact in how it actually is
+able to achieve different levels of
+
+360
+00:39:32.000 --> 00:39:39.000
+performance so I'd like to try to build
+simulated experience where I have an
+application and I artificially inject
+
+361
+00:39:39.000 --> 00:39:47.000
+some loss into the network so i'm going
+to use again jack and jill here to test
+instances these instances are going to
+
+362
+00:39:47.000 --> 00:39:53.000
+be about 80 milliseconds apart in round
+trip time and then i'm going to have 160
+parallel streams just
+
+363
+00:39:53.000 --> 00:40:08.000
+and so the goal here is in the in the
+presence of loss how good can I do so
+it's oftentimes hard to find a link with
+
+364
+00:40:08.000 --> 00:40:13.000
+a very controlled amount of loss to run
+an experiment and certainly we take
+operational excellence very very
+
+365
+00:40:13.000 --> 00:40:18.000
+seriously in Amazon and try to make sure
+that there is no loss anywhere on our
+network but it does happen especially if
+
+366
+00:40:18.000 --> 00:40:24.000
+you go out to the internet and have
+mobile clients so we need a way to
+simulate it in our test environment so
+
+367
+00:40:24.000 --> 00:40:32.000
+I'm going to simulate it again using
+this TC tool so TC is a very flexible
+and what allows us to do with each pack
+
+368
+00:40:32.000 --> 00:40:38.000
+leaving our box and here is a command
+that will add an artificial amount of
+point two percent loss to all of my
+
+369
+00:40:38.000 --> 00:40:48.000
+outgoing packets from that instance so
+again how good can we do with point two
+percent loss so starting out running my
+
+370
+00:40:48.000 --> 00:40:53.000
+apache bench benchmark i'm getting a
+little over four gigabits per second
+that's pretty good over 80 milliseconds
+
+371
+00:40:53.000 --> 00:41:04.000
+round-trip time now let's introduce that
+loss BAM there went over half of my
+throughput just point two percent and my
+
+372
+00:41:04.000 --> 00:41:12.000
+application is already really suffering
+so what can we do well we talked about a
+bunch of different techniques so let's
+
+373
+00:41:12.000 --> 00:41:17.000
+just try them you know a lot of these a
+lot of these tools and a lot of these
+tuning parameters takes time to build
+
+374
+00:41:17.000 --> 00:41:23.000
+intuitions about and if you don't if you
+don't fully know which where to start
+you can just try them so let's try
+
+375
+00:41:23.000 --> 00:41:32.000
+trimming that initial congestion window
+well turns out that was a bad idea so
+maybe we won't do that let's try the TCP
+
+376
+00:41:32.000 --> 00:41:39.000
+buffers on the sender side that also
+doesn't help and so you know the reason
+I kind of put the sender side here is
+
+377
+00:41:39.000 --> 00:41:45.000
+you know if you have a client-server
+architecture you can't always affect
+what the client is doing so it would be
+
+378
+00:41:45.000 --> 00:41:50.000
+nice if we could try to tune the server
+to behave with a slightly different way
+without having to force a kind of an
+
+379
+00:41:50.000 --> 00:41:56.000
+application or assistant change on our
+clients but it turns out there's not
+really much that we can do here on
+
+380
+00:41:56.000 --> 00:42:03.000
+updating the receipt window on this on
+the sender side and in fact that
+actually makes things worse so in in
+
+381
+00:42:03.000 --> 00:42:09.000
+reading about some of these congestion
+control algorithms I
+the Illinois algorithm there's a little
+
+382
+00:42:09.000 --> 00:42:17.000
+bit foreshadowing here the the Illinois
+algorithm actually was particularly
+built to handle loss little better so
+
+383
+00:42:17.000 --> 00:42:23.000
+let's try at plugging in the Illinois
+congestion control algorithm look at
+that so it's magic right I'm pulling
+
+384
+00:42:23.000 --> 00:42:29.000
+this magic rabbit out of my hat and I
+get one hundred and thirty-seven percent
+increase in performance just by tuning
+
+385
+00:42:29.000 --> 00:42:35.000
+the TCP connection control algorithm so
+a lot of congestion control algorithms
+right aren't really expecting loss but
+
+386
+00:42:35.000 --> 00:42:41.000
+if you're in a situation where you have
+persistent loss of network and it comes
+and goes then it might be something that
+
+387
+00:42:41.000 --> 00:42:45.000
+you want to test and try to evaluate
+whether or not some of these different
+congestion control algorithms might be
+
+388
+00:42:45.000 --> 00:42:55.000
+helpful to you let's talk about long big
+transfers so there's this there's this
+new enclosure called big fat or long fat
+
+389
+00:42:55.000 --> 00:43:03.000
+pipes and it's oftentimes a ripe area
+for optimization because it comes back
+to that bandwidth delay product problem
+
+390
+00:43:03.000 --> 00:43:09.000
+so let's say we have two instances that
+are spread across an ad millisecond path
+and I want to transfer some pretty big
+
+391
+00:43:09.000 --> 00:43:14.000
+file so I'm going to transfer one
+gigabyte files and I'm gonna get eight
+parallel clients and the goal is how
+
+392
+00:43:14.000 --> 00:43:22.000
+much bandwidth how good can I do across
+these fairly long links to try to get
+those eight gig files transferred as
+
+393
+00:43:22.000 --> 00:43:31.000
+quickly as possible so if i run it just
+kind of flat out i see about two
+gigabits per second that's okay not too
+
+394
+00:43:31.000 --> 00:43:39.000
+bad let's try doubling the buffers on
+the server side man still not a good
+idea but of course you know on a big
+
+395
+00:43:39.000 --> 00:43:44.000
+transfer like this the the impact you
+would expect is of course on the
+receiver right so the receiving side is
+
+396
+00:43:44.000 --> 00:43:49.000
+the thing that has this buffer that's
+constantly getting filled as its
+transferring this all this data so let's
+
+397
+00:43:49.000 --> 00:43:56.000
+try doubling the receive window on the
+client side oh yeah that's better so now
+we're going about 2.4 gigabits per
+
+398
+00:43:56.000 --> 00:44:02.000
+second which is a nice little bump so
+using these little tuning tools that
+we've talked about today you know we can
+
+399
+00:44:02.000 --> 00:44:10.000
+start to try to tease apart where we can
+get some increases in our system let's
+try this active queue management so each
+
+400
+00:44:10.000 --> 00:44:15.000
+of these lines is going to be
+independent I didn't mention that yet
+each of these lines is not you know I'm
+
+401
+00:44:15.000 --> 00:44:20.000
+not doing the server side and the client
+side and active queue management so each
+of these are kind of in
+
+402
+00:44:20.000 --> 00:44:27.000
+isolation so if I just turn on active
+queue management in isolation I also get
+a little bit of a bump right so you know
+
+403
+00:44:27.000 --> 00:44:32.000
+understanding what kind of the queuing
+in the middle of network has enabled me
+to get a few more percentile points of a
+
+404
+00:44:32.000 --> 00:44:41.000
+benefit from this from this test set up
+all right so I have two things that
+independently made things better what's
+
+405
+00:44:41.000 --> 00:44:50.000
+next turn both on right let's start on
+and we've done even better what about
+Illinois let's turn that on to a little
+
+406
+00:44:50.000 --> 00:44:58.000
+bit better Brazil so adding our magic
+hat back in the equation we've now been
+able to jump to coming a little bit
+
+407
+00:44:58.000 --> 00:45:05.000
+that's right so at this point let's also
+turn on the server side because we've
+removed a lot of the restrictions from
+
+408
+00:45:05.000 --> 00:45:11.000
+the client side so let's try turning up
+those server side buffers as well and we
+gotta just a little bit more performance
+
+409
+00:45:11.000 --> 00:45:15.000
+out of that as well and so one of the
+interesting things about that is you
+know it was it was an experiment we did
+
+410
+00:45:15.000 --> 00:45:23.000
+early and had overall negative effects
+but as you start turning tuning and
+tuning you know all of these parameters
+
+411
+00:45:23.000 --> 00:45:31.000
+interact right and so you it it can help
+be helpful to try out different
+combinations of parameters although
+
+412
+00:45:31.000 --> 00:45:37.000
+certainly starting with one of the time
+is definitely a good idea so in the end
+on this experiment we got about thirty
+
+413
+00:45:37.000 --> 00:45:44.000
+two percent of network of increase in
+network performance just by you know
+tuning and playing and not all the
+
+414
+00:45:44.000 --> 00:45:50.000
+choices were good ones at least not
+initially but as we continue to play we
+can see that there's opportunities for
+
+415
+00:45:50.000 --> 00:46:00.000
+you know for improving these things okay
+let's talk about a low RTT path so this
+experiment is a little bit contrived but
+
+416
+00:46:00.000 --> 00:46:07.000
+I just I wanted to include it to kind of
+highlight what what the effect of that
+MTU size was so remember we talked
+
+417
+00:46:07.000 --> 00:46:14.000
+before about kind of the difference
+between 1500 bite Mt use and 9001 by
+them to use so for this trip for this
+
+418
+00:46:14.000 --> 00:46:21.000
+example application I'm gonna be moving
+really big files like 10 gig files and
+think of it kind of is like a backup in
+
+419
+00:46:21.000 --> 00:46:28.000
+your in your local AZ kind of kind of
+situation and what would happen if it
+was actually not using the 9001 bite em
+
+420
+00:46:28.000 --> 00:46:41.000
+to you so let's let's do this transfer
+but force it to be a 1500 by Mt
+so with a 1500 m to you I'm getting
+
+421
+00:46:41.000 --> 00:46:45.000
+about you know a little under nine
+gigabits per second that's actually
+pretty good right you know that'll move
+
+422
+00:46:45.000 --> 00:46:55.000
+quite a bit of data across the wire now
+let's turn on the nine thousand one bite
+and to use and there we go we get a nice
+
+423
+00:46:55.000 --> 00:47:04.000
+improvement someone expectedly right
+we're sending more bites for the same
+number of packets now when we were
+
+424
+00:47:04.000 --> 00:47:09.000
+talking before about the active queue
+management right the the active queue
+management was really intended for long
+
+425
+00:47:09.000 --> 00:47:15.000
+network pass that have a lot of routers
+in the middle and some of those routers
+might have these network interfaces and
+
+426
+00:47:15.000 --> 00:47:21.000
+have kind of full queues and one of the
+comments I made was that the active
+queue management algorithms try to be
+
+427
+00:47:21.000 --> 00:47:28.000
+fairly smart and use heuristics about
+when to insert you know latency in
+between those packets because you might
+
+428
+00:47:28.000 --> 00:47:33.000
+think well this control delay algorithm
+is a terrible idea for high-throughput
+applications because you're adding
+
+429
+00:47:33.000 --> 00:47:39.000
+latency and so if you have a really
+small round trip time you know you
+that's the opposite of what you want and
+
+430
+00:47:39.000 --> 00:47:47.000
+it'd be very susceptible to changes in
+those inner packet delays but it turns
+out that coddle is actually pretty smart
+
+431
+00:47:47.000 --> 00:47:54.000
+and when you turn it on it's smart
+enough not to do anything so it's it's
+it's a fairly safe tool to kind of
+
+432
+00:47:54.000 --> 00:48:00.000
+experiment with and you can see that you
+know when when you're getting really
+really good throughput it's not going to
+
+433
+00:48:00.000 --> 00:48:05.000
+be adding that delay and it's not going
+to be impacting your performance there
+on such especially alone this example
+
+434
+00:48:05.000 --> 00:48:14.000
+where you're on a local link with really
+really good throughput okay so empty use
+get you a little bit so something to
+
+435
+00:48:14.000 --> 00:48:22.000
+make sure if you ever on a system and
+you're trying to tweak a little bit just
+something to the double check okay last
+
+436
+00:48:22.000 --> 00:48:31.000
+application in the beginning to talk I
+was talking about initial congestion
+windows right and the example I gave was
+
+437
+00:48:31.000 --> 00:48:38.000
+a lot of web pages have small artifacts
+which tend to fit in that you know you
+know one is to tens of K of data and
+
+438
+00:48:38.000 --> 00:48:44.000
+tend to be transferred over relatively
+short-lived connections so let's let's
+build a test set up that tries to kind
+
+439
+00:48:44.000 --> 00:48:50.000
+of tease this apart so this is the one
+test I'm actually
+use HTTP just to kind of remove a
+
+440
+00:48:50.000 --> 00:48:55.000
+variable and really focus in on this
+problem because I'm its kind of coming
+down to exactly how many packets we need
+
+441
+00:48:55.000 --> 00:49:02.000
+transferring but I'm gonna have a huge
+number of concurrent connections so
+6,400 current clients all trying to grab
+
+442
+00:49:02.000 --> 00:49:11.000
+a 10k file all at once and we're back to
+kind of our normal 80 millisecond link
+between these instances so our goal here
+
+443
+00:49:11.000 --> 00:49:15.000
+is actually going to be to minimize the
+latency of these connections not
+necessarily the bandwidth put the
+
+444
+00:49:15.000 --> 00:49:22.000
+latency although we obviously those are
+very very related so if i run this by
+default i get about two and a half
+
+445
+00:49:22.000 --> 00:49:31.000
+gigabits per second and it takes a
+little over three minutes to run not bad
+let's uh let's change our initial
+
+446
+00:49:31.000 --> 00:49:36.000
+congestion window from three packets to
+16 packets remember this is going from
+4300 bites before waiting for our
+
+447
+00:49:36.000 --> 00:49:44.000
+initial acknowledgement to 23k before we
+get initial acknowledgement and we can
+see that we actually pull down the mean
+
+448
+00:49:44.000 --> 00:49:52.000
+time to run this experiment by like
+almost six seconds right and that's
+because there's less time that the the
+
+449
+00:49:52.000 --> 00:49:56.000
+sender is sitting there waiting for that
+first acknowledgement it can actually
+put more data on the wire up front and
+
+450
+00:49:56.000 --> 00:50:03.000
+it turns into an actual increase in
+performance so tuning this this initial
+congestion window can really help in
+
+451
+00:50:03.000 --> 00:50:08.000
+these kinds of situations of course if
+you're transferring a really long file
+over very long-lived connection that
+
+452
+00:50:08.000 --> 00:50:14.000
+initial congestion window probably is
+not going to have a material difference
+on the end and run an execution time of
+
+453
+00:50:14.000 --> 00:50:22.000
+that transfer but if the transfer short
+then you will see it okay let's go ahead
+and turn on Illinois so you might think
+
+454
+00:50:22.000 --> 00:50:28.000
+that this is a talk about you know
+advertising a little my congestion
+control algorithm it's not the intent it
+
+455
+00:50:28.000 --> 00:50:31.000
+was just something I was been playing
+around with anyone you can see has
+something actually very interesting here
+
+456
+00:50:31.000 --> 00:50:39.000
+with it when i turn on Illinois my bang
+went down but so did my time and so what
+actually is happening here is because
+
+457
+00:50:39.000 --> 00:50:44.000
+it's a different algorithm it's making
+slightly different choices and so when I
+see when I see this result you know I
+
+458
+00:50:44.000 --> 00:50:49.000
+think what's happening is that the
+number of outliers that are kind of
+shifting around the average have come
+
+459
+00:50:49.000 --> 00:50:56.000
+down and so Illinois is a little bit
+slower but it's a little bit more
+consistent right so again it's it's
+
+460
+00:50:56.000 --> 00:51:02.000
+merely an anecdote of you know can we
+play around with these different
+tuning parameters and see what effect
+
+461
+00:51:02.000 --> 00:51:07.000
+they have on our system so our magic hat
+there didn't do a whole lot but it did
+bring down the meantime just a little
+
+462
+00:51:07.000 --> 00:51:15.000
+bit so four point six percent okay so
+what should you take away from this talk
+the one is that the network doesn't have
+
+463
+00:51:15.000 --> 00:51:22.000
+to be a black box right there's tools
+out there that we can inspect what's
+going on on your TCP connection what are
+
+464
+00:51:22.000 --> 00:51:29.000
+the retransmission settings what are the
+you know timeout settings what are the
+congestion window settings we can start
+
+465
+00:51:29.000 --> 00:51:35.000
+playing with these and once you once you
+know where to look then you can start
+having the fun time of experimentation
+
+466
+00:51:35.000 --> 00:51:41.000
+right so spin up a few instances you
+know run them for an hour and just and
+just throw all these different
+
+467
+00:51:41.000 --> 00:51:45.000
+techniques and see what you come up with
+and after we do that a few times you'll
+start to build some intuitions about
+
+468
+00:51:45.000 --> 00:51:52.000
+what kinds of improvements you might
+expect in other environments but they
+can be some pride surprising from time
+
+469
+00:51:52.000 --> 00:51:56.000
+to time as well the other thing to take
+away from this talk is I've never
+actually touched the application right I
+
+470
+00:51:56.000 --> 00:52:03.000
+never made a change to engine X I've
+never made a change to Apache benchmark
+I'm these are all kind of Linux level
+
+471
+00:52:03.000 --> 00:52:07.000
+tuning parameters that you know you can
+apply even if you don't control the
+software that you have so if you have
+
+472
+00:52:07.000 --> 00:52:13.000
+third-party software or close source
+software you don't necessarily are in a
+bind in that you can't change it you
+
+473
+00:52:13.000 --> 00:52:18.000
+have other options to change kind of
+system level parameters to try to get
+better performance kind of independent
+
+474
+00:52:18.000 --> 00:52:24.000
+of what the application is doing and
+then finally you know hopefully this
+will provide some insight into you know
+
+475
+00:52:24.000 --> 00:52:29.000
+what your application is actually
+meeting right you know you you want to
+make sure that if your application has a
+
+476
+00:52:29.000 --> 00:52:36.000
+specific demand of the network if you're
+using long long paths with long with
+high arc tt's or short rtts you know you
+
+477
+00:52:36.000 --> 00:52:43.000
+can try to figure out what what avenues
+to kind of a tackle first that's it
+thank you very much for coming to the
+
+478
+00:52:43.000 --> 00:52:51.000
+talk I really appreciate your time
+please remember to commit your
+valuations I'm happy to stay up here at
+the front if anybody has questions
+afterwards

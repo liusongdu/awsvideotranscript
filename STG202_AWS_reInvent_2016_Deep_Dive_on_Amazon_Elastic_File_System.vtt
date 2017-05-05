@@ -1,0 +1,2633 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:08.000
+welcome and thanks for joining us I'm
+excited to be here we have lots of
+exciting content plan for the session
+
+2
+00:00:08.000 --> 00:00:15.000
+and some pretty cool announcements to
+make as well my name is Edward name and
+I lead the product management team for
+
+3
+00:00:15.000 --> 00:00:24.000
+EFS I'm joined on stage with Darryl
+Osborn who's solutions architect a
+storage solutions architect at AWS we
+
+4
+00:00:24.000 --> 00:00:32.000
+have so much content that we likely will
+take the entire 60 minutes to to go
+through it so in terms of QA feel free
+
+5
+00:00:32.000 --> 00:00:38.000
+at the end to come up and we'll Darryl
+and I will stick around for 15 20 30
+minutes who are low however long it
+
+6
+00:00:38.000 --> 00:00:46.000
+takes to answer your questions one on
+one let me start with a quick run
+through of what you can expect during
+
+7
+00:00:46.000 --> 00:00:54.000
+the session I'm going to start by
+talking about EFS give an overview of
+EFS and talk about why and when you
+
+8
+00:00:54.000 --> 00:01:02.000
+would use EFS i'm going to review some
+key technical and security concepts some
+of that material will be refresher
+
+9
+00:01:02.000 --> 00:01:08.000
+content for some of you but i want to
+make sure we all have the same baseline
+of knowledge before we get into some of
+
+10
+00:01:08.000 --> 00:01:17.000
+the deeper sections then i'm going to
+spend time talking about EFS performance
+and a number of aspects of our overall
+
+11
+00:01:17.000 --> 00:01:23.000
+performance model and how you can
+leverage that performance model to
+really optimize how your applications
+
+12
+00:01:23.000 --> 00:01:33.000
+and workloads run with ef-s then we're
+going to do two hands on type of
+activities Darrell's going to walk
+
+13
+00:01:33.000 --> 00:01:40.000
+through a real world example of how you
+can move data as quickly as possible
+into EFS and between EFS file systems
+
+14
+00:01:40.000 --> 00:01:48.000
+you in using parallelization and then
+Darrell is also going to talk about a
+wordpress example he's going to go
+
+15
+00:01:48.000 --> 00:01:54.000
+through what it's like to deploy
+wordpress on to EFS and some of the best
+practices for that we're then going to
+
+16
+00:01:54.000 --> 00:02:02.000
+talk about EFS is economics so I'll talk
+a bit about total cost of ownership and
+how to think about that and then we have
+
+17
+00:02:02.000 --> 00:02:11.000
+some exciting feature plans and
+announcements to make so let's get
+started
+
+18
+00:02:11.000 --> 00:02:21.000
+and let me start by talking about awss
+storage offerings its overall portfolio
+of storage products and how EFS fits
+
+19
+00:02:21.000 --> 00:02:31.000
+into that set of offerings AWS offers
+three main types of storage file object
+and block and let me walk through each
+
+20
+00:02:31.000 --> 00:02:40.000
+of those in turn so starting from the
+right block storage which is represented
+by Amazon EBS and ec2 instance storage
+
+21
+00:02:40.000 --> 00:02:50.000
+with block storage data is presented to
+an ec2 instance as a disk volume and
+block storage provides that that disk
+
+22
+00:02:50.000 --> 00:02:57.000
+volume 2 single instances and provides
+the lowest latency that you can get from
+any of our storage products for
+
+23
+00:02:57.000 --> 00:03:05.000
+operations so EBS for example is really
+popular for boot volumes and for
+database workloads because of its low
+
+24
+00:03:05.000 --> 00:03:18.000
+latency and we have object storage so an
+object is a piece of data like a
+document or an image or video file
+
+25
+00:03:18.000 --> 00:03:26.000
+that's stored with some metadata in a
+flat structure an object storage
+provides that data to your applications
+
+26
+00:03:26.000 --> 00:03:35.000
+via and API over the Internet so with
+our s3 service it's super simple to
+build for example a web application that
+
+27
+00:03:35.000 --> 00:03:46.000
+delivers content to your users by making
+basic API calls get calls to your bucket
+of storage glacier also is object
+
+28
+00:03:46.000 --> 00:03:54.000
+storage and it's intended for archival
+use cases so it's really intended for
+data that's accessed infrequently and
+
+29
+00:03:54.000 --> 00:04:05.000
+you you're able to pay a lower price per
+gigabyte for that data for storing it on
+AWS and as of five months ago five
+
+30
+00:04:05.000 --> 00:04:11.000
+months ago yesterday actually with the
+announcement of EFS as a generally
+available service we now have file
+
+31
+00:04:11.000 --> 00:04:20.000
+storage and with file storage with ef-s
+data is presented via a file system
+interface and file system semantics to
+
+32
+00:04:20.000 --> 00:04:27.000
+ec2 instances
+when it's attached to an ec2 instance
+your EFS file system acts just like a
+
+33
+00:04:27.000 --> 00:04:36.000
+local file system would and with ef-s
+you can attach your file system to one a
+few tens hundreds thousands of instances
+
+34
+00:04:36.000 --> 00:04:43.000
+so that all of these instances have
+access to the same set of data and
+there's strong consistency across the
+
+35
+00:04:43.000 --> 00:04:54.000
+accesses for for operations across those
+instances with ef-s we focused on
+changing the game for file storage and
+
+36
+00:04:54.000 --> 00:05:06.000
+for storage in general and there are
+three core pillars to our design of EFS
+the first is that EFS is simple the
+
+37
+00:05:06.000 --> 00:05:14.000
+first is that if the second is that EFS
+is elastic and the third is that EFS is
+scalable and those three are on top of a
+
+38
+00:05:14.000 --> 00:05:24.000
+foundation of high availability and high
+durability and let me talk about each of
+these in turn so EFS is simple it's a
+
+39
+00:05:24.000 --> 00:05:32.000
+fully managed service which makes it
+easy and simple to man it to administer
+file systems at scale there's no file
+
+40
+00:05:32.000 --> 00:05:40.000
+layer or hardware to manage there's no
+volumes lawns raid groups provisioning
+to manage none of that stuff and with
+
+41
+00:05:40.000 --> 00:05:46.000
+ef-s you can create a file system in
+seconds and that's probably hard to
+believe for for some of you who have
+
+42
+00:05:46.000 --> 00:05:54.000
+built your own file storage on top of
+AWS or outside of AWS but it's really
+easy to get started and we'll talk a
+
+43
+00:05:54.000 --> 00:06:01.000
+little bit about that a little later EFS
+provides seamless integration with
+existing tools and applications it's it
+
+44
+00:06:01.000 --> 00:06:09.000
+supports NFS version for dot one which
+is a widespread and open protocol it
+provides standard file system access
+
+45
+00:06:09.000 --> 00:06:16.000
+semantics so you get what you would
+expect from a file system the ability to
+take out locks the ability to write data
+
+46
+00:06:16.000 --> 00:06:23.000
+to the middle of the file the ability to
+append data to the end of a file
+directory structures atomic renames
+
+47
+00:06:23.000 --> 00:06:34.000
+strongly after right consistency and it
+offers simple pricing it's a simple
+cents per gigabyte per month model that
+
+48
+00:06:34.000 --> 00:06:42.000
+doesn't that incorporates
+all of the charges that you would you
+would do it in car so there's no charges
+
+49
+00:06:42.000 --> 00:06:53.000
+for throughput there's no charges for
+request pricing it's just a simple 30
+cents per gigabyte per month having a
+
+50
+00:06:53.000 --> 00:07:04.000
+little trouble with the clicker here
+okay EFS is elastic so file systems grow
+and shrink automatically as you add and
+
+51
+00:07:04.000 --> 00:07:09.000
+remove files there's no need to
+provision in fact there's no way to
+provision storage capacity or
+
+52
+00:07:09.000 --> 00:07:16.000
+performance things just scale up and
+scale down as you add data and remove
+data and you pay only for the storage
+
+53
+00:07:16.000 --> 00:07:26.000
+space you use so you literally are
+paying just for the bytes that you're
+storing on EFS and EFS is scalable file
+
+54
+00:07:26.000 --> 00:07:32.000
+systems can grow to petabytes of
+capacity and there's no need to
+reprovision as your file system grows no
+
+55
+00:07:32.000 --> 00:07:38.000
+need to adjust performance settings no
+need to really do anything for your file
+system to grow it a petabyte scale it
+
+56
+00:07:38.000 --> 00:07:47.000
+just does it automatically as you add
+data throughput skills automatically as
+file systems grow so with every gigabyte
+
+57
+00:07:47.000 --> 00:07:54.000
+of data that you store you get a certain
+amount of throughput that you're allowed
+to drive to EFS so that means that as
+
+58
+00:07:54.000 --> 00:08:02.000
+your file systems grow the amount of
+throughput that you can drive in order
+to read data and write data grows with
+
+59
+00:08:02.000 --> 00:08:10.000
+the size of the file system provides
+consistent low latencies lots of file
+workloads are latency sensitive so it
+
+60
+00:08:10.000 --> 00:08:17.000
+was really critical for us to make sure
+that we offered consistent Lowell
+agencies and EFS supports thousands up
+
+61
+00:08:17.000 --> 00:08:22.000
+to thousands of concurrent NFS
+connections so if you have applications
+that span multiple ec2 instances they
+
+62
+00:08:22.000 --> 00:08:31.000
+can all have access to a common set of
+data and EFS is designed to be highly
+available and highly durable your data
+
+63
+00:08:31.000 --> 00:08:39.000
+is automatically spread across multiple
+az's and it's available in multiple az's
+so you can read your data and write your
+
+64
+00:08:39.000 --> 00:08:45.000
+data from any AZ within a region and
+every aspect of the service beyond even
+just the data is designed for high
+
+65
+00:08:45.000 --> 00:08:50.000
+availability so including the endpoints
+that you create in your v pc which I'll
+talk about in a sec
+
+66
+00:08:50.000 --> 00:09:04.000
+so where can you use the FS today we're
+in four regions us West Oregon us East
+Northern Virginia us east ohio and EU
+
+67
+00:09:04.000 --> 00:09:15.000
+ireland and there are many more regions
+coming soon and a question i sometimes
+get is should i use EFS or should i use
+
+68
+00:09:15.000 --> 00:09:23.000
+EBS and you know with EBS you can format
+your your volume with a file system so
+when would you use the fs versus EBS
+
+69
+00:09:23.000 --> 00:09:31.000
+well some some guidelines to think about
+when you're trying to figure out does
+EFS makes sense is the following so if
+
+70
+00:09:31.000 --> 00:09:41.000
+you have an ec2 application and it
+requires a file system and either
+requires multi attached so requires
+
+71
+00:09:41.000 --> 00:09:49.000
+access from more than one instance
+requires multi AZ availability or
+durability needs to scale 2 gigabytes
+
+72
+00:09:49.000 --> 00:09:57.000
+per second of throughput or if it
+requires automatic scaling so as you add
+data grows and as you take it out it
+
+73
+00:09:57.000 --> 00:10:05.000
+removes so if if you go through that and
+you meet any of those you should really
+consider EFS for your application and
+
+74
+00:10:05.000 --> 00:10:16.000
+we'll talk a little bit more later on
+about the fs and abs and some of the
+differences for you to think about
+
+75
+00:10:16.000 --> 00:10:24.000
+and you should you should understand
+that operating your own file storage is
+is complex and it's expensive and
+
+76
+00:10:24.000 --> 00:10:32.000
+there's really two ways that people
+typically do that so one is you can
+simply replicate EBS volumes so for
+
+77
+00:10:32.000 --> 00:10:38.000
+example let's say that you have a web
+serving environment you have multiple
+ec2 instances and on each instance
+
+78
+00:10:38.000 --> 00:10:44.000
+you're running an Apache web server and
+you want each of those web servers to
+have access to the content that the web
+
+79
+00:10:44.000 --> 00:10:51.000
+server needs to serve so you could go
+and create an EBS volume catch it attach
+a different volume to each instance and
+
+80
+00:10:51.000 --> 00:10:57.000
+synchronize your files across volumes
+the problem with that is that there's a
+lot of management overhead and doing
+
+81
+00:10:57.000 --> 00:11:03.000
+that you need to manage the sinking of
+data you need to provision and manage
+volumes and it's also expensive because
+
+82
+00:11:03.000 --> 00:11:13.000
+you're paying for at least one volume
+for every web server that you have
+another way to have your own sort of
+
+83
+00:11:13.000 --> 00:11:21.000
+file storage on the cloud that's
+accessible to multiple instances is if
+you use an NFS server setup your own NFS
+
+84
+00:11:21.000 --> 00:11:29.000
+server on an ec2 instance or you use a
+shared file layer so some 30-some third
+parties offer shared file layers that
+
+85
+00:11:29.000 --> 00:11:36.000
+you can install on an ec2 instance and
+that are backed by EBS volumes so those
+solutions unfortunately in many cases
+
+86
+00:11:36.000 --> 00:11:43.000
+are complex to set up complex to
+maintain its not a fully managed service
+you run into scale challenges think
+
+87
+00:11:43.000 --> 00:11:50.000
+about the case of a single NFS server
+running on a single ec2 instance it's
+running on a single box so there's only
+
+88
+00:11:50.000 --> 00:11:55.000
+so much scale that you can have
+similarly there's only there's
+challenges around high availability
+
+89
+00:11:55.000 --> 00:12:03.000
+again if you have a single box or even a
+small set of boxes you you're
+introducing some availability risks and
+
+90
+00:12:03.000 --> 00:12:15.000
+those solutions are costly and we'll
+talk about cost and more detail later on
+and customers are using EFS for a wide
+
+91
+00:12:15.000 --> 00:12:22.000
+variety of workloads and applications
+today web serving content management are
+super popular use cases for EFS so a lot
+
+92
+00:12:22.000 --> 00:12:29.000
+of customers that are doing database
+backups of EBS volumes on to EFS
+analytics workloads are really popular
+
+93
+00:12:29.000 --> 00:12:36.000
+so you'll have tens or hundreds of
+instances that are doing analysis on a
+common set of data media and
+
+94
+00:12:36.000 --> 00:12:44.000
+entertainment workflows like video
+processing video transcoding container
+storage home directories and really many
+
+95
+00:12:44.000 --> 00:12:51.000
+different types of workflow management
+where you need to share some data or
+some set of state across an application
+
+96
+00:12:51.000 --> 00:13:00.000
+that's running on multiple instances
+okay so let's talk briefly about some
+key technical and security concepts and
+
+97
+00:13:00.000 --> 00:13:13.000
+let me start clickers still acting up
+let me start with a definition the
+fundamental EFS resource is a file
+
+98
+00:13:13.000 --> 00:13:24.000
+system and that's where you store your
+files and your directories and you can
+create 125 file systems per account and
+
+99
+00:13:24.000 --> 00:13:40.000
+then uh let me just take care of one
+thing
+another definition is a mount target so
+
+100
+00:13:40.000 --> 00:13:48.000
+you access your file systems from a from
+within a VPC from instances that our nav
+pc and in order to do that you create
+
+101
+00:13:48.000 --> 00:13:56.000
+these endpoints which we call mount
+targets in a cheese haz with in a VPC
+for from which you want to access an EFS
+
+102
+00:13:56.000 --> 00:14:03.000
+filesystem and what this endpoint or
+what this mount target does is it
+provides an IP address and it provides a
+
+103
+00:14:03.000 --> 00:14:10.000
+DNS name that you use when you're
+mounting your file system and mount
+targets are designed to be highly
+
+104
+00:14:10.000 --> 00:14:20.000
+available and how do you access a file
+system from an instance well you mount
+it using a standard Linux mount command
+
+105
+00:14:20.000 --> 00:14:32.000
+and if you can make that out on the
+screen here it's a there's the command
+up there the dash T is the means that
+
+106
+00:14:32.000 --> 00:14:38.000
+you'll specify the type of mount and
+that's really the only parameter you
+really are sorry one of the two
+
+107
+00:14:38.000 --> 00:14:43.000
+parameters that you need to specify so
+it's an NFS for mount and then an
+optional parameter that you need to
+
+108
+00:14:43.000 --> 00:14:50.000
+specify is the NFS version number which
+is for dot one and we highly recommend
+for dot one we do support 40 but for
+
+109
+00:14:50.000 --> 00:14:56.000
+performance reasons for that one is what
+we recommend then you provide the file
+system dns name which is what the mount
+
+110
+00:14:56.000 --> 00:15:03.000
+target provides and you could replace
+that with an IP address for the amount
+target as well if you prefer and then
+
+111
+00:15:03.000 --> 00:15:13.000
+the dash o is for an optional parameter
+which i mentioned the NFS version number
+and then the user's target directory the
+
+112
+00:15:13.000 --> 00:15:20.000
+final parameter there and that's the
+local directory that your EFS file
+system will appear in once it's mounted
+
+113
+00:15:20.000 --> 00:15:31.000
+okay so how does it all fit together so
+you have a region and within a region
+you have a file system so file system is
+
+114
+00:15:31.000 --> 00:15:42.000
+it belongs in a region you have a VPC in
+that region that's your v pc and within
+each AZ you create these mount targets
+
+115
+00:15:42.000 --> 00:15:53.000
+in your v pc and the easy two instances
+that are running in the AZ s in your
+PC connect via those mount targets and
+
+116
+00:15:53.000 --> 00:16:00.000
+you should note that data can be
+accessed from any AZ in the region
+concurrently while maintaining full
+
+117
+00:16:00.000 --> 00:16:05.000
+consistency so if you're doing rights
+and one AZ you're guaranteed at the
+reeds in the and another AZ will have
+
+118
+00:16:05.000 --> 00:16:15.000
+the latest version of the data and there
+are a number of security mechanisms
+available to your EFS file system so
+
+119
+00:16:15.000 --> 00:16:22.000
+first at the network level you can
+control net you can control network
+traffic to and from your file systems by
+
+120
+00:16:22.000 --> 00:16:30.000
+using VPC security groups and using VPC
+Network ackles and really what you're
+doing is you're applying with the
+
+121
+00:16:30.000 --> 00:16:35.000
+security groups you're applying them to
+the mount targets and so because the
+mount target is where you're sending
+
+122
+00:16:35.000 --> 00:16:42.000
+your traffic to the file system you
+control what traffic can reach your file
+system by applying the the relevant
+
+123
+00:16:42.000 --> 00:16:51.000
+security groups to those mount argit's
+you can control at the data access layer
+file and directory access by using POSIX
+
+124
+00:16:51.000 --> 00:17:00.000
+permissions standard POSIX permissions
+and then at the administrative level you
+can control API access to file systems
+
+125
+00:17:00.000 --> 00:17:12.000
+using I am and EFS supports both action
+level and resource level permissions and
+then what does our API provide provides
+
+126
+00:17:12.000 --> 00:17:19.000
+basic management functionality for for
+your file system so the building to
+create a file system create and delete
+
+127
+00:17:19.000 --> 00:17:26.000
+mount targets tag a file system view
+details on the file systems in your
+account and those the API functions are
+
+128
+00:17:26.000 --> 00:17:37.000
+accessible through our UI through the
+management console to the CLI and
+through the SDK okay so let's talk about
+
+129
+00:17:37.000 --> 00:17:50.000
+performance EFS is designed for a wide
+spectrum of of performance needs and if
+you think about a typical way that
+
+130
+00:17:50.000 --> 00:17:57.000
+people think about performance and
+across a spectrum on one side you have
+applications and workloads that drive
+
+131
+00:17:57.000 --> 00:18:05.000
+high levels of throughput often from
+many instances so a lot of parallel
+all operations and in the name of the
+
+132
+00:18:05.000 --> 00:18:11.000
+game is as much aggregate throughput as
+possible across a number of instances
+and then on the other end of the
+
+133
+00:18:11.000 --> 00:18:20.000
+spectrum are applications where you're
+doing a lot of serialized operations and
+the latency of each individual operation
+
+134
+00:18:20.000 --> 00:18:25.000
+makes a big difference in terms of how
+many operations per second are how much
+throughput you can drive so very latency
+
+135
+00:18:25.000 --> 00:18:35.000
+sensitive applications and what you see
+on the on the screen here in terms of
+workloads are examples of what customers
+
+136
+00:18:35.000 --> 00:18:41.000
+are using AFS for I talked about a
+couple of these before but on the
+throughput intense side of the spectrum
+
+137
+00:18:41.000 --> 00:18:50.000
+things like genomics workloads big data
+analytics scale out jobs on the other
+side metadata intensive jobs and then
+
+138
+00:18:50.000 --> 00:18:57.000
+sort of in the middle are a lot of the
+sort of general types of use cases that
+you would use file for so web serve and
+
+139
+00:18:57.000 --> 00:19:12.000
+content management home directory etc
+and in order to support that spectrum of
+workloads and applications EFS offers
+
+140
+00:19:12.000 --> 00:19:18.000
+two different performance modes that you
+can choose from so the first is called
+general-purpose mode and that's the
+
+141
+00:19:18.000 --> 00:19:29.000
+default mode for a file system and what
+it does is it offers the lowest latency
+for your file operations now that the
+
+142
+00:19:29.000 --> 00:19:34.000
+trade-off for general-purpose mode is
+that there's a limit in terms of the
+number of operations per second you can
+
+143
+00:19:34.000 --> 00:19:41.000
+drive when you're in general purpose
+mode and that limit is 7,000 operations
+per second the other mode is max io mode
+
+144
+00:19:41.000 --> 00:19:49.000
+and it offers a virtually unlimited
+ability to scale your throughput and I
+ops so you don't have this 7,000
+
+145
+00:19:49.000 --> 00:19:57.000
+operations per second limit but the
+trade-off is it does so with slightly
+higher latency spur operation so in
+
+146
+00:19:57.000 --> 00:20:03.000
+terms of which workloads make sense for
+which performance mode in general
+general purpose mode is the best choice
+
+147
+00:20:03.000 --> 00:20:10.000
+for most workloads that's why we call it
+general purpose and that's why it's the
+default but if you need hi aggregate
+
+148
+00:20:10.000 --> 00:20:16.000
+levels of I ops or high aggregate levels
+of throughput and typically that's if
+you have a workload for
+
+149
+00:20:16.000 --> 00:20:22.000
+example where you'll have tens or more
+instances accessing a file system and
+driving lots of traffic to it then you
+
+150
+00:20:22.000 --> 00:20:33.000
+should consider max io mode and what we
+generally recommend is when you're
+testing EFS with your application and
+
+151
+00:20:33.000 --> 00:20:40.000
+trying to figure out sure to use general
+purpose or max io mode you should start
+off by creating a file system that's in
+
+152
+00:20:40.000 --> 00:20:47.000
+general purpose mode and testing it and
+we provide a cloud watch metric that
+shows how close you're getting to the
+
+153
+00:20:47.000 --> 00:20:55.000
+7000 operations per second limit but
+that's tied to general purpose mode so
+we recommend just testing it and looking
+
+154
+00:20:55.000 --> 00:21:00.000
+at the cloud watch metric to see and if
+you're OK in terms of cloud watch metric
+you should definitely stay in general
+
+155
+00:21:00.000 --> 00:21:13.000
+purpose mode in order to understand
+DFS's performance model it's helpful for
+me to provide a bit of context on EFSA's
+
+156
+00:21:13.000 --> 00:21:22.000
+architecture so EFS has a distributed
+data storage design and what that means
+is that file systems are distributed
+
+157
+00:21:22.000 --> 00:21:31.000
+across an unconstrained number of
+servers and what that why that's good is
+because it avoids the bottlenecks and
+
+158
+00:21:31.000 --> 00:21:37.000
+the constraints of traditional file
+servers and it allows high levels of
+aggregate operations per second an
+
+159
+00:21:37.000 --> 00:21:47.000
+aggregate throughput and also allows
+that scaling to petabytes scale that I
+talked about with ef-s as I mentioned
+
+160
+00:21:47.000 --> 00:21:54.000
+earlier data is also distributed across
+availability zones and that's important
+for durability and availability so when
+
+161
+00:21:54.000 --> 00:22:00.000
+you when you do a read operation on EFS
+and you'll get the acknowledgement back
+that the write operation has completed
+
+162
+00:22:00.000 --> 00:22:06.000
+you can be rest assured that actually
+the data has been written across
+multiple lazies so that happens before
+
+163
+00:22:06.000 --> 00:22:20.000
+you get the acknowledgement back
+now this distributed architecture has
+some performance implications so one is
+
+164
+00:22:20.000 --> 00:22:27.000
+that there's a small latency overhead
+for each file operation and that's tied
+to the fact that the data is spread out
+
+165
+00:22:27.000 --> 00:22:33.000
+and it spread across multiple
+availability zones and it's strongly
+consistent so when you get an
+
+166
+00:22:33.000 --> 00:22:40.000
+acknowledgement back you know the data
+has travelled to the other availability
+zones but it also enables scale out so
+
+167
+00:22:40.000 --> 00:22:48.000
+it allows you to get to these high
+aggregate levels of performance and so
+when you think about EFS versus EBS it's
+
+168
+00:22:48.000 --> 00:22:55.000
+helpful to think about a few different
+things so the first is the per operation
+latency so EFS does offer low consistent
+
+169
+00:22:55.000 --> 00:23:00.000
+Layton sees but because of the
+distributed design I just talked about
+if you're looking for the absolute
+
+170
+00:23:00.000 --> 00:23:08.000
+lowest possible Layton sees EBS has
+lower latencies because it doesn't have
+that distributed design in terms of
+
+171
+00:23:08.000 --> 00:23:15.000
+throughput scale EFS scales to multiple
+gigabytes per second and Darryl will
+talk about he'll give an example
+
+172
+00:23:15.000 --> 00:23:23.000
+actually of a couple gigabytes per
+second than he drove when copying data
+on AFS with EBS it's around a single
+
+173
+00:23:23.000 --> 00:23:31.000
+gigabyte per second in terms of
+availability durability EFS data spread
+across multiple az's EBS it's in a
+
+174
+00:23:31.000 --> 00:23:40.000
+single lazy access EBS single ec2
+instance can access a volume with ef-s
+you can have one to thousands of ec2
+
+175
+00:23:40.000 --> 00:23:48.000
+instances a kissing it concurrently and
+so some of the use cases that are really
+in the sweet spot for EFS are big data
+
+176
+00:23:48.000 --> 00:23:55.000
+and analytics some of the media
+processing that I was talking about
+content management home directories with
+
+177
+00:23:55.000 --> 00:24:03.000
+EBS really lady and latency sensitive
+applications like databases make a lot
+of sense for EBS and EBS also makes a
+
+178
+00:24:03.000 --> 00:24:20.000
+lot of sense for boot volumes
+so tied to this per operation latency
+that I've been talking about the overall
+
+179
+00:24:20.000 --> 00:24:30.000
+throughput that you can achieve when you
+are doing a sequence of operations in
+serial across EFS is is tied to the the
+
+180
+00:24:30.000 --> 00:24:38.000
+size of the operation that you're
+driving so if you're doing a read or
+write that's a that's a read or write of
+
+181
+00:24:38.000 --> 00:24:45.000
+a bigger piece of data that latency is
+amortized over a large amount of data
+and so in effect if you're doing these
+
+182
+00:24:45.000 --> 00:24:53.000
+operations in serial you're able to
+drive higher amounts of throughput with
+larger operation sizes and this graph
+
+183
+00:24:53.000 --> 00:25:00.000
+shows io size versus throughput to give
+you a sense for and again this is
+serialized operation to give you a sense
+
+184
+00:25:00.000 --> 00:25:14.000
+for what that what that looks like and
+EFS is designed to process high volumes
+of concurrent operations in an effective
+
+185
+00:25:14.000 --> 00:25:24.000
+way so one way to drive high levels of
+throughput or high levels of I ops is to
+do it via parallel operations that
+
+186
+00:25:24.000 --> 00:25:32.000
+you're throwing a TFS concurrently and
+you can do that via multiple threads on
+a single ec2 instance or if you want
+
+187
+00:25:32.000 --> 00:25:38.000
+even more parallelization you can do it
+on multiple threads across multiple ec2
+instances and this graph illustrates
+
+188
+00:25:38.000 --> 00:25:48.000
+that so in this graph we held the i/o
+size constant it's actually we're
+showing the creation of 4k files and
+
+189
+00:25:48.000 --> 00:25:55.000
+this is across ten instances and it
+shows on the x-axis the number of
+threads and on the y-axis the aggregate
+
+190
+00:25:55.000 --> 00:26:03.000
+I ops that that you're able to drive and
+in this example you can see almost a
+linear increase in the aggregate I ups
+
+191
+00:26:03.000 --> 00:26:13.000
+as you increase the number of threads
+and daryl is going to give a little bit
+of a walk through of an example of doing
+
+192
+00:26:13.000 --> 00:26:20.000
+some of this parallelization so you can
+see how you could actually do that in
+the real world and we provide cloud
+
+193
+00:26:20.000 --> 00:26:26.000
+watch metrics for a variety of views of
+your file system performance
+if you want to understand the operations
+
+194
+00:26:26.000 --> 00:26:30.000
+per second that you're driving if you
+want to understand the volume of
+throughput that you're driving over a
+
+195
+00:26:30.000 --> 00:26:37.000
+period of time we have cloud watch
+metrics that provide that data to
+metrics that I'll call out specifically
+
+196
+00:26:37.000 --> 00:26:44.000
+burst credit balance and permitted
+throughput as I mentioned the amount of
+throughput that you're entitled to on an
+
+197
+00:26:44.000 --> 00:26:51.000
+EFS file system is tied to the amount of
+data that you're storing and essentially
+the rate at which so we have this burst
+
+198
+00:26:51.000 --> 00:26:59.000
+credit model and if you have burst
+credits available you're able to drive
+throughput to your file system and the
+
+199
+00:26:59.000 --> 00:27:05.000
+rate at which you earn these bursts
+credits is tied to the amount of storage
+that you have in the file system and it
+
+200
+00:27:05.000 --> 00:27:12.000
+all equates to around 100 megabytes per
+second of throughput that you can drive
+for every terabyte of data stored so if
+
+201
+00:27:12.000 --> 00:27:19.000
+you have one terabyte it's 100 megabytes
+per second if you have five terabytes
+500 megabytes per second and there's
+
+202
+00:27:19.000 --> 00:27:26.000
+details in our documentation on this but
+just wanted to give you a feel for what
+that bursting model is like and these
+
+203
+00:27:26.000 --> 00:27:32.000
+two cloud watch metrics the first credit
+balance permitted throughput give you
+visibility into how you're doing from a
+
+204
+00:27:32.000 --> 00:27:37.000
+burst credit perspective and if you're
+if you're okay or if you need to add
+more data in order to get the level of
+
+205
+00:27:37.000 --> 00:27:48.000
+throughput that you want and then in
+terms of kernel version and NFS mount
+options these things actually really
+
+206
+00:27:48.000 --> 00:27:56.000
+matter so definitely use a Linux kernel
+version for dot 0 or newer there's so
+many performance enhancements that have
+
+207
+00:27:56.000 --> 00:28:07.000
+been added to the Linux kernel over time
+so we highly recommend 40 or later and
+mount via NFS for dot 1 there are a
+
+208
+00:28:07.000 --> 00:28:14.000
+bunch of performance enhancements tied
+to for dot 1 versus 40 including
+improved performance for multi-threaded
+
+209
+00:28:14.000 --> 00:28:19.000
+applications so that's something we
+highly recommend the other parameters
+that I'm showing the other optional
+
+210
+00:28:19.000 --> 00:28:25.000
+parameters you don't need to worry too
+much about because those are the
+defaults for most clients it doesn't
+
+211
+00:28:25.000 --> 00:28:30.000
+hurt to specify them anyway in case it's
+not the default for whatever client
+you're using but all of this stuff is in
+
+212
+00:28:30.000 --> 00:28:36.000
+our documentation as well but for the
+most part default options will be what
+you need
+
+213
+00:28:36.000 --> 00:28:46.000
+so a summary on the performance front
+first of all test test test I can talk
+about Layton sees all day I can talk
+
+214
+00:28:46.000 --> 00:28:50.000
+about throughput all day you're not
+going to really know what that means for
+your application until you test your
+
+215
+00:28:50.000 --> 00:28:56.000
+application that's because every
+application has a different a different
+set of access patterns so testing is
+
+216
+00:28:56.000 --> 00:29:03.000
+really the best way to understand what
+does your application look like when
+working with the fs use general purpose
+
+217
+00:29:03.000 --> 00:29:10.000
+mode for lowest latency mac co mode for
+scale out and for most use cases general
+purpose mode is the right mode use
+
+218
+00:29:10.000 --> 00:29:22.000
+kernel version 400 later and FS for dot
+1 look for opportunities to to aggregate
+your I osoyoos larger io sizes when
+
+219
+00:29:22.000 --> 00:29:29.000
+you're reading and writing data perform
+asynchronous operations so one perimeter
+I sort of glossed over on the previous
+
+220
+00:29:29.000 --> 00:29:37.000
+slide was the async mount option which
+is a default mount option and what that
+does is it allows the NFS client to
+
+221
+00:29:37.000 --> 00:29:44.000
+acknowledge your right even before it's
+gone to the back end so that gives you
+some enhanced performance for for rights
+
+222
+00:29:44.000 --> 00:29:51.000
+and also similarly for reads but you
+know there's a there's some you need to
+make sure that you're OK from a
+
+223
+00:29:51.000 --> 00:29:56.000
+consistency perspective in order to do
+that because you'll be getting
+acknowledgments to your application that
+
+224
+00:29:56.000 --> 00:30:02.000
+right is completed even though it hasn't
+propagated necessarily to the back end
+parallelization we'll talk about that in
+
+225
+00:30:02.000 --> 00:30:11.000
+a little bit and then we'll also talk
+about using cashing in front of your
+filesystem and with that I'll turn it
+
+226
+00:30:11.000 --> 00:30:24.000
+over to Darryl
+Thanks that appreciate it so welcome
+everyone glad to be here I'm from Texas
+
+227
+00:30:24.000 --> 00:30:34.000
+and in Texas we love things who else is
+from Texas any Texans here all right in
+Texas what do we like and things in
+
+228
+00:30:34.000 --> 00:30:43.000
+Texas are bigger and in Texas we like
+things faster as well so what do we want
+to do we want to move a lot of data big
+
+229
+00:30:43.000 --> 00:30:54.000
+data very fast so that's what I wanted
+to do so this is what we did we had two
+scenarios the first scenario was we
+
+230
+00:30:54.000 --> 00:31:03.000
+wanted to transfer a lot of media assets
+so what we did we came up with a random
+size file so they range from one gig to
+
+231
+00:31:03.000 --> 00:31:21.000
+100 gig plus we wanted to move them from
+s3 any BS our next scenario is we had a
+lot of smaller file so we randomly
+
+232
+00:31:21.000 --> 00:31:42.000
+generated files between 64 K and 256 and
+again we wanted to transfer those from
+s3 and EBS over to EFS so how should we
+
+233
+00:31:42.000 --> 00:31:51.000
+do this do we want to paralyze the copy
+or do we want to do it in a serial
+manner so if we take a look at serial
+
+234
+00:31:51.000 --> 00:32:02.000
+what does that look like one file after
+another so you can only do so much
+activity at once or should we do it in
+
+235
+00:32:02.000 --> 00:32:18.000
+parallel have a lot of different threads
+have a lot of different instances doing
+this copy at the same time so what did
+
+236
+00:32:18.000 --> 00:32:28.000
+we use we use new parallel some of you
+may be familiar with this you could be
+familiar with X arts as well so very
+
+237
+00:32:28.000 --> 00:32:39.000
+similar to that so really replace
+is having to look through and do a
+basically a copy command so what we did
+
+238
+00:32:39.000 --> 00:32:48.000
+is and it talks about it with with new
+parallel it makes it very it's
+consistent because the output is going
+
+239
+00:32:48.000 --> 00:32:57.000
+to be the same as if you did it in a
+serialized manner all right so this is
+what we did we created the destination
+
+240
+00:32:57.000 --> 00:33:15.000
+directory using parallel and we did the
+copy as well so what does that look like
+so if you're familiar with AWS we love
+
+241
+00:33:15.000 --> 00:33:25.000
+data we thrive for data so data tells us
+so much information about how things are
+going so we wanted to have data-driven
+
+242
+00:33:25.000 --> 00:33:39.000
+results we also wanted to hand this off
+to someone else we wanted a repeatable
+output results and of course we want to
+
+243
+00:33:39.000 --> 00:33:49.000
+make sure they were optimizing for cost
+we want to do this as inexpensively as
+we possibly could so we want to
+
+244
+00:33:49.000 --> 00:33:56.000
+determine the best instance type to help
+us with reducing the cost but we wanted
+to make sure that we had we could move a
+
+245
+00:33:56.000 --> 00:34:04.000
+lot of data very very fast so we looked
+at these families these instance
+families and we wanted to see which is
+
+246
+00:34:04.000 --> 00:34:11.000
+going to be the best we want to do a
+quick test transfer of a thousand files
+and we wanted to take a look at the
+
+247
+00:34:11.000 --> 00:34:15.000
+different threads we went from one
+thread to a thousand twenty four threads
+what would that look like how would that
+
+248
+00:34:15.000 --> 00:34:26.000
+impact this is copy this transfer so we
+used a couple of tools to do this we use
+data dog to monitor their performance on
+
+249
+00:34:26.000 --> 00:34:36.000
+on the instance we use sumo logic to do
+the data visualization we also use
+saltstack to do the automation the
+
+250
+00:34:36.000 --> 00:34:49.000
+orchestration so what happened
+so with four instances we were able to
+run 451 megabytes a second and it looks
+
+251
+00:34:49.000 --> 00:34:59.000
+something like this we had very
+consistent throughput for all four
+instances that's great but what does
+
+252
+00:34:59.000 --> 00:35:08.000
+that mean how can we improve that so
+again if we go parallel we want to add
+more instances if we went up to 50
+
+253
+00:35:08.000 --> 00:35:18.000
+instances we were able to get four point
+two gigabytes a second gigabytes a
+second now that's not the limit for EFS
+
+254
+00:35:18.000 --> 00:35:27.000
+that was a limit for our environment
+based on the size of data we had stored
+in our EFS file system so if you have
+
+255
+00:35:27.000 --> 00:35:37.000
+more data you can definitely see that
+throughput increase now let's go to our
+other use case or other example our
+
+256
+00:35:37.000 --> 00:35:49.000
+scenario so we had a lot of small files
+ranging from 64k to 256k and we wanted
+to see which instance type was going to
+
+257
+00:35:49.000 --> 00:35:56.000
+be best and how many threads we should
+be using so all the different colors you
+see here those are all the different
+
+258
+00:35:56.000 --> 00:36:04.000
+instance types we ran this test against
+and if you notice right there in about
+200 threads it's sort of plateaued off
+
+259
+00:36:04.000 --> 00:36:15.000
+so now we know you know what 200 threads
+is where we want to be for our use case
+for our example our workload so we
+
+260
+00:36:15.000 --> 00:36:27.000
+wanted to find the best instance type at
+the least cost so that Kate that brought
+us to the see three large instance type
+
+261
+00:36:27.000 --> 00:36:35.000
+and we were able to push through five
+thousand little over five thousand files
+per minute when we did this at 200
+
+262
+00:36:35.000 --> 00:36:48.000
+threads alright so now we have the
+optimal instant size we have the optimal
+number of threads so now what we want to
+
+263
+00:36:48.000 --> 00:36:54.000
+do is we want to we want to go parallel
+we want to increase the number of
+instances
+
+264
+00:36:54.000 --> 00:37:04.000
+so we decided let's go ahead and try out
+300 oh and also we want to optimize for
+cost so what did we use spot market so
+
+265
+00:37:04.000 --> 00:37:13.000
+what does that look like cost-wise this
+cost to do this test less than its
+around less than five dollars to run
+
+266
+00:37:13.000 --> 00:37:24.000
+this test these instances were running
+at 4.5 cents per hour so we were able to
+do this test very efficiently with 300
+
+267
+00:37:24.000 --> 00:37:38.000
+instances this see three large instance
+we were able to copy 1.6 million files a
+minute so that's a lot that is parallel
+
+268
+00:37:38.000 --> 00:37:48.000
+ISM with the optimal instance type with
+the number of threats and the number of
+the correct number of ec2 instances for
+
+269
+00:37:48.000 --> 00:37:59.000
+our workload and you can see it very
+consistent for all of those all of those
+ec2 instances so in summary what did we
+
+270
+00:37:59.000 --> 00:38:08.000
+learn from this very large files and get
+a lot of throughput here we were limited
+at 4.2 just because of the size of our
+
+271
+00:38:08.000 --> 00:38:14.000
+file system but definitely that that can
+increase if you have a larger file
+system and with small files again you
+
+272
+00:38:14.000 --> 00:38:22.000
+want to go parallel increase the number
+of threats they want to increase the
+number of instances then you can also
+
+273
+00:38:22.000 --> 00:38:33.000
+start pushing depending on your workload
+your use case you can you can see
+performance similar to this so in
+
+274
+00:38:33.000 --> 00:38:42.000
+summary we want to paralyze everything
+paralyzed threads paralyzed instances as
+ed mentioned you want to test test test
+
+275
+00:38:42.000 --> 00:38:51.000
+test your application out test it again
+and test it again make sure it's working
+the way that you wanted to want to
+
+276
+00:38:51.000 --> 00:38:55.000
+capture and analyze the state as well
+you want to see how are you performing
+when you're running your workload
+
+277
+00:38:55.000 --> 00:39:09.000
+against the fs and again to do this test
+it cost us less than five dollars
+alright so that sort of showed you a
+
+278
+00:39:09.000 --> 00:39:20.000
+little of how we recommend to run a sort
+of a parallel workload with threads and
+instance accounts now I want to talk a
+
+279
+00:39:20.000 --> 00:39:28.000
+little bit about a good use case so ed
+mentioned a number of different use
+cases that EFS is really great at
+
+280
+00:39:28.000 --> 00:39:37.000
+serving and one of those a sort of
+combination is content management as
+well as web survey so you're all
+
+281
+00:39:37.000 --> 00:39:43.000
+familiar with what this is you know it's
+basically web-based applications serving
+out content this could be wiki's this
+
+282
+00:39:43.000 --> 00:39:54.000
+could be blogs you know just web
+applications so one that is very popular
+that you may be familiar with is it is
+
+283
+00:39:54.000 --> 00:40:01.000
+WordPress it's a wordpress as you may be
+familiar with it is a free and open
+source tool that many people who's
+
+284
+00:40:01.000 --> 00:40:10.000
+running wordpress today got a couple
+WordPress users out there okay great
+it's great software it really makes your
+
+285
+00:40:10.000 --> 00:40:19.000
+web page look great very easy to run
+free and priceless is the quote from
+from woodbridge so it's a it's a great
+
+286
+00:40:19.000 --> 00:40:25.000
+great product as I looked into this a
+little bit more I was surprised at the
+number of sites that actually run
+
+287
+00:40:25.000 --> 00:40:31.000
+WordPress so there's a study just done
+recently that said that twenty-seven
+percent of all the websites are running
+
+288
+00:40:31.000 --> 00:40:39.000
+wordpress that's amazing twenty-seven
+percent of anything in this market is
+huge so that's great there's also a
+
+289
+00:40:39.000 --> 00:40:51.000
+quote or a study done that it says it's
+very easy so it's very very easy to run
+very easy to maintain and again another
+
+290
+00:40:51.000 --> 00:40:56.000
+study from Forbes this is a little a
+little while ago so it's probably a
+little out of date but it also said that
+
+291
+00:40:56.000 --> 00:41:04.000
+you know they're 660 million websites
+are running wordpress so we want to test
+this out you know how would this great
+
+292
+00:41:04.000 --> 00:41:16.000
+web serving content management system
+perform on EFS so WordPress is available
+at really two different
+
+293
+00:41:16.000 --> 00:41:23.000
+flavors in a sense so if you want to run
+a wordpress site you can go to a managed
+provider so wordpress com is one press
+
+294
+00:41:23.000 --> 00:41:29.000
+net is another there's just two that
+that I'm familiar with but there's going
+to be there's hundreds out there that
+
+295
+00:41:29.000 --> 00:41:35.000
+will manage and basically provide the
+WordPress environment for you if you
+wanted to run your your your application
+
+296
+00:41:35.000 --> 00:41:45.000
+there the other way is to download the
+software from wordpress.org and run it
+yourself so that's what we're going to
+
+297
+00:41:45.000 --> 00:41:56.000
+do today so we want to do a comparison
+between resources and components of
+WordPress so how they sort of map so if
+
+298
+00:41:56.000 --> 00:42:02.000
+we take a look at this unstructured data
+we want all that unstructured data in
+components and we also want to structure
+
+299
+00:42:02.000 --> 00:42:11.000
+data under the components of WordPress
+where is that going to go to where's
+that can be stored in AWS so the
+
+300
+00:42:11.000 --> 00:42:19.000
+unstructured data is going to be an EFS
+that's where we're going to store those
+PHP files the themes the plugins those
+
+301
+00:42:19.000 --> 00:42:25.000
+are some of the challenges that a lot of
+users administrators have is when they
+start installing these plugins and
+
+302
+00:42:25.000 --> 00:42:30.000
+themes it's going to be installed on
+maybe that that local instance and then
+you got to do that multiple times as you
+
+303
+00:42:30.000 --> 00:42:38.000
+sort of expand your WordPress I'm fleet
+so we want to store that in a file
+system that is shared among a number of
+
+304
+00:42:38.000 --> 00:42:49.000
+ec2 instances and that structured data
+we're going to put in RDS of course so
+what does this look like so very quickly
+
+305
+00:42:49.000 --> 00:42:56.000
+this is the architecture that we're
+going to be coming out with a reference
+architecture with this and an updated
+
+306
+00:42:56.000 --> 00:43:03.000
+WordPress white paper that has all this
+information in it so within your VPC
+you're going to have a couple of a Z's
+
+307
+00:43:03.000 --> 00:43:08.000
+you're going to have those mount targets
+that ed mentioned they're going to be it
+connected back to your EFS file system
+
+308
+00:43:08.000 --> 00:43:16.000
+you're going to have RDS spun up you're
+going to have an ec2 instance that ec2
+instance is going to be able to connect
+
+309
+00:43:16.000 --> 00:43:22.000
+to the mount target as well as your RDS
+environment but we want to do more than
+just one instance so we want to have an
+
+310
+00:43:22.000 --> 00:43:29.000
+auto scaling group and we don't have
+multiple instances in there in front of
+that what we want we want to yell be
+
+311
+00:43:29.000 --> 00:43:41.000
+we want this to be connected to the
+Internet we can put cloud front in front
+of that we can put RDS or route 53 and
+
+312
+00:43:41.000 --> 00:43:47.000
+then our users will be able to connect
+we can expand this a little further and
+actually cash some of the the database
+
+313
+00:43:47.000 --> 00:43:55.000
+data that's structured data and we can
+put elastic cash in front of RDS then
+also help out what we can do is put
+
+314
+00:43:55.000 --> 00:44:09.000
+install opie cash on the web servers on
+our WordPress servers to cash some of
+those PHP files from EFS so what does
+
+315
+00:44:09.000 --> 00:44:23.000
+this look like let's go ahead and very
+quickly take a look at this so there we
+go
+
+316
+00:44:23.000 --> 00:44:32.000
+this is an example of a CloudFormation
+template that's going to be included in
+the reference architecture these are
+
+317
+00:44:32.000 --> 00:44:39.000
+just some of the configuration settings
+of parameters that we have so we want to
+identify the the file system named the
+
+318
+00:44:39.000 --> 00:44:47.000
+performance mode general purpose or mac
+co all the NFS mount name then go into
+the bpc configuration the wordpress
+
+319
+00:44:47.000 --> 00:44:55.000
+configuration ELB configuration Aurora
+we're going to put this in an Aurora
+cluster elastic ash configuration as
+
+320
+00:44:55.000 --> 00:45:02.000
+well so all of these parameters are
+going to be in this CloudFormation
+template okay so we're not going to run
+
+321
+00:45:02.000 --> 00:45:09.000
+that right now just because it's going
+to take some time to to create the the
+RDS Aurora cluster so we're just going
+
+322
+00:45:09.000 --> 00:45:22.000
+to go ahead and jump over to an
+environment sorry already up and running
+now I have this over any organ region so
+
+323
+00:45:22.000 --> 00:45:34.000
+what does this look like so if we take a
+look at our load balancer so right now
+we have one wordpress instance and when
+
+324
+00:45:34.000 --> 00:45:40.000
+we launched that confirmation template
+what it did it actually mounted that
+file system as well installed all the
+
+325
+00:45:40.000 --> 00:45:49.000
+application all the applications that we
+need it so we take a look at the
+dashboard for wordpress we want to go
+
+326
+00:45:49.000 --> 00:46:04.000
+ahead and install a new theme so let's
+go ahead and do that
+I like this theme so we'll go ahead and
+
+327
+00:46:04.000 --> 00:46:14.000
+use that so this is going to be
+downloading it's going to be downloaded
+and installed on our file systems this
+
+328
+00:46:14.000 --> 00:46:25.000
+mounted to this this one single instance
+that's a serving up all of our wordpress
+content now that's installed we're going
+
+329
+00:46:25.000 --> 00:46:38.000
+to go ahead and activate it now what we
+can do is take a look at what that looks
+like so very simple very basic WordPress
+
+330
+00:46:38.000 --> 00:46:46.000
+site sort of out of the box well we also
+want to want to install some plugins as
+well so we want to add a new plugin and
+
+331
+00:46:46.000 --> 00:47:05.000
+we want to add the opie cash dashboard
+so going very easy to do the
+installation again is it going to be
+
+332
+00:47:05.000 --> 00:47:14.000
+installed it's going to be stored in our
+wp-content folder which is sitting on
+our EFS file system let's go ahead and
+
+333
+00:47:14.000 --> 00:47:29.000
+activate that we also want to activate
+our other plugin or w3 total cache
+buggin as well
+
+334
+00:47:29.000 --> 00:47:35.000
+so now that that is working what we want
+to do is we want to make one small
+change and this is something you
+
+335
+00:47:35.000 --> 00:47:41.000
+probably wouldn't do on your sub you
+notice here if we we don't know exactly
+what instance is running a we only have
+
+336
+00:47:41.000 --> 00:47:47.000
+one instance so we know it's it's
+running on that one but if we expand our
+auto scaling group we're not going to
+
+337
+00:47:47.000 --> 00:47:56.000
+know what what instance that is so
+quickly i'm going to go ahead and just
+copy a header file that i've already
+
+338
+00:47:56.000 --> 00:48:21.000
+made some some changes to and actually
+first we need to go ahead and connect to
+that that ec2 instance
+
+339
+00:48:21.000 --> 00:48:34.000
+if we grab this instance we'll go ahead
+and connect to it grab our connection
+string
+
+340
+00:48:34.000 --> 00:48:48.000
+now let's go ahead and copy that new
+header file over so now what do we have
+we do a refresh on this now we're going
+
+341
+00:48:48.000 --> 00:48:53.000
+to see the instance ID that's good so
+now that we know that it's running there
+but we want to do something else as well
+
+342
+00:48:53.000 --> 00:49:04.000
+so let's go ahead let's add a picture we
+want to make you know want to customize
+this just a little bit so let's go ahead
+
+343
+00:49:04.000 --> 00:49:13.000
+and select a file will upload a new file
+and my side is called cloud Viking so
+we've got a little picture of a Viking
+
+344
+00:49:13.000 --> 00:49:26.000
+ship we'll go ahead and save that we
+want to use logo and tagline save and
+publish now as we refresh this we're in
+
+345
+00:49:26.000 --> 00:49:33.000
+a ver a little picture which is great so
+now let's say that we have an event and
+not a scaling event that we needed to
+
+346
+00:49:33.000 --> 00:49:42.000
+expand our auto scaling group and have
+launched a number of other instances so
+if we go into our auto scaling group for
+
+347
+00:49:42.000 --> 00:49:54.000
+this environment
+will change the desired number of
+instances to say four go ahead and save
+
+348
+00:49:54.000 --> 00:50:02.000
+that change so now in the background is
+going to automatically launch these
+instances well a part of this the launch
+
+349
+00:50:02.000 --> 00:50:11.000
+config for our auto scaling group has
+all the information and needs to
+download all the files in needed 24 for
+
+350
+00:50:11.000 --> 00:50:17.000
+our environment it's able to
+automatically mount the EFS filesystem
+and it's going to be automatically
+
+351
+00:50:17.000 --> 00:50:36.000
+joined to our load balancer so if we
+quickly switch back to our environment
+one thing we could also do after we've
+
+352
+00:50:36.000 --> 00:50:46.000
+done all this is we could install our
+memcache d client on our ec2 instances
+we could configure opie cash a little
+
+353
+00:50:46.000 --> 00:50:53.000
+bit more and say you know what we're
+going to going to maybe attach another
+EBS volume and actually have Opie cash
+
+354
+00:50:53.000 --> 00:51:01.000
+store those files cash those files on
+this other EBS volume if you wanted to
+we could also use cloud front to cash
+
+355
+00:51:01.000 --> 00:51:11.000
+some of that information and use that as
+our CDN then we could also use route 53
+and put in a custom domain name so this
+
+356
+00:51:11.000 --> 00:51:18.000
+would look like any you know typical
+WordPress application but in the
+background you have an basically an
+
+357
+00:51:18.000 --> 00:51:25.000
+infinite number of ec2 instances that
+you could scale to infinite amount of
+storage and ef-s and on the database
+
+358
+00:51:25.000 --> 00:51:32.000
+side you've got an Aurora cluster but in
+front of that you have an elastic cash
+caching mechanism to cash all those
+
+359
+00:51:32.000 --> 00:51:41.000
+database calls and again both of those
+environments can grow if we need to so
+now if we quickly hop over to see where
+
+360
+00:51:41.000 --> 00:51:52.000
+we're at hopefully all of those
+instances have have joined it looks like
+successful now if we hop back and we do
+
+361
+00:51:52.000 --> 00:52:02.000
+change thanks now if we hop back and we
+take a look at this take a look at the
+instance ID and as we scroll through
+
+362
+00:52:02.000 --> 00:52:08.000
+this we should see the instance ID
+change so now all of these instance IDs
+these new instances have been added to
+
+363
+00:52:08.000 --> 00:52:16.000
+our load balancer and it's serving out
+all of this data again very easy to
+deploy we have this in a CloudFormation
+
+364
+00:52:16.000 --> 00:52:21.000
+template it's going to be available as a
+reference architecture and we're going
+to be updating the the white paper as
+
+365
+00:52:21.000 --> 00:52:37.000
+well
+alright thank you Darrell alright so
+let's briefly talk about economics with
+
+366
+00:52:37.000 --> 00:52:45.000
+DFS as I mentioned earlier with ef-s you
+pay only for the storage space to use
+there's no minimum commitments no
+
+367
+00:52:45.000 --> 00:52:52.000
+upfront fees you don't pay to provision
+storage there's no throughput charges
+requests charges none of that it's a
+
+368
+00:52:52.000 --> 00:53:01.000
+simple flat gigabyte per month charge of
+thirty cents in our US regions so how do
+you put that thirty cents per gigabyte
+
+369
+00:53:01.000 --> 00:53:09.000
+per month into context well one way to
+do that is to think about what it would
+cost to have a shared file system that
+
+370
+00:53:09.000 --> 00:53:20.000
+you run on your own on AWS and a common
+way to do that would be a third party a
+file system layer that you run on ec2
+
+371
+00:53:20.000 --> 00:53:28.000
+instances and that's backed by EBS
+volumes and so in that type of setup you
+would have if you're doing this across
+
+372
+00:53:28.000 --> 00:53:35.000
+multiple lazies so that you get the
+multi AZ characteristics of EFS you
+would have one instance in each AZ
+
+373
+00:53:35.000 --> 00:53:44.000
+that's running this shared file layer
+and you would have two sets of EBS
+volumes one set in each AZ that actually
+
+374
+00:53:44.000 --> 00:53:52.000
+stores the data and you would have inter
+easy traffic between the EBS volumes in
+order to replicate the data across a Z's
+
+375
+00:53:52.000 --> 00:54:01.000
+so how much would that cost well let's
+say that you need to store around 500
+gigabytes of data and you want multi AZ
+
+376
+00:54:01.000 --> 00:54:08.000
+because you require high availability
+high durability so using that shared
+file layer on top of EBS you'd probably
+
+377
+00:54:08.000 --> 00:54:14.000
+provision around six hundred gigabytes
+worth of EBS volumes that's assuming
+around eighty five percent utilization
+
+378
+00:54:14.000 --> 00:54:21.000
+you would never 100% utilize an EBS
+volume and keep in mind you'd need to
+replicate those volumes to the second AZ
+
+379
+00:54:21.000 --> 00:54:31.000
+so for storage you have two times the
+600 gigabyte GB two volumes that adds up
+to one hundred twenty dollars you have
+
+380
+00:54:31.000 --> 00:54:36.000
+the compute costs and these are the ec2
+instances that just manage the file
+system layer so these aren't your
+
+381
+00:54:36.000 --> 00:54:41.000
+instances that are accessing the file
+system these are the
+are just running that file system layer
+
+382
+00:54:41.000 --> 00:54:49.000
+and then you'd have the cross AZ or
+inter AZ data transfer costs for all the
+replication traffic you're doing and
+
+383
+00:54:49.000 --> 00:54:55.000
+that hundred twenty nine dollars per
+month is if you were doing the typical
+amount of traffic that we see customers
+
+384
+00:54:55.000 --> 00:55:02.000
+doing on EFS so all together you're
+looking at a price of about six hundred
+dollars per month to have this set up on
+
+385
+00:55:02.000 --> 00:55:10.000
+EFS with a 500 gigabyte file system
+you're paying 150 dollars per month so
+that's one lens through which to look at
+
+386
+00:55:10.000 --> 00:55:20.000
+the price and understand the economics
+and now I'd like to talk about some
+upcoming features and announce a feature
+
+387
+00:55:20.000 --> 00:55:32.000
+that's available today so first of all
+we are releasing soon encryption of data
+at rest and what that will do is it
+
+388
+00:55:32.000 --> 00:55:38.000
+provides an additional layer of
+protection for your data and helps you
+meet your organization's regulatory and
+
+389
+00:55:38.000 --> 00:55:46.000
+compliance requirements and our
+encryption of data at rest will be fully
+integrated with AWS kms or key
+
+390
+00:55:46.000 --> 00:55:52.000
+management service so you can manage the
+keys that you're using to encrypt and
+decrypt your file data and the
+
+391
+00:55:52.000 --> 00:55:58.000
+encryption and decryption is handled
+transparently all you do is you specify
+that for a file system you want it to be
+
+392
+00:55:58.000 --> 00:56:06.000
+encrypted you specify the key and EFS
+manages everything and there's no extra
+cost for enabling encryption so that
+
+393
+00:56:06.000 --> 00:56:22.000
+feature is coming in early 2017 also
+coming soon is a simplifying feature for
+using EFS today every mount target that
+
+394
+00:56:22.000 --> 00:56:32.000
+you create has a unique DNS name and
+that DNS name is derived from the AZ in
+which the mount target resides with the
+
+395
+00:56:32.000 --> 00:56:38.000
+new feature that will be coming soon you
+will have a single DNS name for your
+file system so single DNS name across
+
+396
+00:56:38.000 --> 00:56:45.000
+all of your mount targets and that DNS
+name will automatically resolve to the
+IP address of the mount target and the
+
+397
+00:56:45.000 --> 00:56:53.000
+AZ from which you are mounting your file
+system so it's simplification where you
+don't have to worry about which AZ or
+
+398
+00:56:53.000 --> 00:56:58.000
+instance
+when you're mounting the file system and
+to give you a feel for what that would
+
+399
+00:56:58.000 --> 00:57:08.000
+look like today the DNS names have the
+first part is tied to what AZ are in
+that will go away and now your your DNS
+
+400
+00:57:08.000 --> 00:57:13.000
+names for your file systems will just
+have your files will just have the rest
+of the DNS name without that easy so
+
+401
+00:57:13.000 --> 00:57:27.000
+your file system ID EFS region amazon
+AWS and then before talking about the
+next feature which is the one that we're
+
+402
+00:57:27.000 --> 00:57:34.000
+announcing today let me set the stage by
+talking about how customers typically
+think about bridging data between on
+
+403
+00:57:34.000 --> 00:57:41.000
+Prem and EFS and customers typically
+think about four scenarios for working
+with file data across there on Prem
+
+404
+00:57:41.000 --> 00:57:50.000
+environments and EFS so one is migration
+where they want to move their entire
+data set in their application onto AWS
+
+405
+00:57:50.000 --> 00:58:01.000
+and then run the application on ec2
+instances using data in EFS so that's
+migration another is bursting and with
+
+406
+00:58:01.000 --> 00:58:07.000
+bursting the pattern is that you would
+move your data your data stored
+permanently on Prem you move it on to
+
+407
+00:58:07.000 --> 00:58:13.000
+EFS in order to do some processing on
+the data so you would spin up an ec2
+cluster do some processing on the data
+
+408
+00:58:13.000 --> 00:58:20.000
+and then you would move it back onto on
+prem to permanently reside there so
+that's bursting the third is tiering
+
+409
+00:58:20.000 --> 00:58:27.000
+where you would store part of your data
+set permanently on EFS and keep part of
+it on Prem and you would access the
+
+410
+00:58:27.000 --> 00:58:34.000
+entire data set from applications
+running on Prem and so you would ideally
+keep your hotter data on Prem where it's
+
+411
+00:58:34.000 --> 00:58:41.000
+closer to the applications and the rest
+of your data set on EFS and then finally
+there's backup and disaster recovery
+
+412
+00:58:41.000 --> 00:58:48.000
+where you maintain a copy of your full
+data set on EFS you periodically make
+sure that that's up to date and then you
+
+413
+00:58:48.000 --> 00:58:55.000
+can use that either if you want to
+restore backup or for disaster recovery
+scenarios and what we're announcing
+
+414
+00:58:55.000 --> 00:59:03.000
+today is access to your EFS file systems
+from on-premises servers over direct
+connect connections
+
+415
+00:59:03.000 --> 00:59:10.000
+and for those of you who aren't familiar
+with what Direct Connect is AWS direct
+connect establishes a private network
+
+416
+00:59:10.000 --> 00:59:17.000
+connection between your on prime
+environment and AWS bypassing the
+Internet entirely one of the benefits of
+
+417
+00:59:17.000 --> 00:59:22.000
+doing that is that you get improved
+Layton sees on this direct connect
+connection compared to a connection over
+
+418
+00:59:22.000 --> 00:59:29.000
+the Internet and you get improved
+throughput so with this feature that
+we're announcing today you can mount
+
+419
+00:59:29.000 --> 00:59:36.000
+your file system from a non-prime server
+using the same NFS for dot one mount
+command you'd use from ec2 instances and
+
+420
+00:59:36.000 --> 00:59:44.000
+you're you're you'll be able to access
+your data just like you would with from
+ec2 in terms of these scenarios that I
+
+421
+00:59:44.000 --> 00:59:52.000
+talked about that this supports supports
+the migration the bursting and the
+backup and dr scenarios probably not a
+
+422
+00:59:52.000 --> 00:59:59.000
+great solution for most tiering
+applications because you'll want your
+hot or data to be on prem still for
+
+423
+00:59:59.000 --> 00:60:08.000
+those so this is really about moving
+your data in and moving your data out
+now keep in mind that the latency of
+
+424
+00:60:08.000 --> 00:60:16.000
+direct connect connections will impact
+performance so due to laws of physics on
+some direct connect connections you'll
+
+425
+00:60:16.000 --> 00:60:24.000
+actually see tens of milliseconds of
+delays due to propagating the data over
+long distances so if you're really
+
+426
+00:60:24.000 --> 00:60:30.000
+trying to drive high levels of
+throughput high levels of i/o keep in
+mind what we talked about earlier in
+
+427
+00:60:30.000 --> 00:60:41.000
+terms of power lies parallelizing the
+data that you're copying over and this
+actually shows a test that we ran that
+
+428
+00:60:41.000 --> 00:60:50.000
+shows the time it took to copy 26,000
+files to EFS as a function of the number
+of threads and as you can see as you
+
+429
+00:60:50.000 --> 00:60:58.000
+increase the number of threads the time
+goes down and it has a nice asymptotic a
+nature to the curve and that's because
+
+430
+00:60:58.000 --> 00:61:03.000
+as you increase the number of threads
+every time you do you increase the
+number of threads by two you're having
+
+431
+00:61:03.000 --> 00:61:13.000
+the time that it takes to copy the data
+over so you would expect an asymptote
+and this Direct Connect feature is
+
+432
+00:61:13.000 --> 00:61:22.000
+available today in three regions it's
+available actually starting right now so
+us West Oregon us east ohio and you
+
+433
+00:61:22.000 --> 00:61:35.000
+ireland and then it's coming soon to us
+these northern virginia and that's it we
+are out of time i do want to encourage
+
+434
+00:61:35.000 --> 00:61:41.000
+you if you're interested in learning
+more about EFS and especially learning
+about some example applications
+
+435
+00:61:41.000 --> 00:61:49.000
+customers using EFS there's a case study
+with atlassian it's it happened earlier
+today one session but there's another
+
+436
+00:61:49.000 --> 00:61:56.000
+one at twelve-thirty on friday there's
+and they're talking about jira on top of
+the FS there's a case study with spokeo
+
+437
+00:61:56.000 --> 00:62:04.000
+they're talking about web serving and
+optimizing web serving with ef-s and
+then there's a session with monsanto
+
+438
+00:62:04.000 --> 00:62:11.000
+where they're doing a bunch of really
+cool analytics workloads on EFS so thank
+you all Darryl and I will stand by for a
+question
+
+
+

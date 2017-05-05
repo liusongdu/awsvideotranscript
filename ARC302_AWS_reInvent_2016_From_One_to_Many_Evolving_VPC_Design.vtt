@@ -1,0 +1,2962 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:13.000
+my name is Rob Alexander and welcome to
+my talk on VPC design this is the fourth
+year that we've been doing this talk how
+
+2
+00:00:13.000 --> 00:00:20.000
+many of you have seen this before been
+to this one couple good thank you
+appreciate you coming back there is new
+
+3
+00:00:20.000 --> 00:00:30.000
+stuff don't worry but we always start
+with this slide and that's because this
+talk is based upon practical designs we
+
+4
+00:00:30.000 --> 00:00:36.000
+see working out in the wild in
+production workloads with our customers
+we kind of distill those down every year
+
+5
+00:00:36.000 --> 00:00:42.000
+and find kind of the best designs we see
+working where customers are doing
+interesting things with VPC and that's
+
+6
+00:00:42.000 --> 00:00:48.000
+what this talk is all about so do try
+these at home there's nothing
+theoretical here I will also point out
+
+7
+00:00:48.000 --> 00:00:58.000
+that I do read all your feedback and the
+overwhelming feedback last year was more
+designs less screenshots of router
+
+8
+00:00:58.000 --> 00:01:07.000
+configurations so you'll notice we we
+cranked down the the level from 400 to
+300 that is directly due to less
+
+9
+00:01:07.000 --> 00:01:14.000
+screenshots of router configurations so
+please give me feedback again let me
+know if I got the porridge right and
+
+10
+00:01:14.000 --> 00:01:21.000
+will correct from next year if I if
+I didn't get it quite right so it's 300
+level talk but I don't spend a lot of
+
+11
+00:01:21.000 --> 00:01:28.000
+time talking about the basics so if you
+don't know what our out table is in VPC
+you don't know the difference between a
+
+12
+00:01:28.000 --> 00:01:33.000
+security group and nakal you don't know
+what Direct Connect is don't know what
+in their gateway is or why you would
+
+13
+00:01:33.000 --> 00:01:41.000
+want one did a few talks for you that
+you might want to watch in advance so
+these two will give you a firm grounding
+
+14
+00:01:41.000 --> 00:01:52.000
+you can listen and hopefully get back
+and and catch up on the things that you
+might not have caught first time around
+
+15
+00:01:52.000 --> 00:01:58.000
+so when I first started this talk four
+years ago it was mostly about why you
+would even want one of these things
+
+16
+00:01:58.000 --> 00:02:07.000
+customers were like what why do I want
+to go into VPC what is it good for that
+has to quickly changed these are more of
+
+17
+00:02:07.000 --> 00:02:13.000
+my conversations today's how do I build
+something like this so we are going to
+get to that and that's what this talk is
+
+18
+00:02:13.000 --> 00:02:23.000
+about it's getting from one to this. But
+first you have to start with one. So, you
+know, a VPC, a virtual private cloud, is
+
+19
+00:02:23.000 --> 00:02:30.000
+you're isolated container your own
+private network within AWS where you
+define all the networking that goes into
+
+20
+00:02:30.000 --> 00:02:36.000
+it and upon creation the one big
+decision you have to make is you have to
+choose what IP space to allocate to it
+
+21
+00:02:36.000 --> 00:02:43.000
+cider block to designate for all the
+resources you're going to launch in that
+VPC so that sliders fixed on VPC
+
+22
+00:02:43.000 --> 00:02:51.000
+creation and you can't change it after
+after you designate it so the biggest is
+/16 all the way down /28 and I
+
+23
+00:02:51.000 --> 00:03:02.000
+always recommend go big go as big as you
+can if there is not a reason for you not
+to go to /16. If you're worried
+
+24
+00:03:02.000 --> 00:03:09.000
+about wasting IP space don't I've never
+had a customer come back to me and say I
+wish I would have made that BBC smaller
+
+25
+00:03:09.000 --> 00:03:25.000
+the opposite however it happens way too
+much so just a few guidelines on the IP
+space design so a few recommendations
+
+26
+00:03:25.000 --> 00:03:34.000
+clickers not behaving so plan for
+expansion you know if you're not going
+into if you're only going into one
+
+27
+00:03:34.000 --> 00:03:38.000
+region think about other regions when
+you're thinking about your space and
+make sure it's still going to make sense
+
+28
+00:03:38.000 --> 00:03:46.000
+with other regions and play absolutely
+consider future connectivity to your
+corporate networks other partner
+
+29
+00:03:46.000 --> 00:03:51.000
+networks any kind of external
+connectivity you might be in have that
+in mind when you're designing your IP
+
+30
+00:03:51.000 --> 00:03:56.000
+space and make sure you're not
+overlapping that's just asking for
+headache down the road that you don't
+
+31
+00:03:56.000 --> 00:04:05.000
+need so the next thing after the space
+after the vbc spaces you got it you got
+to carve out some subnets so subnets are
+
+32
+00:04:05.000 --> 00:04:12.000
+available
+these own specific VPC is a region-wide
+construct subnets are AZ-specific make sure
+
+33
+00:04:12.000 --> 00:04:19.000
+you distribute your IP space equally
+across all AZs. If you're in a
+region that has three or more AZs, make
+
+34
+00:04:19.000 --> 00:04:26.000
+sure you plan for that. So even though
+you might only be going day one in 2 AZs, save that equal distribution of IP
+
+35
+00:04:26.000 --> 00:04:34.000
+space for at least three AZs. I promise
+you, in a year or two you will want that
+space maybe even a few months depending
+
+36
+00:04:34.000 --> 00:04:41.000
+on how you go you know each AZ has its
+own resource pool so for example if
+you're in the spot market that's a whole
+
+37
+00:04:41.000 --> 00:04:48.000
+nother market over there that you're not
+taking advantage of in that third AZ so
+plan for it so what about subnets how
+
+38
+00:04:48.000 --> 00:05:04.000
+big how many should I have well not this
+mini and again this is not uncommon you
+know I spent many years in enterprise IT
+
+39
+00:05:04.000 --> 00:05:12.000
+and we used subnets as a unit of
+deployment and a unit of isolation this
+is very common and the tools that you
+
+40
+00:05:12.000 --> 00:05:20.000
+have available to you and VPC are much
+richer and much more give you a lot more
+functionality than a subnet so if you do
+
+41
+00:05:20.000 --> 00:05:27.000
+this if you do one subnet for
+application and across three az's you're
+going to have at least one person with
+
+42
+00:05:27.000 --> 00:05:37.000
+their full-time job of managing your IP
+space and it's just not necessary so
+these are my recommendations for VPC
+
+43
+00:05:37.000 --> 00:05:43.000
+subnet design the first thing is that
+traditional switching limitations and
+the reason that you might have done that
+
+44
+00:05:43.000 --> 00:05:49.000
+in your own data center don't apply here
+is a virtual network there's no
+performance impact for having thousands
+
+45
+00:05:49.000 --> 00:05:57.000
+and thousands and thousands of instances
+in a single subnet there's no broadcast
+domain you're not and I have any of
+
+46
+00:05:57.000 --> 00:06:06.000
+those limitations VPC so I always advise
+consider large mixed-use subnets don't
+use them as isolation containers make
+
+47
+00:06:06.000 --> 00:06:14.000
+sure you have a very large diverse
+ability to pull from IPs and you're not
+constraining one subnet because this is
+
+48
+00:06:14.000 --> 00:06:18.000
+the subnet for APP A and you run out I
+IPs over there but you can't poo I peas
+from another
+
+49
+00:06:18.000 --> 00:06:27.000
+not because that subnets for application
+be it just it's not necessary and VPC
+use security groups instead to enforce
+
+50
+00:06:27.000 --> 00:06:35.000
+isolation you know by default you get to
+start with 500 security groups and a VPC
+that's much more robust ability to
+
+51
+00:06:35.000 --> 00:06:43.000
+isolate things than summits and then
+tags for grouping resources you know
+tags can drive cost allocation cat they
+
+52
+00:06:43.000 --> 00:06:50.000
+can drive very fine-grained permissions
+and controls through identity and access
+management IAM but you can't get that
+
+53
+00:06:50.000 --> 00:06:59.000
+out of subnets so what do you use
+subnets for you use subnets as
+containers for routing policy that's
+
+54
+00:06:59.000 --> 00:07:05.000
+really what my primary recommendation is
+think of them as containers for routing
+policy and we'll talk about what that
+
+55
+00:07:05.000 --> 00:07:12.000
+means and if you don't know what I mean
+about when I say performance and
+thousands and thousands of instances in
+
+56
+00:07:12.000 --> 00:07:18.000
+a single subnet why that doesn't matter
+with VPC please go watch this talk net
+401 will give you a really good under
+
+57
+00:07:18.000 --> 00:07:32.000
+the hood perspective of how VPC really
+works so here's a good starter home this
+will this will work for eighty percent
+
+58
+00:07:32.000 --> 00:07:40.000
+of you for both starting and a long way
+into the future have many very large and
+complicated customers using a very
+
+59
+00:07:40.000 --> 00:07:49.000
+similar subnet design in a single VPC
+and those of you that you can see here
+/a to give you a thousand your public
+
+60
+00:07:49.000 --> 00:07:56.000
+little over a thousand and the slash
+twenty will give you a little over four
+thousand that just this distribution
+
+61
+00:07:56.000 --> 00:08:02.000
+means you have about 50,000 IP still
+left over for future expansion so it's a
+good start but we're actually going to
+
+62
+00:08:02.000 --> 00:08:09.000
+start with three subnet spray-z because
+I do want to focus on that point about
+routing policy so I'm going to have I
+
+63
+00:08:09.000 --> 00:08:16.000
+have three different routing policies
+for this VPC so a subnet dedicated to
+each one of those routing policies and
+
+64
+00:08:16.000 --> 00:08:26.000
+we'll go through what that means so I
+took my advice and I'd put a /16 on
+this VPC. The first routing policy well
+
+65
+00:08:26.000 --> 00:08:32.000
+the first is to point out that by
+default all the subnets in a VPC can
+talk to each other. So
+
+66
+00:08:32.000 --> 00:08:38.000
+it's a flat network it's a star there's
+like a virtual router that is
+represented in each subnet by this dot
+
+67
+00:08:38.000 --> 00:08:45.000
+one address which is handed out by the
+VPC DHCP server and that every route
+table by default will have this local
+
+68
+00:08:45.000 --> 00:08:52.000
+route that facilitates that routing
+within the subnets that that route is
+put there by default and it's you cannot
+
+69
+00:08:52.000 --> 00:09:02.000
+manipulate it so the first of my subnet
+policies is I'm gonna have a public
+subnet so anything are deploying this
+
+70
+00:09:02.000 --> 00:09:10.000
+public subnet is get automatically going
+to get a public IP I'm going to create
+an Internet gateway and I GW this is a
+
+71
+00:09:10.000 --> 00:09:17.000
+logical construct that allows and
+facilitates the egress and ingress of
+traffic into the VPC so just attaching
+
+72
+00:09:17.000 --> 00:09:25.000
+the idw doesn't mean that automatically
+you've opened up your VPC to public
+traffic it just gives the facilitation
+
+73
+00:09:25.000 --> 00:09:30.000
+of that what you also have to do is
+provide a route to the IGW which you see
+there so your default route now is
+
+74
+00:09:30.000 --> 00:09:40.000
+pointing to the I GW and with that and
+public IPS instances in that subnet can
+now egress out the Internet gateway and
+
+75
+00:09:40.000 --> 00:09:47.000
+out to public networks and depending
+upon their security group and network
+Apple configuration they can also be
+
+76
+00:09:47.000 --> 00:09:59.000
+reached from the outside now my routing
+policy for my bottom subnet is very
+different I want that bottom subnet to
+
+77
+00:09:59.000 --> 00:10:06.000
+only be private eye peas no public IPS
+and and no routes to public networks so
+it's going to be tied into my corporate
+
+78
+00:10:06.000 --> 00:10:12.000
+network later so I'm going to create a
+virtual private gateway a VG w you see
+represented there at the bottom and
+
+79
+00:10:12.000 --> 00:10:20.000
+that's going to be a termination point
+later for things like VPN tunnels or
+direct connect connections and so you
+
+80
+00:10:20.000 --> 00:10:26.000
+see there I have added a route for my
+corporate side or block that represents
+my corporate network and that is
+
+81
+00:10:26.000 --> 00:10:32.000
+directed towards this virtual private
+gateway so everything private is now
+directed there to reach those external
+
+82
+00:10:32.000 --> 00:10:38.000
+networks and then my third routing
+product routing policy is this subnet in
+the middle which is kind of a hybrid so
+
+83
+00:10:38.000 --> 00:10:45.000
+it's also a private subnet so everything
+in there has private IPs but we
+also want to facilitate those
+
+84
+00:10:45.000 --> 00:10:54.000
+instances and resources in the subnets
+to be able to reach public networks so
+how do you do that well the first
+
+85
+00:10:54.000 --> 00:10:59.000
+question is why would you do that why
+would you want that why would you want
+private resources to reach outside and
+
+86
+00:10:59.000 --> 00:11:06.000
+there's a lot of reasons and some of
+them might not be as obvious as others
+the first one is AWS API endpoints so if
+
+87
+00:11:06.000 --> 00:11:13.000
+you're making any API calls from
+instances in the subnets whether that's
+you know auto scaling calls or moving
+
+88
+00:11:13.000 --> 00:11:25.000
+Ian's eyes or trying to reach up AWS
+public services like s3 or Kinesis
+lambda SNS those are all public regional
+
+89
+00:11:25.000 --> 00:11:31.000
+resources that exist on the public
+network so you have to be able to get
+out of the VPC to go talk to those
+
+90
+00:11:31.000 --> 00:11:37.000
+endpoints and same with third party
+services any software platforms or paths
+or size of platforms that you might use
+
+91
+00:11:37.000 --> 00:11:46.000
+obviously exists outside your VPC so the
+traditional way to do this is to deploy
+an at instance so there's an ec2
+
+92
+00:11:46.000 --> 00:11:55.000
+instance that it's providing network
+address translation so it has a public
+IP in fronts those instances that our
+
+93
+00:11:55.000 --> 00:12:01.000
+only private IPs translates and
+allows them to egress out and you
+facilitate that in the routing table by
+
+94
+00:12:01.000 --> 00:12:11.000
+pointing your route to the actual NAT
+instance itself the instance itself to
+be able to get out
+
+95
+00:12:11.000 --> 00:12:20.000
+the problem with that is is scaling is
+that you know as your traffic increases
+in your requirements to get out through
+
+96
+00:12:20.000 --> 00:12:28.000
+this NAT instance it's a single point of
+failure it has a dedicated amount of
+bandwidth so it's not scaling it's a
+
+97
+00:12:28.000 --> 00:12:33.000
+single ec2 instance and eventually
+you're going to you know burn anything
+up so how do we do scalable and
+
+98
+00:12:33.000 --> 00:12:41.000
+available net so this is a first set of
+requirements we're going to go through a
+number of these requirements as we go
+
+99
+00:12:41.000 --> 00:12:47.000
+through our different designs so this is
+the first point where public subnets for
+resources are reachable from the
+
+100
+00:12:47.000 --> 00:12:54.000
+internet we have private subnets with
+egress only access to public networks we
+want scalable available NAT and for now
+
+101
+00:12:54.000 --> 00:13:06.000
+we're dealing with just one AWS account
+one region and one bpc so back to the
+net on fire you know we used to have all
+
+102
+00:13:06.000 --> 00:13:13.000
+these complicated ways to deploy
+multiple net instances I just route
+tables to go between them and facilitate
+
+103
+00:13:13.000 --> 00:13:23.000
+some kind of high availability with ec2
+based in that instances fortunately the
+late last year we launched an at gateway
+
+104
+00:13:23.000 --> 00:13:32.000
+which is pretty much from an object's
+perspective a drop-in replacement for
+them for the NAT instance you point your
+
+105
+00:13:32.000 --> 00:13:40.000
+routes to it the same it takes an EIP
+elastic IP as a public IP address so
+from you know the design perspective it
+
+106
+00:13:40.000 --> 00:13:48.000
+looks like an ad instance but underneath
+the hood there's a lot more going on
+here that makes them out gateway special
+
+107
+00:13:48.000 --> 00:13:55.000
+I'd like to just point out a few things
+so why would you use an at Gateway over
+in that instance you know most of us
+
+108
+00:13:55.000 --> 00:14:02.000
+know how that works private comes in
+with a source IP and port than that
+instance source and that's that so it
+
+109
+00:14:02.000 --> 00:14:11.000
+replaces that source IP with its own
+public IP that's all well and good the
+tricky part is that source port because
+
+110
+00:14:11.000 --> 00:14:22.000
+that has to be unique when you're
+talking to networks out so if you have
+for example lots of instances going out
+
+111
+00:14:22.000 --> 00:14:29.000
+and trying to get a security update
+that has the same end point out there
+the same destination port and IP address
+
+112
+00:14:29.000 --> 00:14:37.000
+your source port has to be unique has to
+be unique connection for every single
+one says you have more and more and more
+
+113
+00:14:37.000 --> 00:14:43.000
+connections going out to the same
+destinations every time you're opening a
+new connection on in that instance it's
+
+114
+00:14:43.000 --> 00:14:51.000
+having to check its table choose a new
+unique source port and in a very atomic
+and transactional way open that
+
+115
+00:14:51.000 --> 00:15:00.000
+connection and make sure that that
+source port is unique you know this is
+quite a similar problem with a database
+
+116
+00:15:00.000 --> 00:15:10.000
+but databases work in milliseconds this
+needs to work in microseconds so the
+traditional no scaling for an ad
+
+117
+00:15:10.000 --> 00:15:18.000
+instance has been to vertically scale it
+keep everything in memory keep it fast
+keep everything in microseconds but
+
+118
+00:15:18.000 --> 00:15:26.000
+horizontal scaling of NAT instances has
+been very difficult and so that's where
+NAT gateway comes in we applied some
+
+119
+00:15:26.000 --> 00:15:34.000
+very innovative engineering to address
+this problem with horizontal scale for
+not so NAT gateway is a fully
+
+120
+00:15:34.000 --> 00:15:47.000
+horizontally scale has full replication
+of connection state and is highly
+available so
+
+121
+00:15:47.000 --> 00:15:57.000
+so there we are you drop it in that
+gateway and there are a few requirements
+it's not like an I gwgw where it's a VPC
+
+122
+00:15:57.000 --> 00:16:04.000
+wide service you deploy in a gateway in
+a specific availability zone highly
+available and fault-tolerant for that
+
+123
+00:16:04.000 --> 00:16:11.000
+availability zone so you still need that
+internet gateway you still need separate
+subnets to be able to define the routing
+
+124
+00:16:11.000 --> 00:16:20.000
+policy to use that that gateway it
+requires an elastic IP assigned to it so
+it has a public address and it's each
+
+125
+00:16:20.000 --> 00:16:31.000
+each net gateway is burst of all to 10
+gig of bandwidth today so it actually
+appears as a lasting network interface
+
+126
+00:16:31.000 --> 00:16:38.000
+in your subnet when you create this net
+gateway but you'll notice there's no
+security group assigned to it because
+
+127
+00:16:38.000 --> 00:16:43.000
+you can't assign a security group two
+nite gateway so how do you secure access
+if you want to be very restrictive about
+
+128
+00:16:43.000 --> 00:16:50.000
+who can actually use the NAT gateway how
+would you do that so the first thing is
+network ackles they still apply so if
+
+129
+00:16:50.000 --> 00:16:56.000
+you're doing some coarse grain control
+and the subnet access itself those were
+still apply to get to the net gateway
+
+130
+00:16:56.000 --> 00:17:05.000
+the second thing is is what I've been
+harping on is use routing policy so have
+subnets like we have that are that have
+
+131
+00:17:05.000 --> 00:17:14.000
+a route table assigned to them that
+allows them to use then at gateway
+versus subnets that don't and the third
+
+132
+00:17:14.000 --> 00:17:21.000
+one is really the key one so use
+security groups to restrict outbound so
+I find most customers don't ever mess
+
+133
+00:17:21.000 --> 00:17:27.000
+with their outbound rules on their
+security groups and by default if you
+create a new security group your
+
+134
+00:17:27.000 --> 00:17:33.000
+outbound is open to all traffic so you
+see there you know a destination for
+everything port range for everything
+
+135
+00:17:33.000 --> 00:17:44.000
+that's a default VPC security group so
+what I recommend is having dedicated so
+your default changing make it only RFC
+
+136
+00:17:44.000 --> 00:17:52.000
+1918 space make it only the space within
+your VPC you know if you're doing a lot
+of other network connectivity other
+
+137
+00:17:52.000 --> 00:17:58.000
+networks and stuff this might look a
+little different but the default here is
+I put my outbound only to my VPC cider
+
+138
+00:17:58.000 --> 00:18:04.000
+it only. So they can only talk to stuff in
+the VPC and then i create a separate NAT
+
+139
+00:18:04.000 --> 00:18:12.000
+enable VPC security group that then
+enables them to go anywhere so that
+gives the default now is much more
+
+140
+00:18:12.000 --> 00:18:24.000
+lockdown so you can do this you can have
+one at Gateway and multiple az's using
+that not gateway but as I said before
+
+141
+00:18:24.000 --> 00:18:31.000
+it's an it's an AZ specific deployment
+so for real availability if that
+something ever happened in that AZ you
+
+142
+00:18:31.000 --> 00:18:38.000
+would have lost all possible NAT
+functionality in your VPC so we
+always recommend to deploy one at
+
+143
+00:18:38.000 --> 00:18:50.000
+Gateway/AZ. So pros and cons of NAT gateway
+
+144
+00:18:50.000 --> 00:18:58.000
+so pros to drop in replacement for
+netgalley I mean for NAT instances it's
+very easy to migrate you just update
+
+145
+00:18:58.000 --> 00:19:03.000
+your right route table you can even
+migrate the EIP over if you want to be
+consistent the only caveat (警告/附加说明) is that
+
+146
+00:19:03.000 --> 00:19:09.000
+obviously you're going to lose any open
+connections that are that are open at
+the time that you do the cutover it's
+
+147
+00:19:09.000 --> 00:19:17.000
+fully managed highly available in fault
+tolerant scalable it 10 gig and it
+supports a VPC flow log so you can
+
+148
+00:19:17.000 --> 00:19:25.000
+monitor and track all of the network
+traffic that's going through the gateway
+on the con side there's no higher level
+
+149
+00:19:25.000 --> 00:19:33.000
+functions it just does not so those of
+you that are pulling that instances that
+are doing things like IPS or UTM or any
+
+150
+00:19:33.000 --> 00:19:38.000
+kind of URL filtering or packet
+inspection you know more the high-level
+security functions that's not the neck
+
+151
+00:19:38.000 --> 00:19:44.000
+that gateway so you know we have lots of
+partners that offer those features and
+their NAT instances along with providing
+
+152
+00:19:44.000 --> 00:19:52.000
+that so whether that's you know our
+sophos or fortinet or we have all a
+whole range of partners are provide
+
+153
+00:19:52.000 --> 00:20:00.000
+security appliances that do these high
+level functions and as I mentioned you
+can't associate security group so here
+
+154
+00:20:00.000 --> 00:20:08.000
+we are we got our one VPC and now we're
+moving on to our next one where we have
+an internal only corporate IT app that
+
+155
+00:20:08.000 --> 00:20:16.000
+we want to connect to our internal
+corporate network
+over IPSec tunnels so what are the
+
+156
+00:20:16.000 --> 00:20:24.000
+considerations when we're talking about
+multiple VPCs when you start moving
+into one, two, three, ten, a hundred, VPCs what
+
+157
+00:20:24.000 --> 00:20:34.000
+should be thinking about and why would
+you want to do that and why not one big
+VPC and my first question back to you
+
+158
+00:20:34.000 --> 00:20:41.000
+whenever I'm asked that from a customer
+is well why not 1 AWS account because
+those two go hand-in-hand as soon as you
+
+159
+00:20:41.000 --> 00:20:49.000
+have more than one account you have more
+than one VPC so there are a few things
+that go with both having multiple
+
+160
+00:20:49.000 --> 00:20:56.000
+accounts and multiple and multiple pcs
+and the first one is blast radius so if
+you have one VPC and you have thousands
+
+161
+00:20:56.000 --> 00:21:04.000
+of developers somebody's going to step
+on each other's toes you know I am
+allows you to give very fine-grained
+
+162
+00:21:04.000 --> 00:21:13.000
+resource control over who can do what in
+your VPC but you cannot IAM API limits
+right so if for example you have one
+
+163
+00:21:13.000 --> 00:21:22.000
+misbehaving app that Browns out your
+throttle limits on ec2 describe calls
+that affects everyone else so there is a
+
+164
+00:21:22.000 --> 00:21:33.000
+certain level of blast radius that you
+must consider when you're putting
+resources in a VPC
+
+165
+00:21:33.000 --> 00:21:42.000
+here's another very good reason to have
+both multiple accounts and multiple of
+
+166
+00:21:42.000 --> 00:21:53.000
+epcs probably the best reason out there
+if you're not doing that come talk to me
+same with this one you know regulatory
+
+167
+00:21:53.000 --> 00:22:03.000
+and compliance reasons keep them a
+separate account separate resources this
+is also another very common one so with
+
+168
+00:22:03.000 --> 00:22:10.000
+disaster recovery separate region and
+separate account so you have all of your
+data replicated to a different a
+
+169
+00:22:10.000 --> 00:22:16.000
+different region for disaster recovery
+and in case there's some kind of
+compromise in your account in your
+
+170
+00:22:16.000 --> 00:22:23.000
+production that compromise cannot affect
+your disaster recovery because it's all
+in a separate account separate VPC
+
+171
+00:22:23.000 --> 00:22:32.000
+completely isolated and then we do some
+things a little fancier to illustrate
+you know where we go with more VPCs
+
+172
+00:22:32.000 --> 00:22:46.000
+more accounts so here we have a you know
+an account in a VPC / business unit and
+we're sending all the application logs
+
+173
+00:22:46.000 --> 00:22:53.000
+S3 access logs, ELB logs out of these
+accounts and these VPCs from these
+business units you know they're able to
+
+174
+00:22:53.000 --> 00:23:00.000
+manage their own bottom line have cost
+visibility and get their own bill
+because they have their own account but
+
+175
+00:23:00.000 --> 00:23:07.000
+we're sending all of their you know
+digital exhaust to a separate account
+you know things like a degras config
+
+176
+00:23:07.000 --> 00:23:13.000
+also to track all the changes within
+their VPCs so if somebody changes a
+security group it changes internet
+
+177
+00:23:13.000 --> 00:23:19.000
+gateway authors a route table you're
+going to know about it cloud trail to
+monitor all of their API calls is the
+
+178
+00:23:19.000 --> 00:23:24.000
+audit log of all their API calls and
+then VPC flow logs again so you know all
+the traffic that's going in and out of
+
+179
+00:23:24.000 --> 00:23:32.000
+their VPCs all this stuff is going to
+another account and another VPC
+dedicated to logging to auditing and
+
+180
+00:23:32.000 --> 00:23:38.000
+analysis of this data so we might have
+an EMR and they're doing you know
+MapReduce jobs to reduce this data I
+
+181
+00:23:38.000 --> 00:23:46.000
+have Amazon redshift doing you know data
+warehousing of this data for
+querying analytics and then of course s3
+
+182
+00:23:46.000 --> 00:23:55.000
+has as the storage bracket so now we've gone
+through some of the reasons why that you
+
+183
+00:23:55.000 --> 00:24:01.000
+would consider multiple view pcs let's
+let's dive back into our private app so
+this is the one we showed before where
+
+184
+00:24:01.000 --> 00:24:11.000
+we have only a private connection to
+corporate network over an ipsec tunnel
+but the application in there wants to
+
+185
+00:24:11.000 --> 00:24:22.000
+make heavy use of s3 is a primary data
+store so how do we facilitate in a
+private only VPC access to a public
+
+186
+00:24:22.000 --> 00:24:32.000
+resource like s3 so our next round of
+design requirements so VPN connectivity
+to private only VPC no egress in the VPC
+
+187
+00:24:32.000 --> 00:24:42.000
+to public networks so no public IPs
+whatsoever private IP accessed it amazon
+S3 very content specific egress control
+
+188
+00:24:42.000 --> 00:24:49.000
+access control so we control exactly
+what goes out of the VPC, be able to
+filter it and one AWS account one VPC
+
+189
+00:24:49.000 --> 00:24:55.000
+one region still. So by default if you
+didn't do anything else this is the
+route that you would take to facilitate
+
+190
+00:24:55.000 --> 00:25:00.000
+that connectivity you know you have to
+go down in your data center all the way
+out your data centers public board or
+
+191
+00:25:00.000 --> 00:25:09.000
+back around to the region and that's
+obviously it's not an ideal way to go
+fortunately we have VPC endpoints which
+
+192
+00:25:09.000 --> 00:25:20.000
+are there we go to meet exactly this
+requirement to provide private IP
+connectivity to AWS services in this
+
+193
+00:25:20.000 --> 00:25:29.000
+case S3 so VPC endpoints there's no
+internet gateway required there's no NAT
+you're not using public IPs it's free
+
+194
+00:25:29.000 --> 00:25:38.000
+and you have very robust access control
+and its private IP connectivity to s3 so
+here's an example of creating S3
+
+195
+00:25:38.000 --> 00:25:44.000
+endpoint and assigning it to a subnet so
+this is the CLI you'll notice you
+actually tell it what route table you
+
+196
+00:25:44.000 --> 00:25:53.000
+want so there we are and it creates the
+route for you so you see the destination
+is a
+
+197
+00:25:53.000 --> 00:25:59.000
+prefix list and the target is the
+endpoint itself and we'll talk a little
+bit in a minute about what a prefix list
+
+198
+00:25:59.000 --> 00:26:06.000
+is and to give an example here's here's
+a subnet that does have an Internet
+gateway what would happen if you created
+
+199
+00:26:06.000 --> 00:26:14.000
+and assigned a VPC and point to this one
+here you have your default realities
+near gateway but you're still using the
+
+200
+00:26:14.000 --> 00:26:21.000
+prefix list for s3 for the service to
+access s3 that's obviously a more
+specific route for s3 so that's going to
+
+201
+00:26:21.000 --> 00:26:29.000
+be used over the Internet gateway for S3
+in that region if you access S3 in
+another region that endpoint is only for
+
+202
+00:26:29.000 --> 00:26:37.000
+this region in this case us west too so
+you would use the internet gateway to go
+to another region to access S3 and what
+
+203
+00:26:37.000 --> 00:26:43.000
+if you had a NAT gateway so if you
+already had a default route out of the
+NAT gateway it's actually really
+
+204
+00:26:43.000 --> 00:26:50.000
+important that you that you also add the
+VPC endpoint to that private subnet
+because otherwise you're funneling all
+
+205
+00:26:50.000 --> 00:26:56.000
+of your S3 traffic through the neck
+gateway and if you know that that
+gateway it's charged on and you know the
+
+206
+00:26:56.000 --> 00:27:04.000
+data transfer rates through that gateway
+so the vbc endpoint is not its private
+IP so it's a it's a cost decision there
+
+207
+00:27:04.000 --> 00:27:13.000
+too to add a VPC endpoint two subnets
+that are using nat to get out of the out
+of the out of the VPC so prefix lists
+
+208
+00:27:13.000 --> 00:27:22.000
+are an abstraction so they basically
+represent the entire public IP space of
+s3 in the region and so all you need to
+
+209
+00:27:22.000 --> 00:27:27.000
+do is reference the prefix list and it
+will figure out what the actual back-end
+I peas and this solved you know a lot of
+
+210
+00:27:27.000 --> 00:27:35.000
+headaches that customers have before and
+trying to keep track of what actually
+consisted of S3 IP space so
+
+211
+00:27:35.000 --> 00:27:41.000
+obviously those this range is changed
+all the time in the back end but all you
+have to do is reference the prefix list
+
+212
+00:27:41.000 --> 00:27:49.000
+and you can use them in your outbound
+security group rules so similarly to how
+I advised within that gateway you can do
+
+213
+00:27:49.000 --> 00:27:57.000
+the same thing to restrict access to the
+VPC endpoint so you can say only certain
+instances in the subnet even though the
+
+214
+00:27:57.000 --> 00:28:02.000
+subnet itself has a route to the VPC
+endpoint you can apply a security group
+to instance
+
+215
+00:28:02.000 --> 00:28:11.000
+is to restrict them outbound to be able
+to use the VPC endpoint by referencing
+the prefix list and here's the fine
+
+216
+00:28:11.000 --> 00:28:19.000
+grain access control i mentioned so
+there's multiple stages you can be able
+to apply policies to control egress out
+
+217
+00:28:19.000 --> 00:28:27.000
+of your VPC so the first one is I can
+apply an IM policy to the VPC endpoint
+itself that says it can be as detailed
+
+218
+00:28:27.000 --> 00:28:35.000
+as users and groups amount of content
+specific objects in this case I've gone
+pretty generic which is a specific
+
+219
+00:28:35.000 --> 00:28:44.000
+bucket so you can only use this VPC
+endpoint to go out to specific bucket so
+I applied it to the end point and it's
+
+220
+00:28:44.000 --> 00:28:53.000
+only forget input and so instances that
+have that are in that about they have
+the route to the VPC in point are
+
+221
+00:28:53.000 --> 00:29:02.000
+allowed to get out if they are going to
+that bucket so that's on the endpoint
+itself but I can also apply a policy on
+
+222
+00:29:02.000 --> 00:29:11.000
+the bucket so you have it on both ends
+now the bucket can say only specific VPC
+endpoints or only specific v pcs can
+
+223
+00:29:11.000 --> 00:29:20.000
+talk to me so here we check and make
+sure that it's coming from a very
+specific VPC endpoint and if it is then
+
+224
+00:29:20.000 --> 00:29:30.000
+you're allowed access to the bucket so
+multiple stages of access control so
+just to recap real quick so you have the
+
+225
+00:29:30.000 --> 00:29:37.000
+route table that gives the subnet the
+resources in the subnet itself again
+subnet defines routing policy gives
+
+226
+00:29:37.000 --> 00:29:44.000
+access to the VPC endpoint the second is
+that policy on the endpoint itself that
+says what you get what can go out of
+
+227
+00:29:44.000 --> 00:29:50.000
+this VPC through this endpoint to access
+what resources and S3. The third thing is
+the bucket policy itself which says who
+
+228
+00:29:50.000 --> 00:30:00.000
+can access this. And then the fourth is
+the security groups. So multiple stages.
+So we'll just give a little in points in
+
+229
+00:30:00.000 --> 00:30:08.000
+action here so we create a backups
+bucket for all these Internet APPs so
+that they can push those up to S3 but we
+
+230
+00:30:08.000 --> 00:30:15.000
+have a compliance application which has
+more fine-grained requirements around
+what can go out and so we create a
+
+231
+00:30:15.000 --> 00:30:22.000
+separate endpoint for them so you can
+create multiple endpoints and have
+different policies on these end points
+
+232
+00:30:22.000 --> 00:30:32.000
+on it on a VPC. The restriction is that
+you can only have in a route table one
+route to S3 so that prefix like so you
+
+233
+00:30:32.000 --> 00:30:42.000
+can have multiple ones so for example if
+I wanted to add more buckets I wouldn't
+be creating new endpoints for these
+
+234
+00:30:42.000 --> 00:30:48.000
+subnets because they already have a
+route to an end point so instead i would
+have to alter the policy itself to allow
+
+235
+00:30:48.000 --> 00:30:59.000
+access to these additional buckets so
+pros and cons of the endpoints so secure
+highly scalable highly available access
+
+236
+00:30:59.000 --> 00:31:07.000
+to s3 you don't have to worry about
+scaling it or bandwidth fine-grain
+control of access to the content S3 from
+
+237
+00:31:07.000 --> 00:31:15.000
+the VPC can control which VPCs which
+endpoints can access which buckets and
+there's no public IPs that required and
+
+238
+00:31:15.000 --> 00:31:24.000
+so all source IP is accessing s3 or kept
+your private IPs from your VPC. Negatives
+so cons if you
+
+239
+00:31:24.000 --> 00:31:33.000
+do restrict an S3 bucket to a specific VPC or or specifically VPC endpoint you
+can't use the S3 console anymore to
+
+240
+00:31:33.000 --> 00:31:41.000
+manage S3 I hope that's obvious why but
+the console doesn't run your VPC so as
+soon as you put that policy out there
+
+241
+00:31:41.000 --> 00:31:49.000
+you will go in today to this management
+console and you'll get a nice big error
+and you need to enable dns that doesn't
+
+242
+00:31:49.000 --> 00:31:56.000
+mean you can't use your own dns if you
+do you just need to forward it on to the
+Amazon EC2 VPC DNS because we got to
+
+243
+00:31:56.000 --> 00:32:10.000
+resolve those prefix lists
+alright so we got two down what's next
+so this is the part where this usually
+
+244
+00:32:10.000 --> 00:32:21.000
+happens you know the it the easy
+deployment methodology of VPCs the
+ability to spin them up very fast new
+
+245
+00:32:21.000 --> 00:32:29.000
+projects do tests and then actually
+deploy applications and connect them
+back into your corporate networks you're
+
+246
+00:32:29.000 --> 00:32:39.000
+going to have a lot of VPCs very fast
+and and while that dynamic nature of the
+VPCs is a great feature you know adding
+
+247
+00:32:39.000 --> 00:32:45.000
+IPSec tunnels bringing in new networks
+propagating those into your corporate
+network making change control in your
+
+248
+00:32:45.000 --> 00:32:51.000
+network border these are impactful
+changes and when they're coming rapid
+fire like this your network engineers
+
+249
+00:32:51.000 --> 00:33:00.000
+are not going to be happy with you so
+let's to emphasize you know just the
+what's involved in just one of these VPN
+
+250
+00:33:00.000 --> 00:33:09.000
+connections let's zoom in on one of
+these and see what is a real HA VPN to
+VPC connectivity looks like so every time
+
+251
+00:33:09.000 --> 00:33:18.000
+you create a VPN connection to a VPC
+it's two tunnels so that's the
+redundancy on our end so one tunnel will
+
+252
+00:33:18.000 --> 00:33:25.000
+debt will land in separate availability
+zones and that will connect down to one
+of your customer gateways so this is
+
+253
+00:33:25.000 --> 00:33:32.000
+your VPN device terminating the tunnels
+and your end now to provide HA on
+your end you're going to want to
+
+254
+00:33:32.000 --> 00:33:45.000
+customer gateways come on so that you
+can have redundancy on your end. So now
+we've got four tunnels so four tunnels
+
+255
+00:33:45.000 --> 00:33:59.000
+are involved in each connection
+and then BGP please don't do static
+routes always dynamic always BGP and
+
+256
+00:33:59.000 --> 00:34:06.000
+this is the arrangement when you when
+you connect to us we advertise down our ASN
+and the cider block that comprises the
+
+257
+00:34:06.000 --> 00:34:21.000
+VPC itself you advertise up your network
+so your internal corporate network what
+also comes down from us work our MEDs so
+
+258
+00:34:21.000 --> 00:34:28.000
+multi-exit-discriminators so this is a
+way for BGP do for us to influence the
+routes that come down to you so we use
+
+259
+00:34:28.000 --> 00:34:36.000
+those in our VPN as a service that backs
+the VGW to tell you which tunnel we're
+going to prefer so you need to make sure
+
+260
+00:34:36.000 --> 00:34:42.000
+an honor those when they come down and
+you can do the same to us so if you want
+us to prefer if you want your traffic to
+
+261
+00:34:42.000 --> 00:34:48.000
+prefer one CGW over the other you can do
+the same you can send up to us either
+MEDs or you can send up AS path through
+
+262
+00:34:48.000 --> 00:34:57.000
+pending to favor one side or the other
+and then obviously you would react eyes
+the VP seasiders that you're learning
+
+263
+00:34:57.000 --> 00:35:06.000
+from the VPC into your internal network
+through whatever igp protocol you might
+be using on your corporate network all
+
+264
+00:35:06.000 --> 00:35:14.000
+right
+so starting to stress out your network
+pipes are starting to really stress out
+
+265
+00:35:14.000 --> 00:35:22.000
+your network operations team and all
+these things are accessing common shared
+services that exists on your corporate
+
+266
+00:35:22.000 --> 00:35:29.000
+network so whether that's DNS or
+directory services logging monitoring
+security common data sources all that's
+
+267
+00:35:29.000 --> 00:35:37.000
+coming down so our next set of
+requirements is to fix this situation so
+how do we centralize network
+
+268
+00:35:37.000 --> 00:35:43.000
+connectivity so we're not being so
+impactful to our network teams
+centralize the management security and
+
+269
+00:35:43.000 --> 00:35:51.000
+the common service access give account
+owners some kind of control and freedom
+over their own VPC resources but still
+
+270
+00:35:51.000 --> 00:35:58.000
+have centralized security control over
+that access and now we're moving into
+many AWS accounts many VPCs
+
+271
+00:35:58.000 --> 00:36:11.000
+still one region so this model is the
+hub and spoke with peering so we are
+going to facilitate this by moving those
+
+272
+00:36:11.000 --> 00:36:21.000
+common shared services up into a hub VPC
+so this shared services VPC that you see
+here and then all of the spoke VPCs
+
+273
+00:36:21.000 --> 00:36:28.000
+will be peered through VPC peering so
+this is a one-to-one relationship
+between a spoke and the hub that
+
+274
+00:36:28.000 --> 00:36:36.000
+facilitates private connectivity between
+VPCs and you'll notice the shared
+services VPC is the only one that has a
+
+275
+00:36:36.000 --> 00:36:42.000
+consolidated connection down to your
+corporate network and it's also the only
+one that has any egress to the public
+
+276
+00:36:42.000 --> 00:36:49.000
+network so the IGW and the VPC endpoint
+they're all only in the shared services
+VPCs the spokes are completely
+
+277
+00:36:49.000 --> 00:37:00.000
+isolated. So let's assume in on the Shared
+Services Hub and one of the spokes to
+
+278
+00:37:00.000 --> 00:37:07.000
+see how it works so here we see the
+establishment of the peering connection
+itself so this is a API call where both
+
+279
+00:37:07.000 --> 00:37:13.000
+sides have to agree so you send it to
+each other and you're both thumbs up
+that facilitates the creation of
+
+280
+00:37:13.000 --> 00:37:18.000
+appearing connections that doesn't mean
+everything can start talking to each
+other all of a sudden what it does mean
+
+281
+00:37:18.000 --> 00:37:25.000
+is you can now start creating routing
+rules that reference the peering
+connection so you'll see here I create a
+
+282
+00:37:25.000 --> 00:37:33.000
+private route table on the spoke that
+says I want to reference the shared
+services subnet through the peering
+
+283
+00:37:33.000 --> 00:37:39.000
+connection you can be as specific as you
+want you don't have to say the entire
+VPC to the route so you can take this
+
+284
+00:37:39.000 --> 00:37:46.000
+down to a / 32 and that means that you
+spoke would only be able to talk to a
+single host in that over that peering
+
+285
+00:37:46.000 --> 00:37:56.000
+connection but on the other end we give
+the shared services VPC access to the
+entire VPC space of the spoke so now
+
+286
+00:37:56.000 --> 00:38:06.000
+these two can actually route between
+each other all private IP connectivity
+between the two VPCs but what about if
+
+287
+00:38:06.000 --> 00:38:12.000
+I want to reach down from the spoke into
+my corporate network I can add a route
+for that so I've done that here to
+
+288
+00:38:12.000 --> 00:38:19.000
+reference the peering connection because
+that's the direction of my corporate
+network but when I actually try to do
+
+289
+00:38:19.000 --> 00:38:27.000
+that the hubby VPC is going to see
+traffic trying to egress that's not part
+of its network and it's going to drop it
+
+290
+00:38:27.000 --> 00:38:35.000
+and that's that's by design so you can't
+have a transitive relationship with VPC
+peering so I can't be paired with
+
+291
+00:38:35.000 --> 00:38:42.000
+something and then reach other things
+that that VPC is connected to whether
+that's external networks or other spoke
+
+292
+00:38:42.000 --> 00:38:50.000
+VPCs or the VGW or IGW or the VPC
+endpoint all of those are transitive
+relationships all I can do with
+
+293
+00:38:50.000 --> 00:38:59.000
+appearing connection is talk to the
+actual cider space in that VPC that I'm
+appeared with but what if we do want to
+
+294
+00:38:59.000 --> 00:39:09.000
+facilitate that kind of connectivity
+what are our options there
+so probably the most common initial is
+
+295
+00:39:09.000 --> 00:39:16.000
+to deploy a centralized proxy so a lot
+of customers there oh they already have
+centralized proxies for a lot of their
+
+296
+00:39:16.000 --> 00:39:24.000
+outbound access and they'll deploy a
+centralized proxy layer up into their
+shared services VPC and we'll provide
+
+297
+00:39:24.000 --> 00:39:30.000
+you know HTTPS connectivity to
+facilitate this in the end kind of
+communication so how would that work so
+
+298
+00:39:30.000 --> 00:39:40.000
+here we have internally I'll be deployed
+into the shared services VPC back by
+proxy fleet and this is this is not a
+
+299
+00:39:40.000 --> 00:39:47.000
+transparent proxy so this is not in line
+this would be explicit proxy so you
+would have to actually configure your
+
+300
+00:39:47.000 --> 00:39:54.000
+endpoints your instances or devices to
+use the proxy for HTTP communication so
+here you see you're going across the
+
+301
+00:39:54.000 --> 00:40:03.000
+peer in connection to the ELB and
+hitting a resource in that VPC that it
+can now use the VGW and down to your
+
+302
+00:40:03.000 --> 00:40:12.000
+corporate network and similarly to use
+egress out of the Internet and then this
+proxy can be a centralized source of URL
+
+303
+00:40:12.000 --> 00:40:18.000
+filtering and determining what content
+can and can not go out so it's a
+centralized resource for all HTTPS
+
+304
+00:40:18.000 --> 00:40:27.000
+traffic and you see here the proxy is
+the only one that has all the routes to
+all these resources so let's zoom in and
+
+305
+00:40:27.000 --> 00:40:35.000
+see like with this how this is actually
+configured and you'll see here that I'm
+I'm building up layers but keep in mind
+
+306
+00:40:35.000 --> 00:40:41.000
+that star network so by default
+everything is flat everything can talk
+to each other so all these layers that
+
+307
+00:40:41.000 --> 00:40:48.000
+I'm representing are determined on
+security groups routing policy and
+network ackles to actually form these
+
+308
+00:40:48.000 --> 00:40:57.000
+layers so first we've got an internal
+elb so it's all private eye peas and
+that's the destination for my proxy
+
+309
+00:40:57.000 --> 00:41:04.000
+backing it R is the actual instances
+that are performing the proxy functions
+so these can be you know whether it's
+
+310
+00:41:04.000 --> 00:41:12.000
+open source squid or a third party
+vendor that you're using to do your
+proxying does it behind the ELB and they
+
+311
+00:41:12.000 --> 00:41:17.000
+are the only ones that have public IPs
+and they are the only ones that have a
+route to the Internet gateway
+
+312
+00:41:17.000 --> 00:41:28.000
+and so the private subnet in the spoke
+VPCs you can actually use security groups
+across peers now so that actually wasn't
+
+313
+00:41:28.000 --> 00:41:36.000
+possible until this year is to share
+security groups across across a peer
+relationship so the ELB itself could
+
+314
+00:41:36.000 --> 00:41:52.000
+have a security group of spoke to say
+these spoke resources can use me and are
+able to access the ELB and similarly for
+
+315
+00:41:52.000 --> 00:42:08.000
+accessing public resources go same for
+using the VPC endpoint and finally
+administrator it's so operations staff
+
+316
+00:42:08.000 --> 00:42:13.000
+back on your corporate network they're
+going to have to land on something and
+that shared services VPC so something
+
+317
+00:42:13.000 --> 00:42:21.000
+like a baston host administrative hose
+that they land on that the date they can
+then jump on to spokes or any peered
+
+318
+00:42:21.000 --> 00:42:30.000
+relationship but they can also use the
+proxy so if you want to facilitate for
+example S3 connectivity private S3
+
+319
+00:42:30.000 --> 00:42:35.000
+connectivity through your VPCs
+through the shared services VPC you can
+certainly do that and so those devices
+
+320
+00:42:35.000 --> 00:42:46.000
+can be configured to use the proxy and
+your shared services and out they go so
+a few to do's on the Shared Services Hub
+
+321
+00:42:46.000 --> 00:42:54.000
+make sure you're using I am to control
+you know talked about these teams owning
+their own VPC having their own account
+
+322
+00:42:54.000 --> 00:43:01.000
+but you got to make sure that they can't
+alter the design that you've put in
+place so you got to make sure they can't
+
+323
+00:43:01.000 --> 00:43:09.000
+tear it on the pairing relationship or
+put IGW on their VPC so all of the high
+blast radius network specific API calls
+
+324
+00:43:09.000 --> 00:43:17.000
+you need make sure you're locking this
+down so create NetOps roles and
+make sure you apply these roles to every
+
+325
+00:43:17.000 --> 00:43:22.000
+one of your accounts so that your
+network operations teams are the only
+ones that can jump in there assume that
+
+326
+00:43:22.000 --> 00:43:27.000
+role and make network-related VPC
+changes there's a link there for we now
+have managed
+
+327
+00:43:27.000 --> 00:43:35.000
+roles so there's one for network
+administrator's which means it's a
+managed policy which means AWS is
+
+328
+00:43:35.000 --> 00:43:41.000
+responsible for keeping it updated so as
+we release new network related features
+and products that policy will
+
+329
+00:43:41.000 --> 00:43:48.000
+automatically be updated so take a look
+at that we've talked about CloudTrail
+config and VPC flow logs make sure
+
+330
+00:43:48.000 --> 00:43:58.000
+you're making use of those to track
+everything that's going on and all your
+VPCs. so quick pro-con on this one so
+
+331
+00:43:58.000 --> 00:44:06.000
+we're minimizing on-premises network
+changes by you know consolidating down
+to a fixed number of pipes up into the
+
+332
+00:44:06.000 --> 00:44:12.000
+region we've reduced a latency and the
+cost of cloud applications because we've
+moved those shared services up there no
+
+333
+00:44:12.000 --> 00:44:18.000
+longer having to come down to your
+corporate network to access them all
+we've provided spoke accounts control
+
+334
+00:44:18.000 --> 00:44:25.000
+over their own resources but we have
+centralized control of everything that's
+coming out of them with the proxy and
+
+335
+00:44:25.000 --> 00:44:32.000
+the security groups are working across
+all the peers so that we're securing the
+traffic. on the con side for the hub and
+
+336
+00:44:32.000 --> 00:44:41.000
+spoke obviously you're managing the cost
+and the management of the actual proxy
+so all those instances that comprise the
+
+337
+00:44:41.000 --> 00:44:48.000
+actual proxy are your responsibility I
+mentioned it's not a transparent proxy
+so you're having to do the configuration
+
+338
+00:44:48.000 --> 00:44:57.000
+to point everything to that proxy to use
+it for HTTPS it's restricted to L7 to
+HTTPS and we point out the no transitive
+
+339
+00:44:57.000 --> 00:45:04.000
+networking and the peering data transfer
+cross so there is a cost to use peering
+once in a gig and so if you're doing
+
+340
+00:45:04.000 --> 00:45:10.000
+very significant data transfers between
+peered VPCs you want to pay attention
+to that traffic and figure out whether
+
+341
+00:45:10.000 --> 00:45:21.000
+the peering makes sense for you
+alright so here we got multiple hubs you
+know you have maybe a dev hub and maybe
+
+342
+00:45:21.000 --> 00:45:30.000
+have a prod hub but it's not limited to
+just that you might have a data services
+hub that might be tied in but they can
+
+343
+00:45:30.000 --> 00:45:35.000
+be connected to each other and appearing
+is very flexible and can also be dynamic
+so it's something that I don't think is
+
+344
+00:45:35.000 --> 00:45:41.000
+quite apparent at first blush with
+peering but you're going to have you
+know it's just an API call to establish
+
+345
+00:45:41.000 --> 00:45:48.000
+connectivity between two VPCs so you
+might have a deployment use case where
+you have a promotion of data from one
+
+346
+00:45:48.000 --> 00:45:53.000
+environment to another and traditionally
+these environments wouldn't be connected
+but programmatically you could just
+
+347
+00:45:53.000 --> 00:46:04.000
+issue a VPC here in connection connect
+them up transfer the data tear down the
+connection but now we've got we've got
+
+348
+00:46:04.000 --> 00:46:13.000
+your next hot mobile app and one of
+these spokes so we're going to zoom in
+on this one spoke and the hub so we have
+
+349
+00:46:13.000 --> 00:46:24.000
+this mobile mobile app and this is what
+I'm calling an hybrid service which I'm
+trademarking and this is I'm seeing this
+
+350
+00:46:24.000 --> 00:46:32.000
+more and more where you have a private
+VPC the resources in there to have no
+IGW at all private but you're using
+
+351
+00:46:32.000 --> 00:46:41.000
+public AWS resources to provide a front
+into the resources in the VPC so for
+example Amazon API gateway is providing
+
+352
+00:46:41.000 --> 00:46:50.000
+a landing point for your mobile AP is
+and it's providing strong authentication
+and it's providing metering and it also
+
+353
+00:46:50.000 --> 00:46:58.000
+provides access to Lambda functions
+Lambda can reach inside your VPC so
+Lambda can privately access your VPC it
+
+354
+00:46:58.000 --> 00:47:05.000
+does that by creating an elastic network
+interface that the function then uses to
+access you know the interface itself as
+
+355
+00:47:05.000 --> 00:47:13.000
+a private IP from your VPC and it uses
+that to access resources in your VPC
+privately so there's no public access
+
+356
+00:47:13.000 --> 00:47:24.000
+here so here we're accessing you know we
+have a backing store of Amazon Aurora
+deployed into this VPC for the mobile
+
+357
+00:47:24.000 --> 00:47:31.000
+APP to use and that works great
+but what doesn't work is the new
+functionality that we want to launch
+
+358
+00:47:31.000 --> 00:47:39.000
+which depends upon legacy applications
+that are still back in your data center
+back home so this is very common where
+
+359
+00:47:39.000 --> 00:47:46.000
+customers are you know advancing the
+their mobile application at a certain
+pace releasing new features but they
+
+360
+00:47:46.000 --> 00:47:52.000
+have dependency on the legacy
+applications they can do this build
+these things up in the cloud and still
+
+361
+00:47:52.000 --> 00:48:00.000
+be able to reach back to legacy apps and
+make use of the data that's still in
+your corporate network how do you do
+
+362
+00:48:00.000 --> 00:48:12.000
+this you know we've already talked about
+transitive not working so here we go
+we've got all these spokes now that have
+
+363
+00:48:12.000 --> 00:48:19.000
+requirements to have end-to-end layer-3 connectivity so no longer just
+proxy high level layer-7 we won't
+
+364
+00:48:19.000 --> 00:48:26.000
+end to end connectivity and we've also
+got some other regions out there that
+are growing we'd like to bring them into
+
+365
+00:48:26.000 --> 00:48:36.000
+the fold so now we move on to VBC mass
+transit and here's our requirements now
+so now we want to again we're
+
+366
+00:48:36.000 --> 00:48:44.000
+centralizing and minimizing the network
+connections but now we want to allow
+into end routing no minimal operational
+
+367
+00:48:44.000 --> 00:48:54.000
+overhead and we want to leverage the AWS
+network with many AWS accounts many
+of you VPCs and many regions so this is
+
+368
+00:48:54.000 --> 00:49:04.000
+where we bring in a concept of a transit
+VPC now a transit VPC is dedicated to
+just that facilitating connectivity to
+
+369
+00:49:04.000 --> 00:49:15.000
+between networks so we keep it as simple
+as possible all that's going in here are
+dedicated ec2 based routing devices that
+
+370
+00:49:15.000 --> 00:49:20.000
+are going to be responsible for
+maintaining VPN tunnels to a lot of
+different networks and facilitating the
+
+371
+00:49:20.000 --> 00:49:26.000
+communication between all of them
+there's no other resources in the
+transit VPC we keep it simple just has a
+
+372
+00:49:26.000 --> 00:49:34.000
+default route to it to an IGW and no
+other resources in the VPC that are
+depending upon pointing to these things
+
+373
+00:49:34.000 --> 00:49:42.000
+and then we start adding spokes to them
+and the spokes are dead simple they're
+just point
+
+374
+00:49:42.000 --> 00:49:51.000
+default route out to their VGW it's
+kind of turning the model on your head
+because you know these EC2 basic VPN
+
+375
+00:49:51.000 --> 00:49:57.000
+devices are basically asked acting as
+customer gateways but in this model it's
+the reverse they're not really the
+
+376
+00:49:57.000 --> 00:50:08.000
+client they're the hub so as we add more
+and more spokes this is again all bgp
+all dynamic routing we're learning all
+
+377
+00:50:08.000 --> 00:50:16.000
+these networks and these centralized
+transit routers are facilitating into
+and connectivity between all spokes and
+
+378
+00:50:16.000 --> 00:50:24.000
+we can do the same for bringing in
+external networks we just land the VPN
+tunnels and connect them directly to
+
+379
+00:50:24.000 --> 00:50:36.000
+these transit routers and it's you know
+as I mentioned in the proxy these are
+now centralized methods for traffic
+
+380
+00:50:36.000 --> 00:50:48.000
+control for security and filtering
+so if this sounds like something you're
+actually interested in the solution
+
+381
+00:50:48.000 --> 00:50:55.000
+builder team at AWS has actually built a
+solution for transit VPC and we're going
+to talk a little bit about how that
+
+382
+00:50:55.000 --> 00:51:03.000
+works so there's a CloudFormation
+template that sets all of this up for
+you it's based off the cisco cloud
+
+383
+00:51:03.000 --> 00:51:09.000
+services router so the csr which is a
+full stack virtualized ASR so there's
+all the features of your of your
+
+384
+00:51:09.000 --> 00:51:19.000
+hardware ASR but with a BYOL
+pay-as-you-go licensable and the
+CloudFormation stack for transit VPC launched
+
+385
+00:51:19.000 --> 00:51:31.000
+it and in the template all you have to
+do is choose what bandwidth you want so
+at the low end is to with 500 megabytes
+
+386
+00:51:31.000 --> 00:51:44.000
+megabits excuse me / router all the way
+up to 4.5 gigabits per second per router
+so it creates that transit VPC for you
+
+387
+00:51:44.000 --> 00:51:58.000
+deploys in with the IPs assigns carrier
+network space to it so this is not RFC
+1918 space it's shared access space and
+
+388
+00:51:58.000 --> 00:52:06.000
+then it has a very cool automation to be
+able to actually start creating your
+transit connections so spoke connections
+
+389
+00:52:06.000 --> 00:52:16.000
+see very simple all we have is IGW are
+out and it uses S3 for storing
+configuration so we have a route to a
+
+390
+00:52:16.000 --> 00:52:23.000
+VPC endpoint and how do we do
+availability for these things so I'm
+sure you're wondering like this you have
+
+391
+00:52:23.000 --> 00:52:28.000
+centralized routers are now responsible
+for all this communication between all
+these spokes we use easy to auto
+
+392
+00:52:28.000 --> 00:52:35.000
+recovery so if you're not familiar with
+this feature this is all driven by a
+status check alarm called status check
+
+393
+00:52:35.000 --> 00:52:42.000
+failed system so this is a cloud watch
+metric that is a summation of a bunch of
+ec2 related health checks that are
+
+394
+00:52:42.000 --> 00:52:49.000
+rolled up into this one single metric
+that say what the hell of the underlying
+host its power its networking as
+
+395
+00:52:49.000 --> 00:52:56.000
+software everything about that that
+physical host hosting your instance and
+what you can do
+
+396
+00:52:56.000 --> 00:53:05.000
+is set when the alarm is triggered on
+that metric if it fails you can trigger
+to recover the instance which means it
+
+397
+00:53:05.000 --> 00:53:11.000
+will be migrated to new hardware
+automatically and it will retain all the
+characteristics of that instance from
+
+398
+00:53:11.000 --> 00:53:18.000
+private IPs to the ENIs that are on
+there to the EBS volumes are mounted all
+the way to the instance ID itself so it
+
+399
+00:53:18.000 --> 00:53:25.000
+is identical and this is supported on
+all the instance types you see there
+with EBS only it's dependent upon EBS
+
+400
+00:53:25.000 --> 00:53:36.000
+storage to facilitate the migration so
+how do you add a spoke so this is all
+driven by tagging so you go to the VGW
+
+401
+00:53:36.000 --> 00:53:44.000
+of the spoke you add this tag that says
+transit VPC spoke equals true there's a
+lambda function out there that's running
+
+402
+00:53:44.000 --> 00:53:52.000
+every minute that cycles through all of
+your accounts and all your regions to
+check for this tag on a VPC that does
+
+403
+00:53:52.000 --> 00:54:02.000
+not have VPN connections already so it
+finds that tag it builds the necessary
+VPN connections so it creates your CDW's
+
+404
+00:54:02.000 --> 00:54:08.000
+if it needs to the customer gateways
+creates the VPN connection it bundles
+that out up into XML file and encrypts
+
+405
+00:54:08.000 --> 00:54:16.000
+that and stores that on s3 which
+triggers another lambda function by
+putting that object onto s three
+
+406
+00:54:16.000 --> 00:54:25.000
+launches a cisco configuration takes
+that configuration puts it into
+something Cisco friendly and then
+
+407
+00:54:25.000 --> 00:54:34.000
+actually uses the same private access it
+lambda access so it creates an ENI has
+permissions to ssh and deer transit
+
+408
+00:54:34.000 --> 00:54:40.000
+routers and pushes that configuration
+into the CSRs automatically so within a
+matter of minutes this networks are
+
+409
+00:54:40.000 --> 00:54:52.000
+connected the tunnels come up BGP shared
+everybody's happy and you can also use a
+there's some knobs and dials in there to
+
+410
+00:54:52.000 --> 00:55:03.000
+be able to do route influencing so if
+you want to preferred route between your
+between your CSRs you can do that too so
+
+411
+00:55:03.000 --> 00:55:09.000
+by default they're active active which
+is fine if you're stateless but if
+you're doing something like it pcs ours
+
+412
+00:55:09.000 --> 00:55:13.000
+are
+so going to do that or if they're going
+to do stateful file walling or anything
+
+413
+00:55:13.000 --> 00:55:20.000
+that needs to maintain state and not
+have a symmetric routing then you'll
+want to look into this feature so this
+
+414
+00:55:20.000 --> 00:55:31.000
+again just representing all the tunnels
+here is driven by a tag that you put on
+the VG w so you put a tag that says
+
+415
+00:55:31.000 --> 00:55:50.000
+preferred path equals CSR one or CSR to
+now will again drive a configuration
+change to prefer one or the other
+
+416
+00:55:50.000 --> 00:55:58.000
+and I promise this is my only router
+configuration screen shot I just wanted
+to show you that this is what it does it
+
+417
+00:55:58.000 --> 00:56:03.000
+just automatically adds a path
+prepending in there to influence that
+route so this was from the CSR to which
+
+418
+00:56:03.000 --> 00:56:11.000
+is the one you didn't want to prefer so
+it it doubles up on the buffer so that
+is going to be obviously less preferred
+
+419
+00:56:11.000 --> 00:56:25.000
+it applies that route map to that
+neighbor it's finally dying and the same
+is for removing spoke so all you have to
+
+420
+00:56:25.000 --> 00:56:32.000
+do is change that tag either false or
+blank it out or whatever that polar is
+going to be running every minute and
+
+421
+00:56:32.000 --> 00:56:38.000
+checking the state of that tag and it
+will tear down that connection push the
+new configuration that has removed those
+
+422
+00:56:38.000 --> 00:56:44.000
+connections cisco configurator lambda
+function will launch and it will
+reconfigure your routers for you
+
+423
+00:56:44.000 --> 00:56:52.000
+automatically so it's fun stuff it's
+aight i encourage you to check it out
+it's fun to play with it's really easy
+
+424
+00:56:52.000 --> 00:56:58.000
+to launch the template and get running
+and start figuring out if it if it's
+going to work for your ulti VPC
+
+425
+00:56:58.000 --> 00:57:05.000
+configuration alright so here we go we
+got it looks very similar to Dobbin
+spoke but now it's all l3 so this is all
+
+426
+00:57:05.000 --> 00:57:14.000
+driven by tunneling IPSec tunnels
+into these centralized routers and and
+BGP driving all the dynamic routing
+
+427
+00:57:14.000 --> 00:57:21.000
+between all of the various networks so
+you can go everywhere you can go from
+your branch to a spoke you can go from a
+
+428
+00:57:21.000 --> 00:57:32.000
+spoke to another spoke you're going to
+go spoke to your to the internet so full
+into end
+
+429
+00:57:32.000 --> 00:57:42.000
+so now we're starting to get there so
+we're bringing in that second region
+also into our transit we representing
+
+430
+00:57:42.000 --> 00:57:48.000
+here that you can run a transit hub in
+each region or you can move other
+regions over and have spokes you know
+
+431
+00:57:48.000 --> 00:57:58.000
+it's completely up to you how you want
+to run the transit VPC you know where
+you want your point of consolidation to
+
+432
+00:57:58.000 --> 00:58:04.000
+be and I just point out here that we're
+also running in a full mesh between
+transit hubs to different regions over
+
+433
+00:58:04.000 --> 00:58:13.000
+the AWS network so real quick pros and
+cons of the transit VPC so Indian
+routing central transit routers can
+
+434
+00:58:13.000 --> 00:58:20.000
+perform higher level functions there's
+central point of control for you the
+spoke VGWs are dead simple and they're
+
+435
+00:58:20.000 --> 00:58:25.000
+HA by default this minimizes on-premise
+networking changes because you're not
+changing anything about your
+
+436
+00:58:25.000 --> 00:58:31.000
+connectivity to the transit VPC all the
+really dynamic stuff you're you're
+launching all these new VPCs that's all
+
+437
+00:58:31.000 --> 00:58:39.000
+happening in the transit VPC itself and
+it can minimize cost if you're already
+doing this and you can offload this
+
+438
+00:58:39.000 --> 00:58:45.000
+function from you know purchasing new
+networking gear or something for a colo
+instead you can move this up into a
+
+439
+00:58:45.000 --> 00:58:52.000
+transit VPC on the on the con side we
+see availability and management of the
+transit router is up to you we talked a
+
+440
+00:58:52.000 --> 00:59:00.000
+little bit about the availability the
+licensing costs of Cisco and the cost of
+the data transfer is important to point
+
+441
+00:59:00.000 --> 00:59:06.000
+out because everything transit related
+is going over the IGW so it's all
+Internet out so for example if you're
+
+442
+00:59:06.000 --> 00:59:14.000
+going from transit to spoke or spoke to
+transit to home each one of those is an
+Internet out step so you need to pay
+
+443
+00:59:14.000 --> 00:59:24.000
+attention to your data transfer costs
+so if everyone's okay I'm running low on
+time I didn't I didn't realize how this
+
+444
+00:59:24.000 --> 00:59:34.000
+was going to go I've got one more
+section take about five minutes but i'll
+try to blow through it so this is just
+
+445
+00:59:34.000 --> 00:59:44.000
+bringing in direct connect to this
+picture and more regions so we want to
+use an existing private network that we
+
+446
+00:59:44.000 --> 00:59:50.000
+have so we have an MPLS network we don't
+want to use the Internet anymore to
+connect our regions but take advantage
+
+447
+00:59:50.000 --> 00:59:58.000
+of free existing network and we want to
+bring in more regions so dedicated
+scalable network connectivity database
+
+448
+00:59:58.000 --> 01:00:06.000
+leverage our existing corporate network
+predictable latency in many many many
+many regions midget many accounts many VPCS
+
+449
+01:00:06.000 --> 01:00:17.000
+so transit VPC with direct connect
+this works perfectly fine and there's
+actually you know cool little feature
+
+450
+01:00:17.000 --> 01:00:25.000
+here with what we're calling it a
+detached VGW and for those of you that
+are the VPC hackers in the crowd you
+
+451
+01:00:25.000 --> 01:00:31.000
+will noodle on this one tonight figure
+out what else you can do to play with
+this one so this is a cool one you can
+
+452
+01:00:31.000 --> 01:00:38.000
+use a VGW without actually being
+attached to a VPC I don't know if you
+ever try that but you can so if I tag
+
+453
+01:00:38.000 --> 01:00:46.000
+this thing with the transit tag the
+transit router is going to build up
+tunnels to this VGW now right now it's
+
+454
+01:00:46.000 --> 01:00:56.000
+one sided there's nothing else attached
+to the VGW but you can attach a private
+direct connect interface to it so now on
+
+455
+01:00:56.000 --> 01:01:02.000
+one side you've got the private virtual
+interface for direct connect attach this
+VGW another side you have your VPN
+
+456
+01:01:02.000 --> 01:01:08.000
+tunnels into your CS hours so all the
+BGP propagation is going to happen and
+facilitate through this like
+
+457
+01:01:08.000 --> 01:01:19.000
+free-floating life raft of network
+connectivity is not attached to VPC so
+this scales up to about a gigabit of
+
+458
+01:01:19.000 --> 01:01:24.000
+flow so if you're doing multiple
+gigabits you can create more of these
+but if you're doing you know like tens
+
+459
+01:01:24.000 --> 01:01:31.000
+and 20s 30 40 gigabits of traffic of a
+direct connect you don't want to do this
+you want to go a more traditional route
+
+460
+01:01:31.000 --> 01:01:38.000
+which is setting up the private direct connect
+directly into the VGW attached to the
+
+461
+01:01:38.000 --> 01:01:47.000
+transit VPC and then running tunnels
+over direct connect so you can do this
+privately like this so here we're
+
+462
+01:01:47.000 --> 01:01:55.000
+representing the tunnels from your
+on-premise VPN devices directly into the
+CSR transit routers or you can also do
+
+463
+01:01:55.000 --> 01:02:00.000
+it over public it's up to you there's
+pluses and minuses on both so with
+public you're obviously it's a public
+
+464
+01:02:00.000 --> 01:02:12.000
+network now and you're getting all of
+AWS public IP space advertised down to
+you and you also have to secure that on
+
+465
+01:02:12.000 --> 01:02:18.000
+your side you have to treat it like a
+public network so you'll have firewalls
+in such there we go non security layers
+
+466
+01:02:18.000 --> 01:02:25.000
+on your side because it is a public
+network but you can still facilitate the
+tunnels across the direct connect
+
+467
+01:02:25.000 --> 01:02:31.000
+connection its private dedicated
+bandwidth and you'll just be terminating
+those total tunnels on the public EIPs
+
+468
+01:02:31.000 --> 01:02:42.000
+of the transit routers instead of of the
+private IPs the advantage of the
+public is that once in the US once you
+
+469
+01:02:42.000 --> 01:02:48.000
+connect in in one direct connect a
+location with a public direct connect
+interface you get access to all the AWS
+
+470
+01:02:48.000 --> 01:02:53.000
+regions so if you were running transit
+hubs in multiple regions through this
+single connection and here we
+
+471
+01:02:53.000 --> 01:03:01.000
+represented in the Equinix (数据运营商) in
+chicago to the new US east region is where you're directly direct connected into so you
+
+472
+01:03:01.000 --> 01:03:11.000
+obviously have access to your regions
+all your V pcs in that region but you
+would also have access to the remote
+
+473
+01:03:11.000 --> 01:03:18.000
+regions of just click whatever work so
+you'd be able to VPN and it would still
+be all over AWS private network you
+
+474
+01:03:18.000 --> 01:03:24.000
+would not be able to do that with a
+private Direct Connect fifth private
+Direct Connect interfaces can only be
+
+475
+01:03:24.000 --> 01:03:32.000
+connected to VPCs in the same region
+that your direct connected into I'll
+skip this is going to be homework work
+
+476
+01:03:32.000 --> 01:03:39.000
+for you later there's a really good deep
+dive if you want to go to all the
+details of direct connect em VPNs net
+
+477
+01:03:39.000 --> 01:03:50.000
+for two and just real quickly I mean
+hooking up at existing MPLS like IP VPN
+network to a region is is dead simple
+
+478
+01:03:50.000 --> 01:03:56.000
+most of your providers they're already
+in our direct connect locations that
+AWS region is already appointed
+
+479
+01:03:56.000 --> 01:04:05.000
+presence on their global cloud so all it
+is is facilitating adding that new pop
+to your existing IP VPN you know calling
+
+480
+01:04:05.000 --> 01:04:12.000
+up your provider and saying hey I want
+to add us to I want to add to the
+network because you know your facility
+
+481
+01:04:12.000 --> 01:04:17.000
+they're facilitating all the routing
+you're having that relationship with
+their PE routers in each of your
+
+482
+01:04:17.000 --> 01:04:24.000
+locations and they just bring in that
+new network on to your VRF representing
+your cloud and now you've got all of the
+
+483
+01:04:24.000 --> 01:04:34.000
+decider blocks from the a depressed
+region so same with bringing in multiple
+locations here we have Chicago and
+
+484
+01:04:34.000 --> 01:04:41.000
+london the only thing to watch out for
+is as your MPLS cloud gets to a certain
+size there are some limits so there is a
+
+485
+01:04:41.000 --> 01:04:50.000
+100 route max in the VPC route table so
+if you have many many points of presence
+on your MPLS cloud you're going to need
+
+486
+01:04:50.000 --> 01:04:56.000
+to get your provider to either summarize
+those down to nice and clean smaller
+outs or advertise a default route to you
+
+487
+01:04:56.000 --> 01:05:06.000
+because 100 is a hard limit for us in
+the VPC route table and then you're
+obviously going to be seeing our AS in
+
+488
+01:05:06.000 --> 01:05:12.000
+coming in from different locations so
+you have to do things like
+BGP AS-override to make sure there's not any
+
+489
+01:05:12.000 --> 01:05:19.000
+BGP loops when you're bringing in
+multiple regions all right so pros of
+using Direct Connect with trans a VPC
+
+490
+01:05:19.000 --> 01:05:25.000
+private network no internet dependencies
+predictable Layton sees because you have
+that dedicated bandwidth is dedicated
+
+491
+01:05:25.000 --> 01:05:33.000
+links into the regions and access to
+public networks of all US regions over a
+single us-based direct connection
+
+492
+01:05:33.000 --> 01:05:40.000
+connection on the negative you know
+you're getting all of our public IP
+space you might not want all that so you
+
+493
+01:05:40.000 --> 01:05:48.000
+might be having to do some filtering on
+what you get from us as far as public
+network announcements and then 100 route
+
+494
+01:05:48.000 --> 01:05:53.000
+limit we just talked about and obviously
+the cost of a provider network and of
+all these direct connect connections
+
+495
+01:05:53.000 --> 01:06:00.000
+alright so we finally got to the picture
+thank you very much for your time so I
+ran a little bit over
+I really appreciate please give me
+feedback thank you

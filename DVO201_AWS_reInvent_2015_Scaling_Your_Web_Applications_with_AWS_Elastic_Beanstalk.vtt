@@ -1,0 +1,2483 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:09.000
+hi guys thanks for making the Friday
+morning 9am session I know after the
+party last night must be rough so really
+
+2
+00:00:09.000 --> 00:00:15.000
+appreciate you guys being here my name
+is abhishek singh i'm the senior product
+manager on the Elastic Beanstalk team
+
+3
+00:00:15.000 --> 00:00:23.000
+and I've got Colin here who's one of our
+partners and he's going to be talking
+about our customer story let's quickly
+
+4
+00:00:23.000 --> 00:00:29.000
+go ahead and look at what we'll be
+learning in the session today or the
+agenda we're going to be talking about
+
+5
+00:00:29.000 --> 00:00:36.000
+Elastic Beanstalk versus doing it
+yourself if you will we'll look at
+developer workflows on deploying sample
+
+6
+00:00:36.000 --> 00:00:45.000
+applications on Elastic Beanstalk so as
+I was saying we're going to look at
+developer workflows a demo of what
+
+7
+00:00:45.000 --> 00:00:50.000
+we'll be doing with the sample
+application we'll go over some best
+practices and then walk you guys through
+
+8
+00:00:50.000 --> 00:00:57.000
+the console on how you would go use some
+of those best practices and then we'll
+talk about a customer story Colin's
+
+9
+00:00:57.000 --> 00:01:05.000
+going to talk about royal caribbean
+that's implemented their royalcaribbean.com
+web app on Elastic Beanstalk so
+
+10
+00:01:05.000 --> 00:01:12.000
+let's get started so after this session
+you guys should be able to understand
+the benefits of using Elastic Beanstalk
+
+11
+00:01:12.000 --> 00:01:19.000
+versus doing it yourself we will deploy a
+sample application to elastic beanstalk
+we will also make the code available on
+
+12
+00:01:19.000 --> 00:01:26.000
+github so that you guys can go and use
+that code later we'll talk about
+modifying the application both the
+
+13
+00:01:26.000 --> 00:01:32.000
+infrastructure stack and the application
+stack we'll also talk about how to
+extend your application so that you can
+
+14
+00:01:32.000 --> 00:01:40.000
+use additional resources by simply
+defining configuration files in your
+source bundle we will talk about debugging
+
+15
+00:01:40.000 --> 00:01:46.000
+load testing and scaling your
+applications to handle millions of web
+requests and we'll also talk about
+
+16
+00:01:46.000 --> 00:01:51.000
+deployment options available in elastic
+Beanstalk so that you know which ones to
+choose or which ones are appropriate for
+
+17
+00:01:51.000 --> 00:02:00.000
+your deployments finally we will talk
+about operational monitoring if you will
+so setting up alarms and notifications
+
+18
+00:02:00.000 --> 00:02:08.000
+and finally we will talk about using
+tags and the best practices around tags
+for cost management so let's get started
+
+19
+00:02:08.000 --> 00:02:15.000
+with what does Elastic Beanstalk provide
+versus doing it yourself
+as you can see on the instance or the
+
+20
+00:02:15.000 --> 00:02:25.000
+application stack if you're a developer
+you no longer have to go provision PHP
+or your lamp stack for example or
+
+21
+00:02:25.000 --> 00:02:32.000
+install node and Nginx if you're
+using a node.js application Beanstalk
+provides all of that for you all you
+
+22
+00:02:32.000 --> 00:02:41.000
+need to do is simply bring your code
+let's talk about what beatstack provides
+in terms of the infrastructure as you
+
+23
+00:02:41.000 --> 00:02:48.000
+can see Beanstalk provides two separate
+infrastructure stacks we have a single
+instance stack which is really for
+
+24
+00:02:48.000 --> 00:02:54.000
+low-cost development and we also have a
+load balanced auto scaling stack which
+is pre-setup for production workloads
+
+25
+00:02:54.000 --> 00:03:02.000
+and as you will see today I'm using a
+load balancing auto scale stack to run a
+simple application that's serving about
+
+26
+00:03:02.000 --> 00:03:10.000
+10,000 requests per second we'll also
+talk about web and worker tiers so these
+are two tiers that Beanstalk supports
+
+27
+00:03:10.000 --> 00:03:16.000
+today a web tier is used for front-end
+applications or API backends if you will
+and worker tiers are used for
+
+28
+00:03:16.000 --> 00:03:23.000
+performing asynchronous work for example
+if you had a front-end that collected
+email addresses the 
+
+29
+00:03:23.000 --> 00:03:29.000
+workers tier can then be used to send emails out or 
+for image processing if you have an
+application that collects a lot of
+
+30
+00:03:29.000 --> 00:03:38.000
+images does processing and then store
+them in S3 you can use the workers tier
+to do that Beanstalk also provides you
+
+31
+00:03:38.000 --> 00:03:43.000
+with a unique domain name for all your
+applications so you don't have to
+actually go buy a custom domain if you
+
+32
+00:03:43.000 --> 00:03:53.000
+don't want to we also do support custom
+domains as you'll see in my demo which you can 
+use in concert with (和…相呼应) Route 53 so
+
+33
+00:03:53.000 --> 00:03:59.000
+let's quickly look at the pieces of
+information that you need to deploy your
+code in Elastic Beanstalk 
+
+34
+00:03:59.000 --> 00:04:07.000
+and this is for any application on one of our
+supported platforms so Beanstalk
+supports eight different platforms today
+
+35
+00:04:07.000 --> 00:04:16.000
+we support Java both in a Tomcat variant
+and also a generic Java variant on our
+generic Java container you can run any
+
+36
+00:04:16.000 --> 00:04:26.000
+JVM-based application or any JVM-based
+language applications for example Scala
+or closure we support node, PHP, docker,
+
+37
+00:04:26.000 --> 00:04:37.000
+.NET, Python, Ruby and recently we
+added support for Go 
+again as the graphic shows all you need is your code
+
+38
+00:04:37.000 --> 00:04:43.000
+you need to know the region that you're
+deploying your code to 
+this could be any one of the 9 regions where 
+
+39
+00:04:43.000 --> 00:04:50.000
+Beanstalk is supported you need to know your stack
+or container type which is one of the
+8 platforms I mentioned 
+
+40
+00:04:50.000 --> 00:04:55.000
+the third choice you need to make is whether
+you're doing development work or
+production so you choose between the
+
+41
+00:04:55.000 --> 00:05:03.000
+single instance or the load balance with
+auto scaling and finally optionally you
+can choose to create an RDS database
+
+42
+00:05:03.000 --> 00:05:09.000
+I would point out that if you create an
+RDS database as part of your Beanstalk
+environment the life cycle of the
+
+43
+00:05:09.000 --> 00:05:14.000
+database is tied to the life cycle of
+your environment so this is really good
+for development cases 
+
+44
+00:05:14.000 --> 00:05:20.000
+but it's not something you want to use for production workloads 
+because in production 
+the life cycle of your data is generally
+
+45
+00:05:20.000 --> 00:05:29.000
+different from the life cycle of your
+application so that's the point to keep in mind 
+so how can you deploy applications
+
+46
+00:05:29.000 --> 00:05:35.000
+to Elastic Beanstalk we have three
+different ways that are supported today
+you can use the AWS management console
+
+47
+00:05:35.000 --> 00:05:43.000
+you can use one of our toolkits we have
+a toolkit for Eclipse and also plugin
+for Visual Studio or you can use our
+
+48
+00:05:43.000 --> 00:05:53.000
+Elastic Beanstalk CLI which is what I'll
+be demoing today so what's the workflow
+that one needs to go through when you
+
+49
+00:05:53.000 --> 00:05:59.000
+need to deploy an application to elastic
+Beanstalk in this case I'm using a node
+sample the URL for Github is 
+
+50
+00:05:59.000 --> 00:06:08.000
+on the screen so you get started by installing
+the Elastic Beanstalk CLI which is a
+simple pip install then you can download
+
+51
+00:06:08.000 --> 00:06:14.000
+your code in this case I'm git cloning a
+sample application but this could be
+your code that you already have in a
+
+52
+00:06:14.000 --> 00:06:20.000
+folder or your code that you have in
+Github that you can git clone the third
+step is to initialize the folder by
+
+53
+00:06:20.000 --> 00:06:27.000
+calling 'eb init' what this does is
+essentially tie your folder to an
+application in Elastic Beanstalk or in
+
+54
+00:06:27.000 --> 00:06:34.000
+the cloud the fourth step is to follow
+the prompts to configure your
+environment and I'll show you guys these
+
+55
+00:06:34.000 --> 00:06:40.000
+steps in a demo a little later and
+finally once you've configured your
+environment and your folder
+
+56
+00:06:40.000 --> 00:06:47.000
+go ahead and issue an 'eb create' what
+this does is now takes the configuration
+that's stored locally and creates an
+
+57
+00:06:47.000 --> 00:06:54.000
+environment in Elastic Beanstalk that
+runs that application along with the
+configuration so obviously now that you
+
+58
+00:06:54.000 --> 00:07:00.000
+have your application deployed you want
+to go ahead and update and make changes
+and you want to keep on committing new
+
+59
+00:07:00.000 --> 00:07:07.000
+changes to the application so how does
+that work flow look like? 
+the first step is obviously updating your
+
+60
+00:07:07.000 --> 00:07:14.000
+code then you go ahead and add that code
+to your git repository
+Git is not required for the Elastic Beanstalk CLI
+
+61
+00:07:14.000 --> 00:07:20.000
+it's just something that a lot of people use so I have it there
+if you don't have git
+Beanstalks just going to zip up the
+
+62
+00:07:20.000 --> 00:07:28.000
+folder and upload it so that's the other
+option that you do have and finally 
+once you've done the commit and the deploy
+
+63
+00:07:28.000 --> 00:07:37.000
+you can just issue an 'eb open' to open the
+application in the browser so let's
+quickly look at the application the
+
+64
+00:07:37.000 --> 00:07:44.000
+sample application details that will be
+going out or looking at today 
+I want to quickly bring up my browser here so I
+
+65
+00:07:44.000 --> 00:07:50.000
+can show you what the application looks
+like so we have a really simple
+application that's running on Beanstalk
+
+66
+00:07:50.000 --> 00:07:56.000
+it's essentially a pre-launch
+application so if you want to launch
+something you're collecting email
+
+67
+00:07:56.000 --> 00:08:12.000
+addresses what this application does 
+you can go sign up it asks for your name
+and then I can just go in here and say
+
+68
+00:08:12.000 --> 00:08:19.000
+sign up and that record has now been
+stored in DynamoDB so that I have a
+record for it and I also have configured
+
+69
+00:08:19.000 --> 00:08:25.000
+in the application an SNS topic so that
+every time somebody signs up the
+administrator of the website gets an
+
+70
+00:08:25.000 --> 00:08:31.000
+email that someone signed up for your
+application so that's the application
+let's quickly go ahead and look at the
+
+71
+00:08:31.000 --> 00:08:41.000
+details of what's required to run that
+application in Elastic Beanstalk 
+so the first thing we need to do for any
+
+72
+00:08:41.000 --> 00:08:49.000
+application is define dependencies that
+the application uses 
+in elastic Beanstalk we use standard dependency
+
+73
+00:08:49.000 --> 00:08:55.000
+managers for the languages or frameworks
+that you're using so for example this is
+a node application so i'm using a
+
+74
+00:08:55.000 --> 00:09:02.000
+package.json which is used by NPM or the
+Node Package Manager 
+as you can see there I've defined 
+
+75
+00:09:02.000 --> 00:09:08.000
+the application name a version and then a list of
+dependencies that my application uses
+one of the things I want to point out
+
+76
+00:09:08.000 --> 00:09:16.000
+for dependencies is it's a really bad
+idea to have 'latest' as I have in there
+because what's going to happen is 
+
+77
+00:09:16.000 --> 00:09:23.000
+every time you do a deployment if any of the
+dependencies have changed versions NPM
+is going to pull in the new versions 
+
+78
+00:09:23.000 --> 00:09:31.000
+and then you've got a moving target for
+example every time you do a deployment
+what's a better idea is to actually put
+
+79
+00:09:31.000 --> 00:09:38.000
+in the specific versions that you are
+using for your applications 
+if you're in the node world you can actually go a
+
+80
+00:09:38.000 --> 00:09:45.000
+step further and use shrinkwrap which
+is an NPM command to actually tie in the
+entire chain or lock down 
+
+81
+00:09:45.000 --> 00:09:52.000
+the entire chain of dependencies so that every time
+you deploy the APP it's the same exact
+versions of dependencies that are being
+
+82
+00:09:52.000 --> 00:10:02.000
+pulled in and deployed so as I mentioned
+all you need to do for deploying an
+application to Beanstalk is provided
+
+83
+00:10:02.000 --> 00:10:09.000
+application with the appropriate
+dependency manager file so for example
+in node it's a package.json, in ruby it's
+
+84
+00:10:09.000 --> 00:10:18.000
+a gem file, in PHP it's a
+composer file if you will, so on and so forth 
+one of the other pieces that I
+
+85
+00:10:18.000 --> 00:10:23.000
+have in the application here or the
+sample code that you will see is I'm
+using some
+
+86
+00:10:23.000 --> 00:10:30.000
+thing called EB extensions 
+Beanstalk provides very high extensibility in
+terms of what you can do with both your
+
+87
+00:10:30.000 --> 00:10:36.000
+application stack and the infrastructure
+stack and EB extensions is the mechanism
+that you use to modify either the
+
+88
+00:10:36.000 --> 00:10:43.000
+application or the infrastructure stack
+that your application is going to use 
+in this case let's look at the details of
+
+89
+00:10:43.000 --> 00:10:53.000
+how do I modify the application stack 
+so in here I have a set of option settings
+if you will as you can see I'm defining
+
+90
+00:10:53.000 --> 00:10:59.000
+a custom option which is the email
+address where somebody is going to get emailed or 
+
+91
+00:10:59.000 --> 00:11:07.000
+the administrator of the website 
+every time somebody signs up I've got some environment variables that are defined so I have a theme and then
+
+92
+00:11:07.000 --> 00:11:15.000
+as you can see when I have the AWS
+region i'm using a concept of reference
+in this case i'm referencing the AWS
+
+93
+00:11:15.000 --> 00:11:21.000
+region so that I don't have to hard code
+this in my application that ensures that
+this application bundle can be 
+
+94
+00:11:21.000 --> 00:11:29.000
+deployed to any of the regions supported by
+Beanstalk so you're not hard coding it
+to be us-east-1 or us-west-2 for that
+
+95
+00:11:29.000 --> 00:11:37.000
+example we also have two other resources
+there which is a startup_signup_table
+this is the DynamoDB table and then we
+
+96
+00:11:37.000 --> 00:11:45.000
+have a new_sign_up topic which is the SNS topic
+both of these resources are
+created by another set of eb extensions
+
+97
+00:11:45.000 --> 00:11:53.000
+that we're going to look at very quickly
+so in this case again as I'm creating
+resources I want to use references and
+
+98
+00:11:53.000 --> 00:12:00.000
+not hard code values in there because
+these references will change every time
+I create a new application from the
+
+99
+00:12:00.000 --> 00:12:07.000
+source bundle and finally I'm
+configuring the proxy server on the
+container which I'm using Nginx for here
+
+100
+00:12:07.000 --> 00:12:13.000
+and I'm configuring some static file
+folders where I'm going to serve my
+static assets so that the node process
+
+101
+00:12:13.000 --> 00:12:22.000
+is not serving those static assets now
+let's look at the eb extensions that
+actually add additional AWS resources to
+
+102
+00:12:22.000 --> 00:12:29.000
+this application for example as I
+mentioned in this case we're going to be
+using DynamoDB the simple notification
+
+103
+00:12:29.000 --> 00:12:36.000
+service and the simple queuing service
+so in my eb extension I start with a
+resources section
+
+104
+00:12:36.000 --> 00:12:42.000
+and as I mentioned I'm using references
+so you will see that I have a StartupSignupsTable
+defined here as a resource
+
+105
+00:12:42.000 --> 00:12:49.000
+and then I have a NewSignupTopic
+defined here as a resource and that is
+what I was referencing in my previous 
+
+106
+00:12:49.000 --> 00:12:58.000
+eb extension to ensure that i don't have to
+hard-code these values in 
+again in this resources tab this is really a CloudFormation
+
+107
+00:12:58.000 --> 00:13:07.000
+syntax or snippet if you will
+I'm defining three resources here 
+one's of type DynamoDB table and it's got some
+
+108
+00:13:07.000 --> 00:13:14.000
+schema elements that I've defined I've
+got a sign up queue this is essentially
+where the addresses end up every time
+
+109
+00:13:14.000 --> 00:13:23.000
+they are submitted on the application
+and then I have a sign up topic which is
+SNS topic this is used for notification
+
+110
+00:13:23.000 --> 00:13:31.000
+so that every time somebody signs up the
+developer of the application gets a
+notification and then finally I have a
+
+111
+00:13:31.000 --> 00:13:39.000
+policy in there which allows SQS to
+communicate with SNS some of the things
+i want to do point out here is this is a
+
+112
+00:13:39.000 --> 00:13:47.000
+good example of an eb extension that
+uses some of our built-in functions for
+example I'm using a function 
+
+113
+00:13:47.000 --> 00:13:53.000
+get attribute or FN::GetAtt if you will
+which is down here and 
+this is actually getting an attribute 
+
+114
+00:13:53.000 --> 00:14:01.000
+of the queue that I've defined above i'm also using what
+we've seen earlier is references so
+anytime you're writing eb extensions
+
+115
+00:14:01.000 --> 00:14:07.000
+make sure to use references and get attributes 
+as necessary instead of
+hard-coding values into the 
+
+116
+00:14:07.000 --> 00:14:16.000
+eb extensions so let's go ahead and look at
+the demo of what it looks like to do
+everything that i just described in 
+
+117
+00:14:16.000 --> 00:14:33.000
+real life alright so let me go ahead and copy
+the Github URL let's make this a little
+bigger
+
+118
+00:14:33.000 --> 00:14:41.000
+is that big enough for everybody in the
+back can you guys see the text perfect
+all right so let's go ahead and do a git
+
+119
+00:14:41.000 --> 00:14:54.000
+clone and I'm going to pull down my application 
+now let's go into the folder
+so as you can see I've set up my command
+
+120
+00:14:54.000 --> 00:15:03.000
+line if you will to show the branch that I'm using 
+in this case it's the master branch 
+so now i have my
+
+121
+00:15:03.000 --> 00:15:10.000
+application as i mentioned some of the
+files in here simply my app.js file
+which is the application i have the
+
+122
+00:15:10.000 --> 00:15:16.000
+package.json file which i mentioned earlier 
+is the dependencies 
+and then i have the shrink-wrap json 
+
+123
+00:15:16.000 --> 00:15:23.000
+which essentially defines the entire tree
+structure of the dependencies 
+so as we talked about in the workflows 
+
+124
+00:15:23.000 --> 00:15:31.000
+let's go ahead and initialize this folder to be
+deployed to Elastic Beanstalk and 
+I'm going to do that with the 'eb init' 
+
+125
+00:15:31.000 --> 00:15:45.000
+let's go ahead and choose a region 
+I'm going to choose the default which is us-west-2 or Oregon 
+so when I did 'eb init'
+
+126
+00:15:45.000 --> 00:15:51.000
+Beanstalk or the CLI is already showing
+me the applications that i have running
+not obviously when you do demos 
+
+127
+00:15:51.000 --> 00:15:57.000
+in the interest of time you want to have as
+they say a pre-baked set of cookies in
+the oven which i'm going to pull out
+
+128
+00:15:57.000 --> 00:16:02.000
+later so we've got two applications that
+are already running there 
+I have a load generation application that's actually
+
+129
+00:16:02.000 --> 00:16:09.000
+generating the load and then 
+i have my demo application 
+so i'm going to choose the demo application 
+
+130
+00:16:09.000 --> 00:16:16.000
+and then it's showing me that i have two environments
+that are already in the demo application
+so i have a dev environment and a prod
+
+131
+00:16:16.000 --> 00:16:22.000
+environment so let's go ahead and create
+in fact in this step i'm just going to
+pick the dev environment if you will and
+
+132
+00:16:22.000 --> 00:16:32.000
+then we'll later go ahead and create a
+staging environment in here 
+so now my CLI is initialized for Elastic Beanstalk
+
+133
+00:16:32.000 --> 00:16:39.000
+as you can see on my command line Github
+or git things that I have new files in
+there so let's quickly look at those
+
+134
+00:16:39.000 --> 00:16:47.000
+files Beanstalk creates ".elasticbeanstalk"
+folder that has a configuration file
+this file essentially tells
+
+135
+00:16:47.000 --> 00:16:56.000
+the command line interface which
+environment your application is tied to
+so we'll go back and then follow the
+
+136
+00:16:56.000 --> 00:17:04.000
+steps of "eb create" if you will and in
+this case "eb create" can be issued either
+without any parameters or there's a
+
+137
+00:17:04.000 --> 00:17:11.000
+whole host of parameters that you can specify 
+in my case i want to 
+create a sign up staging environment 
+
+138
+00:17:11.000 --> 00:17:19.000
+with the specific cname so i'm gonna do "eb create"
+and i want to use an instance type of c3.large 
+so i'm going to 
+
+139
+00:17:19.000 --> 00:17:28.000
+type that in actually let me start with the
+name first so i'm going to do signup-staging
+and I set instance type of
+
+140
+00:17:28.000 --> 00:17:37.000
+c3.large and then I want to use a cname
+let's go back and quickly take a look at
+the Beanstalk environment so that 
+
+141
+00:17:37.000 --> 00:17:49.000
+I can be consistent across the board 
+so in here the naming scheme i'm using is sign
+up the name or the stage if you will and
+
+142
+00:17:49.000 --> 00:18:03.000
+then launch so let's go ahead and do
+that and now let's go ahead and get that
+process started so as you can see 
+
+143
+00:18:03.000 --> 00:18:09.000
+what Elastic Beanstalk CLI is doing there is
+it's already uploaded the version of the
+application that you have in the folder
+
+144
+00:18:09.000 --> 00:18:15.000
+to S3 and then we're starting to create
+the application and it's showing you
+some of the details there 
+
+145
+00:18:15.000 --> 00:18:22.000
+as i mentioned i have an environment that's pre-baked
+so let's go ahead and let this process
+go on in the background and go to the
+
+146
+00:18:22.000 --> 00:18:35.000
+pre-baked environment so here i have the
+pre-baked environment let's look at some
+of the operations we can do here so one
+
+147
+00:18:35.000 --> 00:18:45.000
+of the first things obviously is you
+want to do an update to this application
+so let's go ahead and make a change so
+
+148
+00:18:45.000 --> 00:18:54.000
+as you guys can see in the application
+that it says the next big thing is here
+let's go ahead and change that to the
+
+149
+00:18:54.000 --> 00:18:59.000
+next week thing is coming for example
+because you know it's a pre-launch site
+we want to make sure that that's what
+
+150
+00:18:59.000 --> 00:19:09.000
+we're doing. so I go to my views and that's where I
+define the next big thing and it's right
+
+151
+00:19:09.000 --> 00:19:21.000
+there so let's change that to coming
+save that file now go back to my command
+line here and all of a sudden get says
+
+152
+00:19:21.000 --> 00:19:26.000
+hey you have changes and this is one of
+the things that a lot of people miss
+12.2 Beanstalk and sometimes get
+
+153
+00:19:26.000 --> 00:19:32.000
+frustrated is that you don't commit your
+changes to git and you try to do a
+deploy in that case it's not going to
+
+154
+00:19:32.000 --> 00:19:39.000
+work because beanstalks using the last
+commit if this folder wasn't a git
+folder we would just take the changes as
+
+155
+00:19:39.000 --> 00:19:45.000
+is and deploying but since we're using
+it we got to make sure that we are
+committing this so let's go ahead and do
+
+156
+00:19:45.000 --> 00:20:06.000
+that so I'm going to set that up and say
+okay so we've added our folder and now I
+all I need to do is issue "eb deploy"
+
+157
+00:20:06.000 --> 00:20:13.000
+and so now the deployments in progress the
+CLI's telling me hey we've starting
+the update the versions being deployed
+
+158
+00:20:13.000 --> 00:20:20.000
+to the instances as you can see and very
+quickly it's going to come and tell me
+everything is done and then i'll call it
+
+159
+00:20:20.000 --> 00:20:27.000
+"eb open" from here I'm pull up the app
+and you should be able to see there that
+it says the next big thing is coming
+
+160
+00:20:27.000 --> 00:20:38.000
+instead of the next thing is here Oh
+Beanstalk does not do get out because we
+don't know what files you need to add
+
+161
+00:20:38.000 --> 00:20:45.000
+the reason for doing get ad is really to
+add your changes to the git repository
+that's just a good work flow I'm going
+
+162
+00:20:45.000 --> 00:20:50.000
+to hold questions till the end if you
+don't mind because we start a little
+late so I want to make sure we get
+
+163
+00:20:50.000 --> 00:20:58.000
+through everything so beanstalks now
+deployed everything successfully let's
+go ahead and do it "eb open" and as you
+
+164
+00:20:58.000 --> 00:21:06.000
+can see it's gone from "the next big
+thing is here" to "the next big thing is
+coming" so it's really very simple to get
+
+165
+00:21:06.000 --> 00:21:17.000
+started very easy to deploy your
+applications make changes and updates
+now let's quickly go back to the slides
+
+166
+00:21:17.000 --> 00:21:28.000
+so let's talk about some of the best
+practices around what you should be
+doing when you are deploying
+
+167
+00:21:28.000 --> 00:21:36.000
+applications on Elastic Beanstalk to
+ensure that your applications can scale
+and handle millions of web requests
+
+168
+00:21:36.000 --> 00:21:44.000
+so the first and the most obvious thing is
+to do you know obviously test and tune
+your application I have some best
+
+169
+00:21:44.000 --> 00:21:49.000
+practices in here that I'll go through
+these are some of the things that we've
+learned over the years both from our
+
+170
+00:21:49.000 --> 00:21:56.000
+customers and our own experience running
+things the first thing that you want to
+do whenever you launch an application or
+
+171
+00:21:56.000 --> 00:22:03.000
+a web APP is you want to pick a
+performance metric that's important
+to you so for example if you're a web
+
+172
+00:22:03.000 --> 00:22:12.000
+application that's an API latency is
+probably the most important aspect of
+that request if you will if you're
+
+173
+00:22:12.000 --> 00:22:18.000
+serving a website where a lot of users
+are coming in attending the website you
+probably want to optimize for the number
+
+174
+00:22:18.000 --> 00:22:25.000
+of concurrent connections and if it's
+something where you're only worried
+about throughput you want to optimize
+
+175
+00:22:25.000 --> 00:22:32.000
+for the number of web requests now for
+folks who are who've done this in the
+past you know there's a equation
+
+176
+00:22:32.000 --> 00:22:39.000
+essentially that connects all three of
+these values so when you're optimizing
+for one you're trading off the other you
+
+177
+00:22:39.000 --> 00:22:46.000
+can't really optimized for all three
+because that would just give you a sub-optimal
+performance across the board and
+
+178
+00:22:46.000 --> 00:22:54.000
+then the other thing that you should do
+is load test your application because
+without testing your application you
+
+179
+00:22:54.000 --> 00:22:59.000
+don't know how it's going to perform
+when that spike of traffic comes for
+your startup for example or your large
+
+180
+00:22:59.000 --> 00:23:08.000
+website and one of the pieces of advice
+I give to customers when I talk to them
+is start without auto scaling minimum
+
+181
+00:23:08.000 --> 00:23:14.000
+and maximum of one what this allows you
+to do is essentially test how your
+application is going to perform in
+
+182
+00:23:14.000 --> 00:23:21.000
+overload conditions that is very
+important because even though you have
+auto scaling turned on and you expect
+
+183
+00:23:21.000 --> 00:23:27.000
+auto scaling to go and add instances if
+you have a big spike your
+going to be in an overload condition for
+
+184
+00:23:27.000 --> 00:23:35.000
+some period of time and you want to make
+sure you understand how your application
+behaves under that condition you also
+
+185
+00:23:35.000 --> 00:23:40.000
+want to look at the available metrics
+and I'll show you guys all the metrics
+we have available in Elastic Beanstalk
+
+186
+00:23:40.000 --> 00:23:48.000
+and make sure you understand how they
+correlate with the different ways your
+application operates finally you want to
+
+187
+00:23:48.000 --> 00:23:54.000
+make sure you tune the auto scaling
+configuration by default Beanstalk uses
+a network in which is a good proxy for
+
+188
+00:23:54.000 --> 00:24:00.000
+the number of requests your application
+is receiving but depending on your
+application you may want to choose a
+
+189
+00:24:00.000 --> 00:24:08.000
+different metric for example CPU and
+also set the appropriate breach duration
+because this allows you to tune how
+
+190
+00:24:08.000 --> 00:24:17.000
+quickly auto scaling is going to react
+when you have traffic coming or loads of
+traffic come in and finally always make
+
+191
+00:24:17.000 --> 00:24:24.000
+sure not just a test your application
+but to understand how your back-end
+behaves I've seen plenty of times where
+
+192
+00:24:24.000 --> 00:24:30.000
+customers have gone in an settable
+application on Elastic Beanstalk and
+said I'm going to scale from 1
+
+193
+00:24:30.000 --> 00:24:37.000
+to 100 instances everything works
+perfectly but then they have an RDS
+database in the back-end or a DynamoDB
+
+194
+00:24:37.000 --> 00:24:43.000
+table in the back-end that they have not
+optimized the throughput on and if you
+don't do that what you're going to
+
+195
+00:24:43.000 --> 00:24:48.000
+essentially end up getting is a lot of
+people will come into your application
+the application is going to send a lot
+
+196
+00:24:48.000 --> 00:24:53.000
+of requests to the back-end and the back-end
+is not going to be able to handle it
+because you've not tuned it or optimized
+
+197
+00:24:53.000 --> 00:25:00.000
+it so always ensure that you understand
+the flow of requests through your entire
+system end-to-end and you've tuned the
+
+198
+00:25:00.000 --> 00:25:07.000
+entire system end-to-end to take traffic
+at the highest load that you're
+anticipating or maybe even go you know
+
+199
+00:25:07.000 --> 00:25:16.000
+one and a half times or twice that much
+when you're testing let's quickly talk
+about deployment options this is again
+
+200
+00:25:16.000 --> 00:25:23.000
+very important because when you have a
+website that's running you've got you
+know a hundred thousand people that are
+
+201
+00:25:23.000 --> 00:25:29.000
+on that website and you have to go make
+changes because you want to roll out a
+new version you want to make sure you
+
+202
+00:25:29.000 --> 00:25:36.000
+understand the deployment options we
+have available because this essentially
+can save your bacon in either having a
+
+203
+00:25:36.000 --> 00:25:41.000
+downtime in that deployment or not
+having a downtime Beanstalk has
+two different options we
+
+204
+00:25:41.000 --> 00:25:48.000
+support we have a rolling deployment
+which is an in-place deployment so what
+this does is essentially update the
+
+205
+00:25:48.000 --> 00:25:55.000
+versions in place or on the existing
+instances if you will some of the pros
+of this are obviously it's fast because
+
+206
+00:25:55.000 --> 00:26:02.000
+we're not bringing up additional
+infrastructure the cons of this approach
+is the rollback is slower because you
+
+207
+00:26:02.000 --> 00:26:09.000
+have to redeploy the previous
+application version to roll back if you
+had any bugs in the new version the
+
+208
+00:26:09.000 --> 00:26:17.000
+other con is possibility of state build
+up so when you're building applications
+an Elastic Beanstalk we're expecting
+
+209
+00:26:17.000 --> 00:26:22.000
+that you're following the twelve factor
+APP methodology your APPs are stateless
+they're not saving state on the machines
+
+210
+00:26:22.000 --> 00:26:29.000
+or on disk if you will they're using a
+database or a cache to do that so when
+you do do deployments you have the
+
+211
+00:26:29.000 --> 00:26:35.000
+possibility of building up state on this
+if you will if your environments have
+been running or the instances have been
+
+212
+00:26:35.000 --> 00:26:43.000
+running for a very long time and they've
+had multiple versions of deployments the
+next approach that we support which is
+
+213
+00:26:43.000 --> 00:26:49.000
+what we recommend for zero downtime
+deployments up is a blue-green approach
+if you will the pros are it's really
+
+214
+00:26:49.000 --> 00:26:56.000
+fast to roll back because you already
+have the old version running you never
+tear it down or until you prove that
+
+215
+00:26:56.000 --> 00:27:02.000
+your new versions working okay so you
+can simply just move the pointer back to
+the old version and it just starts using
+
+216
+00:27:02.000 --> 00:27:09.000
+the old version it also ensures that
+you're not building up state on your
+environments because you're bringing in
+
+217
+00:27:09.000 --> 00:27:17.000
+a new set of infrastructure every time
+you do a deployment the cons of this
+approach are deployments take longer so
+
+218
+00:27:17.000 --> 00:27:23.000
+as you saw in my demo there when I did
+an update it took about 30 seconds or so
+to do the deployment if i did a
+
+219
+00:27:23.000 --> 00:27:30.000
+blue-green approach it would take about
+two to three minutes to do the
+deployment so it's a trade-off on do you
+
+220
+00:27:30.000 --> 00:27:37.000
+want guaranteed zero downtime or do you
+want to just roll out the version as
+quickly as possible one of the other
+
+221
+00:27:37.000 --> 00:27:46.000
+downsides to blue green in elastic
+Beanstalk is we use cname swap so we're
+swapping DNS if you will and there's a
+
+222
+00:27:46.000 --> 00:27:52.000
+lot of clients out there that don't
+necessarily respect the DNS TTL
+that we set on
+
+223
+00:27:52.000 --> 00:27:59.000
+our cname record being stalked by
+default sets a 60-second TTL however
+their clients and specifically mobile
+
+224
+00:27:59.000 --> 00:28:06.000
+devices are really bad at this they will
+cache DNS addresses for up to 24 hours so
+you may run into a problem where
+
+225
+00:28:06.000 --> 00:28:13.000
+customers are unable to access your
+application once you've done a cname
+swap for some period of time so one of
+
+226
+00:28:13.000 --> 00:28:19.000
+the pieces of recommendation that we
+give to customers when they do blue/green
+is to ensure that they understand how
+
+227
+00:28:19.000 --> 00:28:25.000
+long are their clients or their
+customers are essentially going to take
+to tail off of one environment and go to
+
+228
+00:28:25.000 --> 00:28:31.000
+the next and keep the other environment
+at a much lesser scale around so that
+you don't have customers with a bad
+
+229
+00:28:31.000 --> 00:28:38.000
+experience once you're out of that
+window it could be an hour for some
+customers it's days for other customers
+
+230
+00:28:38.000 --> 00:28:45.000
+depending on what they're doing you can
+then terminate that environment because
+it's no longer necessary but this is
+
+231
+00:28:45.000 --> 00:28:52.000
+again a trade-off of you know do you
+want guaranteed down time guaranteed
+zero downtime sorry that guarantees your
+
+232
+00:28:52.000 --> 00:29:00.000
+customers are having a good experience
+or you want to quickly roll out a
+version so let's talk about the
+
+233
+00:29:00.000 --> 00:29:06.000
+operational side you have a website or
+an application in the Elastic Beanstalk
+you've deployed at Elastic Beanstalk
+
+234
+00:29:06.000 --> 00:29:13.000
+everything works great you get a post
+in hacker to use all of a
+sudden you've got a lot of people come
+
+235
+00:29:13.000 --> 00:29:19.000
+in on your website you obviously don't
+want to be sitting and monitoring that
+every single day because today it's
+
+236
+00:29:19.000 --> 00:29:26.000
+hacker news tomorrow it could be CNN day
+after it could be somebody else so that
+takes a lot of time away from when you
+
+237
+00:29:26.000 --> 00:29:35.000
+could be developing or coding in elastic
+Beanstalk we make it super simple to set
+up alarms to set up log rotation so that
+
+238
+00:29:35.000 --> 00:29:42.000
+you always have your logs so you can go
+back and look at any time frame when you
+see errors in your system what may have
+
+239
+00:29:42.000 --> 00:29:50.000
+happened we make it very easy to set up
+metrics and monitoring if you will and
+I'll show you guys the dashboard and
+
+240
+00:29:50.000 --> 00:30:00.000
+finally the last piece of advice I'd
+have around operational behavior is use
+Route 53 health checks Route 53 health
+
+241
+00:30:00.000 --> 00:30:06.000
+checks allow you to essentially
+paying your environment from
+8 different regions across the
+
+242
+00:30:06.000 --> 00:30:15.000
+world it costs about a dollar and a half
+the first 50 health checks are free on
+AWS endpoints after that it's a dollar
+
+243
+00:30:15.000 --> 00:30:24.000
+and a half per month so it's very cheap
+but it's a good sense of how your
+application is being perceived across
+
+244
+00:30:24.000 --> 00:30:30.000
+the world if you will and it tells you
+if for example you've deployed an
+application in San Francisco but it
+
+245
+00:30:30.000 --> 00:30:37.000
+can't be accessed from Frankfurt or from
+Dublin because Route 53 is going to do
+the health checks from those regions and
+
+246
+00:30:37.000 --> 00:30:45.000
+it's actually checking the connectivity
+outside of the AWS network so it's
+really a great thing to have turn on and
+
+247
+00:30:45.000 --> 00:30:54.000
+use and finally as I mentioned in the
+agenda we're going to talk about tagging
+tagging is very important if you're
+
+248
+00:30:54.000 --> 00:31:01.000
+doing any sort of structured application
+deployments on Beanstalk one because it
+makes it super simple for you to find
+
+249
+00:31:01.000 --> 00:31:10.000
+the resources that are created as part
+of your application or environment two
+it can be used to monitor costs so you
+
+250
+00:31:10.000 --> 00:31:18.000
+can go in to our Cost Explorer and say
+show me all resources are all costs
+associated with a certain tag and I'll
+
+251
+00:31:18.000 --> 00:31:26.000
+show you guys how that works very
+quickly here the third piece is
+Beanstalk automatically adds two tags to
+
+252
+00:31:26.000 --> 00:31:31.000
+all your environments we have an
+environment name and an environment ID
+so even if you're not actually tagging
+
+253
+00:31:31.000 --> 00:31:39.000
+with cost center owners for example you
+still have those two pieces of
+information that you can use all right
+
+254
+00:31:39.000 --> 00:31:52.000
+so let's quickly walk through some of
+the pieces that I've shown either so
+let's make this a little bigger
+
+255
+00:31:52.000 --> 00:32:03.000
+alright so here as you can see I should
+have a staging environment here if i
+refresh that's the one we were creating
+
+256
+00:32:03.000 --> 00:32:12.000
+earlier it got created my applications
+here it's got the cname I chose I can go
+click on it and it's everything's
+
+257
+00:32:12.000 --> 00:32:20.000
+working so going back here I have two
+environments at dev and staging
+environment or a prod environment I'm
+
+258
+00:32:20.000 --> 00:32:25.000
+going to look at the production
+environment because I've set it up
+explicitly to generate some errors and
+
+259
+00:32:25.000 --> 00:32:32.000
+what I'm going to show you guys as I
+walk through here is our new health
+monitoring system that essentially
+
+260
+00:32:32.000 --> 00:32:40.000
+allows you to very easily understand and
+tune your applications if you will so as
+you can see here this applications
+
+261
+00:32:40.000 --> 00:32:50.000
+health is in warning state when I click
+on this I get a very simple in English
+message that's telling me that my health
+
+262
+00:32:50.000 --> 00:32:56.000
+state of the environment is in warning
+because one and a half percent of my
+requests coming into the application are
+
+263
+00:32:56.000 --> 00:33:03.000
+failing with HTTP 500 code this is just
+one of the things we monitor as part of
+the new health monitoring system that we
+
+264
+00:33:03.000 --> 00:33:12.000
+have we look at about 40 or so different
+metrics so we're tracking in near
+real-time your CPU usage on the box what
+
+265
+00:33:12.000 --> 00:33:20.000
+are the response codes for the requests
+that you're getting what are the latency
+what are the disk drive states or
+
+266
+00:33:20.000 --> 00:33:27.000
+root file system state are you running
+out of disk space we're tracking memory
+usage so are you running out of memory
+
+267
+00:33:27.000 --> 00:33:34.000
+on any of the instances and we're
+essentially taking a snapshot every 10
+seconds and then applying a set of
+
+268
+00:33:34.000 --> 00:33:41.000
+business rules to it and then
+determining if your application is in OK
+state, warning state, degraded state or
+
+269
+00:33:41.000 --> 00:33:48.000
+severe state and each one of those
+states implies a sense of urgency if you
+will so if your application is in severe
+
+270
+00:33:48.000 --> 00:33:55.000
+state your customers are having a really
+bad experience and we've essentially
+taken all our experience and operating
+
+271
+00:33:55.000 --> 00:34:03.000
+web services and put that into the set
+of rules that we have there for example
+in this case because it's only 1% of my
+
+272
+00:34:03.000 --> 00:34:10.000
+traffic that
+coming back with a 500 I go to a warning
+state if this was about twenty percent I
+
+273
+00:34:10.000 --> 00:34:18.000
+would be in a degraded state any more
+than that I would be in severe so it's
+really a sense of trying to
+
+274
+00:34:18.000 --> 00:34:25.000
+give our customers or our developers a
+sense of what's going on with their
+environment just not looking at the
+
+275
+00:34:25.000 --> 00:34:32.000
+infrastructure but also looking at your
+application and how it's behaving and
+then as I mentioned with the monitoring
+
+276
+00:34:32.000 --> 00:34:40.000
+pieces i will show you guys what we have
+on the console so you can go in here and
+as you can see i have a 8 hosts that are
+
+277
+00:34:40.000 --> 00:34:48.000
+running as part of this environment on
+average i have about seventy percent cpu
+utilization and in the last five minutes
+
+278
+00:34:48.000 --> 00:34:53.000
+because these are all five minute
+averages I've served about 3.1 million
+requests out of this environment and
+
+279
+00:34:53.000 --> 00:35:04.000
+this is the one that I've been
+essentially showing you guys so it's
+right here very easy to monitor see
+
+280
+00:35:04.000 --> 00:35:11.000
+what's going on so I can see
+historically what my environments been
+in since I'm explicitly written the
+
+281
+00:35:11.000 --> 00:35:18.000
+application here to generate errors it's
+in warning state I can see my latency
+here I can see the number of requests
+
+282
+00:35:18.000 --> 00:35:25.000
+CPU network in network out one of the
+cool features I want to point out is you
+can actually click on this edit button
+
+283
+00:35:25.000 --> 00:35:33.000
+and you get to pick from all of the
+resources that are part of the
+environment and each one of these have
+
+284
+00:35:33.000 --> 00:35:38.000
+additional metrics that are available
+for you so remember when I was talking
+about application and tuning I said
+
+285
+00:35:38.000 --> 00:35:43.000
+understand all the metrics that are
+available to you so I would highly
+recommend if you're running a beanstalk
+
+286
+00:35:43.000 --> 00:35:48.000
+application or if you're just getting
+familiar with the Elastic Beanstalk go
+through each one of these options and
+
+287
+00:35:48.000 --> 00:35:54.000
+look at the metrics that are available
+to you understand what they mean and how
+they impact your application you know
+
+288
+00:35:54.000 --> 00:36:00.000
+that's something that you should really
+spend the time upfront because it will
+help you when there is a situation when
+
+289
+00:36:00.000 --> 00:36:10.000
+you have to come back and diagnose
+issues and then let's quickly look at
+the alarms so on any of the metrics
+
+290
+00:36:10.000 --> 00:36:17.000
+that are available on this page you can
+also set up alarms in this case I've set
+up alarm that says anytime my latency
+
+291
+00:36:17.000 --> 00:36:23.000
+goes up above
+five milliseconds I want to alarm and
+what this will do is essentially send
+
+292
+00:36:23.000 --> 00:36:30.000
+somebody an email you can integrate this
+with Pedro duty or other tools slack for
+example all of that can be done because
+
+293
+00:36:30.000 --> 00:36:35.000
+we're essentially sending a SNS
+notification and then you can use that
+to connect with any system that supports SNS
+
+294
+00:36:35.000 --> 00:36:47.000
+and then I talked about tags so in
+this case I've tagged my environment to
+have besides the Beanstalk pre-populated
+
+295
+00:36:47.000 --> 00:36:58.000
+tags a cost center, a campaign, and an
+owner and if we go quickly to support
+here actually it's under my account so
+
+296
+00:36:58.000 --> 00:37:15.000
+go to billing and cost management you
+can actually go to Cost Explorer wide
+stewing that and in here I can actually
+
+297
+00:37:15.000 --> 00:37:25.000
+filter this by tags if you will and then
+I can apply a cost center tag and say
+marketing so now showing me all the
+
+298
+00:37:25.000 --> 00:37:33.000
+costs of all the essentially AWS
+resources that were tagged with that
+cost center tag of marketing so very
+
+299
+00:37:33.000 --> 00:37:43.000
+easy to track your costs there let's go
+back here to Elastic Beanstalk and then
+i will show you guys our health
+
+300
+00:37:43.000 --> 00:37:53.000
+monitoring system very quickly so one of
+the pieces i mentioned on the causes is
+part of the new health monitoring system
+
+301
+00:37:53.000 --> 00:38:00.000
+so if you have enabled enhance health
+monitoring which you can do by going to
+configuration and then helped and then
+
+302
+00:38:00.000 --> 00:38:07.000
+choosing enhanced on the drop-down you
+will get all of these new metrics and
+the new features we also have a CLI
+
+303
+00:38:07.000 --> 00:38:14.000
+version that works similar to h top for
+those of you who are familiar with the
+Linux world so you can just type in
+
+304
+00:38:14.000 --> 00:38:22.000
+"eb health --refresh" and this will
+provide you with a continuously
+refreshing dashboard of what's going on
+
+305
+00:38:22.000 --> 00:38:29.000
+with your environment so as you can see
+this is my dev environment i'm serving
+about a thousand requests per second
+
+306
+00:38:29.000 --> 00:38:38.000
+everything looks just fine here
+so let's go ahead and actually switch to
+my master branch that will connect me
+
+307
+00:38:38.000 --> 00:38:52.000
+with my prod environment
+and now you can see I get all the
+information that I was getting on the
+
+308
+00:38:52.000 --> 00:38:58.000
+console but i also have a lot of
+additional data on a per instance or per
+resource basis so here we've got
+
+309
+00:38:58.000 --> 00:39:06.000
+essentially an environment that's
+serving as you can see about 10,000
+requests per second which is the data
+
+310
+00:39:06.000 --> 00:39:15.000
+here on that line if whoops on the first
+line there it's telling me that I have
+98.5 percent of my requests coming back
+
+311
+00:39:15.000 --> 00:39:23.000
+as 200 or in the 200 range i have about
+1.4 percent that are in the 500 range
+and then i have a set of Layton sees
+
+312
+00:39:23.000 --> 00:39:31.000
+here so i have my p99 which is a latency
+in percentile and this is one of the
+unique features about the Beanstalk
+
+313
+00:39:31.000 --> 00:39:39.000
+health system it's the first system in
+AWS to supply application metrics or
+latency metrics in percentiles and here
+
+314
+00:39:39.000 --> 00:39:44.000
+we've got you know you can look at this
+and say 99 percent of my customers
+requests are being served in 11
+
+315
+00:39:44.000 --> 00:39:52.000
+milliseconds and so it's easy to know
+how your applications performing from an
+operational standpoint if you will and
+
+316
+00:39:52.000 --> 00:40:00.000
+that the third tab or the section if you
+will has your tuning metrics I'm going
+to quickly go ahead and just look at
+
+317
+00:40:00.000 --> 00:40:09.000
+that one tab by itself and in this tab I
+can see I have a few metrics here I have
+load averages which essentially tells
+
+318
+00:40:09.000 --> 00:40:16.000
+you how many threads are backed up on
+your CPU so if you have a dual core
+system you ideally want this number to
+
+319
+00:40:16.000 --> 00:40:22.000
+be about two because that tells you at
+any given time you have one thread
+that's being processed and one thread
+
+320
+00:40:22.000 --> 00:40:30.000
+that's backed up per core we've got CPU
+metrics here so as you can see roughly
+across the fleet I have about thirty
+
+321
+00:40:30.000 --> 00:40:38.000
+percent idle rest of it's being used by
+user processes and then I've got some I
+oh wait time again this is really
+
+322
+00:40:38.000 --> 00:40:45.000
+beneficial in letting you pick your
+scaling metric because you can go in
+here and say hey am I constrained on CPU
+
+323
+00:40:45.000 --> 00:40:51.000
+or am I constraint on IO and that really
+lets you choose the instance type that
+you want to run your application on but
+
+324
+00:40:51.000 --> 00:41:01.000
+also set your scaling metrics and then
+finally as i said the set of rules or
+business rules that are applied
+
+325
+00:41:01.000 --> 00:41:07.000
+bring you to the causes if you will
+where as a developer you don't even have
+to look at all the metrics to understand
+
+326
+00:41:07.000 --> 00:41:13.000
+what's going on we're actually doing
+that work for you and we're going to
+explain it to you in very simple English
+
+327
+00:41:13.000 --> 00:41:20.000
+in this case it's saying one-point-five
+percent of my requests are failing this
+also will say things like
+
+328
+00:41:20.000 --> 00:41:27.000
+"you have morethan ninety percent of your root
+filesystem that's full" or "you're using more
+than x percentage of your memory in your application"
+
+329
+00:41:27.000 --> 00:41:35.000
+if you will so you know
+a lot of different things that can go
+wrong if they do go wrong we will tell
+
+330
+00:41:35.000 --> 00:41:41.000
+you exactly in very simple words what's
+going on and then you can dive deep
+looking at the metrics and the
+
+331
+00:41:41.000 --> 00:41:52.000
+monitoring capability that Beanstalk
+does provide to you so let me go back to
+the slides and let me bring on Colin so
+
+332
+00:41:52.000 --> 00:41:57.000
+that he can talk about our Royal
+Caribbean cruise limited partners and
+how they've done their implementation
+
+333
+00:41:57.000 --> 00:42:10.000
+great thank you have a sec perfect thank
+you good morning everyone how many of
+you went to the party last night oh god
+
+334
+00:42:10.000 --> 00:42:19.000
+okay hopefully you're awake and
+conscious this will be quick so my name
+is Colin angel I'm a technical director
+
+335
+00:42:19.000 --> 00:42:27.000
+at isobar we're a full-service digital
+agency and we were engaged to build and
+deploy Royal Caribbean comms a new
+
+336
+00:42:27.000 --> 00:42:36.000
+website major redesign of their
+e-commerce platform a little look roel
+Caribbean there are a large cruise ship
+
+337
+00:42:36.000 --> 00:42:44.000
+company and they have destinations all
+around the world there their website is
+equally massive in scope we launched the
+
+338
+00:42:44.000 --> 00:42:50.000
+Royal Caribbean calm website in March of
+this year on Beanstalk to great success
+and that's what I want to tell you about
+
+339
+00:42:50.000 --> 00:42:59.000
+it's a high volume website and what's
+more interesting about that is that
+during their peak season they actually
+
+340
+00:42:59.000 --> 00:43:05.000
+see such a huge surge in traffic that it
+nearly doubles their average baseline so
+that could pose some interesting scaling
+
+341
+00:43:05.000 --> 00:43:12.000
+challenges if you're not prepared for
+that so first I want to talk about
+historical challenges Roth caribbeancom
+
+342
+00:43:12.000 --> 00:43:18.000
+used to live in
+Royals data center so it was on premise
+they managed all of the infrastructure
+
+343
+00:43:18.000 --> 00:43:26.000
+scaling etc in addition their dev and
+test environments also lived in those in
+that data center and there was a high
+
+344
+00:43:26.000 --> 00:43:33.000
+demand for those for those environments
+for for various projects now there's
+there's always difficulties dealing with
+
+345
+00:43:33.000 --> 00:43:39.000
+physical hardware there's hardware
+procurement there's hardware failure
+there's upgrading there's repurposing
+
+346
+00:43:39.000 --> 00:43:47.000
+hardware from one project to another
+this all takes time resources money
+physical goods in addition in production
+
+347
+00:43:47.000 --> 00:43:55.000
+the static nature of a physical
+infrastructure meant that royal had to
+over provision their infrastructure for
+
+348
+00:43:55.000 --> 00:44:03.000
+prod just to meet the peak demand of
+that high season and the remainder of
+the year they had more capacity than
+
+349
+00:44:03.000 --> 00:44:09.000
+they were using so obviously there's
+some operational inefficiencies there
+and some extra costs so royal one of
+
+350
+00:44:09.000 --> 00:44:16.000
+Royals other businesses actually
+deployed on on Amazon using it as
+infrastructure as a service so mostly
+
+351
+00:44:16.000 --> 00:44:23.000
+ec2 servers and they managed all the
+other plumbing themselves within the
+cloud now it's important to note that
+
+352
+00:44:23.000 --> 00:44:29.000
+when you deploy a website there's more
+to it than just a bunch of servers
+there's a lot of other plumbing and that
+
+353
+00:44:29.000 --> 00:44:37.000
+requires expertise and requires people
+and requires time and that costs money
+so what I'd like to talk about is why we
+
+354
+00:44:37.000 --> 00:44:45.000
+chose Beanstalk so when we were hired to
+build the Royal Caribbean calm website
+and handle the cloud deployment we made
+
+355
+00:44:45.000 --> 00:44:53.000
+a case for Elastic Beanstalk our
+argument was that using a platform as a
+service would provide operational
+
+356
+00:44:53.000 --> 00:45:00.000
+efficiencies but not only that it would
+improve time to market by allowing them
+to build quicker and build more often so
+
+357
+00:45:00.000 --> 00:45:07.000
+Beanstalk lowers your IT burden right it
+does a lot of the heavy lifting for you
+so that's going to save you time and
+
+358
+00:45:07.000 --> 00:45:11.000
+money it's also going to make things
+more reliable because things are
+automated they're also battle tested by
+
+359
+00:45:11.000 --> 00:45:21.000
+other customers it's an established tool
+it's a very stable environment and it's
+very easy to use but it goes beyond just
+
+360
+00:45:21.000 --> 00:45:28.000
+the benefits of IT it's about it's about
+empowerment right so empowering the
+marketing team providing better visible
+
+361
+00:45:28.000 --> 00:45:35.000
+into their environments in fact giving
+them control over their dev and test
+environments so that they can they can
+
+362
+00:45:35.000 --> 00:45:43.000
+build up as many environments as they
+need to meet the demands of the various
+projects that they've got on the go so
+
+363
+00:45:43.000 --> 00:45:50.000
+it's trivial to fire up environments on
+ondemand using Beanstalk as Abhishek
+showed I mean it literally takes minutes
+
+364
+00:45:50.000 --> 00:45:59.000
+the system that we used was a
+combination of cloud formation and ap is
+and it literally takes editing a couple
+
+365
+00:45:59.000 --> 00:46:05.000
+templates running a command and you've
+built up a whole stack and as a result
+we were able to build out stacks for
+
+366
+00:46:05.000 --> 00:46:12.000
+various projects different releases
+different test tracks etc in matters of
+minutes and try and do that in a
+
+367
+00:46:12.000 --> 00:46:22.000
+traditional data center so what does it
+look like this is somewhat simplified
+for the sake of clarity but it's a it's
+
+368
+00:46:22.000 --> 00:46:29.000
+a hybrid architecture so we have a web
+application living on Beanstalk in the
+cloud and it calls out to enterprise
+
+369
+00:46:29.000 --> 00:46:38.000
+services and those services reside in
+the Royal data center right so actually
+making real time service calls to the
+
+370
+00:46:38.000 --> 00:46:43.000
+data center in a production application
+with high volume how do we do that we
+use Direct Connect which is Amazon's
+
+371
+00:46:43.000 --> 00:46:50.000
+high speed dedicated connections so we
+have high speed networking and low
+latency the architecture is is pretty
+
+372
+00:46:50.000 --> 00:46:57.000
+standard it's a standard VPC we have
+public subnets for the load balancers we
+have private subnets for the ec2 servers
+
+373
+00:46:57.000 --> 00:47:04.000
+where we have tomcat and apache living
+we have an extra layer of security in
+there that is not normal not not
+
+374
+00:47:04.000 --> 00:47:09.000
+standard part of the Beanstalk but we've
+introduced that for various reasons and
+then we also have some other third-party
+
+375
+00:47:09.000 --> 00:47:20.000
+vendors in there to provide some
+features that we needed in addition to
+Beanstalk so how did we build it it's a
+
+376
+00:47:20.000 --> 00:47:30.000
+combination of cloud formation api's
+Jenkins and Beanstalk so cloud formation
+these cloud formation to define the
+
+377
+00:47:30.000 --> 00:47:36.000
+template now this is different from what
+Abhishek showed you earlier when we
+built this the the features that
+
+378
+00:47:36.000 --> 00:47:41.000
+Abhishek showed you were not there yet
+they were not available yet so we chose
+a different path
+
+379
+00:47:41.000 --> 00:47:50.000
+we're still using api's but we're
+actually using the AWS CLI as opposed to
+the head ova AWS eb CLI so there's a
+
+380
+00:47:50.000 --> 00:47:56.000
+difference there but effectively it
+comes to the same thing and so the cloud
+formation templates define what the
+
+381
+00:47:56.000 --> 00:48:03.000
+environment looks like you know what
+kind of instant size you need jvm params
+things like that we use the api's to
+
+382
+00:48:03.000 --> 00:48:09.000
+execute the creation and the updates to
+these environments so they execute the
+cloud formation templates for us we use
+
+383
+00:48:09.000 --> 00:48:15.000
+Jenkins for continuous build so we build
+our code but we also use it to build and
+deploy all the way to Beanstalk so we
+
+384
+00:48:15.000 --> 00:48:21.000
+have hands off build and deploy so it's
+an automated workflow we use get for
+code but we also use it for
+
+385
+00:48:21.000 --> 00:48:27.000
+configuration right it's important to to
+think of infrastructure as code all
+right so our scripts and our
+
+386
+00:48:27.000 --> 00:48:33.000
+configuration or all maintained and get
+so you know our primary goal here was
+automate everything really automate as
+
+387
+00:48:33.000 --> 00:48:39.000
+much as we possibly could I highly
+recommend this approach it allows you to
+define a standardized configuration
+
+388
+00:48:39.000 --> 00:48:46.000
+across the board you can have tweaks for
+various environments but as a whole
+you're going to enforce standards that
+
+389
+00:48:46.000 --> 00:48:54.000
+have been tried and true and tested
+which means better reliability lower
+room for human error and in addition
+
+390
+00:48:54.000 --> 00:48:59.000
+when you've got automation in place
+you've got some nice benefits like easy
+roll backs all right so with the
+
+391
+00:48:59.000 --> 00:49:06.000
+Beanstalk framework it's trivial to roll
+back to a previous version and in fact
+using cloud formation it's easy to roll
+
+392
+00:49:06.000 --> 00:49:14.000
+back your infrastructure to a prior set
+of configuration auditing is also made
+easier by and by automation so all in
+
+393
+00:49:14.000 --> 00:49:22.000
+all our goal is to make it quick and
+simple and and that's the that's the end
+result so hey I want to point out that
+
+394
+00:49:22.000 --> 00:49:29.000
+it's possible with these tools or the
+tools that Abhishek showed you to build
+a continuous delivery pipeline right and
+
+395
+00:49:29.000 --> 00:49:34.000
+it's actually very easy to do this so if
+you've been interested in going down
+this route I highly recommend looking
+
+396
+00:49:34.000 --> 00:49:42.000
+into it because it's quite simple to do
+a combination of in our case get Jenkins
+Beanstalk and cloud formation allowed us
+
+397
+00:49:42.000 --> 00:49:48.000
+to automate the entire process from
+build test security scans provisioning
+hardware deploying the application
+
+398
+00:49:48.000 --> 00:49:54.000
+rolling updates and then all the
+production sort of operational concerns
+around scaling
+
+399
+00:49:54.000 --> 00:50:06.000
+and fault tolerance so what were the
+results at the end of the day we had
+dramatically reduced deployment time now
+
+400
+00:50:06.000 --> 00:50:11.000
+I I say in here it took it takes 30
+minutes for our deployments and Abhishek
+was talking about seconds or minutes and
+
+401
+00:50:11.000 --> 00:50:19.000
+in reality it takes us eight minutes to
+deploy to all of our instances in
+production iPad that 30 minutes just in
+
+402
+00:50:19.000 --> 00:50:25.000
+case you know someone does something
+wrong or you know whatever we have a we
+have an unpredicted issue but it's it's
+
+403
+00:50:25.000 --> 00:50:34.000
+significantly reduced our outages on
+Beanstalk since since our go live in
+March have been zero and our operations
+
+404
+00:50:34.000 --> 00:50:40.000
+for the web app in the cloud have have
+reduced significantly as well it's a
+highly stable environment it also scales
+
+405
+00:50:40.000 --> 00:50:46.000
+extremely well and remember it autos
+scales for you right you could know you
+could set this up yourself you could set
+
+406
+00:50:46.000 --> 00:50:51.000
+up your own auto scaling groups and
+configure those and manage those but
+what Beanstalk does for you is it
+
+407
+00:50:51.000 --> 00:50:57.000
+encapsulates all of that business logic
+all of all those different component
+parts and handles it for you you have to
+
+408
+00:50:57.000 --> 00:51:07.000
+tune it but once it's set up it's
+basically set it and forget it and
+overall the system now is so simple that
+
+409
+00:51:07.000 --> 00:51:13.000
+it takes less than one part time
+resource to manage all of the
+environments everywhere from test to
+
+410
+00:51:13.000 --> 00:51:21.000
+production so based on our success with
+Beanstalk we we just recently launched
+actually last week in additional markets
+
+411
+00:51:21.000 --> 00:51:28.000
+on Beanstalk and we're going to be
+launching mobile booking as well on
+Beanstalk as well so just to summarize
+
+412
+00:51:28.000 --> 00:51:37.000
+I'd like to say that you might think
+that Beanstalk is is simplistic it's not
+it's simple but it's not simplistic it's
+
+413
+00:51:37.000 --> 00:51:43.000
+actually quite powerful and it removes a
+lot of complexity and moving parts that
+you would otherwise have to manage
+
+414
+00:51:43.000 --> 00:51:53.000
+yourself so our experience at Royal
+Caribbean has been has been great with
+Beanstalk and highly encourage you to
+take a look at it thank you

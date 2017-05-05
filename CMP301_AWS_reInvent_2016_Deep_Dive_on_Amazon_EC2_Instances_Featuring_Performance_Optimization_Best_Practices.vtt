@@ -1,0 +1,1940 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:15.000
+helloo great lights thank you thank you
+all for coming my name is Adam baglin
+and I'm a solutions architect on the
+
+2
+00:00:15.000 --> 00:00:22.000
+high performance computing team here at
+AWS i'm really excited to talk to you
+guys today about a subject that I'm
+
+3
+00:00:22.000 --> 00:00:29.000
+really passionate about which is ec2
+performance see I've been a system
+administrator most of my career and I
+
+4
+00:00:29.000 --> 00:00:34.000
+know how frustrating it is to not get
+the performance that you're expecting
+out of an ec2 instance or out of a
+
+5
+00:00:34.000 --> 00:00:41.000
+server so what I wanted to talk to you
+today it's about some of the things that
+I've learned and that my customers do in
+
+6
+00:00:41.000 --> 00:00:47.000
+order to get the best possible
+performance out of ec2 my customers are
+doing things like computational fluid
+
+7
+00:00:47.000 --> 00:00:53.000
+dynamics and gene sequencing and semi
+conductor design so as you can imagine
+performance is a really important
+
+8
+00:00:53.000 --> 00:01:03.000
+subject to them so I'm glad that I can
+share this information with you guys
+today now this presentation it's
+
+9
+00:01:03.000 --> 00:01:10.000
+definitely built to be a deep dive on
+ec2 performance and we're going to die
+pretty deep into the nitty-gritty of how
+
+10
+00:01:10.000 --> 00:01:17.000
+easy to works but along the way I also
+want to make sure that I'm highlighting
+actionable things that you guys can walk
+
+11
+00:01:17.000 --> 00:01:24.000
+away with and actually apply to your
+instances in order to get them to run at
+their full potential I'm also going to
+
+12
+00:01:24.000 --> 00:01:30.000
+talk a little bit about things that go
+into choosing your ec2 instance because
+when it comes to getting performance out
+
+13
+00:01:30.000 --> 00:01:36.000
+of an instance making sure that you're
+picking the right one is just as
+important as all the performance tips
+
+14
+00:01:36.000 --> 00:01:44.000
+that i'm going to give you during this
+presentation
+this side the thing works a little bit
+
+15
+00:01:44.000 --> 00:01:52.000
+easier now ec2 it's a really big subject
+and when you talk about ec2 you can talk
+about a lot of different things you can
+
+16
+00:01:52.000 --> 00:01:59.000
+talk about the different ways of
+purchasing easy to all the AP is and
+SDKs that make managing it easier even
+
+17
+00:01:59.000 --> 00:02:05.000
+talk about the networking that backs
+every see to instance but what I'm going
+to cover today are the ec2 instances
+
+18
+00:02:05.000 --> 00:02:12.000
+themselves how they operate what their
+features are and all the options that
+you have when you go to launch them for
+
+19
+00:02:12.000 --> 00:02:18.000
+all those other subjects I'm going to be
+giving some recommendations for other
+presentations here at reinvent that'll
+
+20
+00:02:18.000 --> 00:02:26.000
+dive deep into those and I'll give those
+at the end of this presentation so let's
+start at the basics what is an ec2
+
+21
+00:02:26.000 --> 00:02:33.000
+instance well easy two instances there
+virtual machines so they are guests that
+are sitting on top of a hypervisor
+
+22
+00:02:33.000 --> 00:02:42.000
+that's running on a piece of physical
+hardware and when we launch DC to about
+10 years ago in 2006 you didn't get a
+
+23
+00:02:42.000 --> 00:02:48.000
+lot of choices you didn't get a lot of
+flexibility you went to launch and
+you've got a instance you didn't get to
+
+24
+00:02:48.000 --> 00:02:54.000
+pick how many virtual CPUs it had or how
+much memory it had it was kind of like
+the original model T where you could
+
+25
+00:02:54.000 --> 00:03:01.000
+have any color you want as long as it's
+black or in our case we made it orange
+and we eventually gave it a name we
+
+26
+00:03:01.000 --> 00:03:08.000
+started calling it the m1 instance but
+customers they wanted more flexibility
+and they wanted more choices so we
+
+27
+00:03:08.000 --> 00:03:16.000
+started iterating on the platform and as
+you can see we've been growing really
+significantly ever since but not only
+
+28
+00:03:16.000 --> 00:03:22.000
+have we been adding more ec2 instances
+we've actually been quietly changing how
+easy to operates underneath the hood a
+
+29
+00:03:22.000 --> 00:03:31.000
+good example of this is in 2011 when we
+launched the CC to instance this was the
+first instance where we actually gave
+
+30
+00:03:31.000 --> 00:03:38.000
+you the ability to define the physical
+topology of your ec2 instances and that
+was with placement groups so with
+
+31
+00:03:38.000 --> 00:03:44.000
+placement groups you can actually define
+that your instances be located
+physically close together to get you the
+
+32
+00:03:44.000 --> 00:03:50.000
+best possible bandwidth and the lowest
+possible latency this was also the time
+where we introduced hardware-assisted
+
+33
+00:03:50.000 --> 00:03:58.000
+virtualization and h vm is a great
+feature because it allows you to use
+more of the underlying hardware and not
+
+34
+00:03:58.000 --> 00:04:05.000
+spend so much time talking to the
+hypervisor now ec2 it's always growing
+and it's always changing even the things
+
+35
+00:04:05.000 --> 00:04:10.000
+that I talked about today may be
+different in the future so whenever
+you're designing your infrastructure
+
+36
+00:04:10.000 --> 00:04:21.000
+make sure that you're looking at our
+documentation to find the latest
+information available on ec2 now before
+
+37
+00:04:21.000 --> 00:04:26.000
+we dive into the instances and dive into
+the the tuning aspects I want to be sure
+that we're starting with a common
+
+38
+00:04:26.000 --> 00:04:35.000
+language so here you can see the name of
+an instance it's the sea for extra large
+and the C&C force is the instance family
+
+39
+00:04:35.000 --> 00:04:43.000
+now the family stands for what the
+instance is best suited for or what
+resources it has so you've got c4
+
+40
+00:04:43.000 --> 00:04:50.000
+compute our for am I for I ups so and so
+forth the next number you see is the
+instance generation and you can think of
+
+41
+00:04:50.000 --> 00:04:58.000
+this almost like a version number of
+your ec2 instance so see for instance is
+newer than ac3 instance and lastly you
+
+42
+00:04:58.000 --> 00:05:03.000
+have the instant sighs and I've heard
+these called t-shirt sizes which is a
+really great way of thinking about them
+
+43
+00:05:03.000 --> 00:05:12.000
+so you've got small medium large extra
+large so and so forth and what all this
+means for you is that you have a lot of
+
+44
+00:05:12.000 --> 00:05:18.000
+choices you have a lot of flexibility
+when you go to launch your instance now
+I know when you're in the ec2 console it
+
+45
+00:05:18.000 --> 00:05:23.000
+can seem pretty overwhelming when you're
+faced with that giant list of instances
+you're trying to launch for your
+
+46
+00:05:23.000 --> 00:05:31.000
+workload so my suggestion to be able to
+pick the right instance is to first
+start with the instance family and to
+
+47
+00:05:31.000 --> 00:05:37.000
+find the right family you need to look
+and understand what your application is
+constrained by so if your application
+
+48
+00:05:37.000 --> 00:05:44.000
+needs a lot of memory start with a ram
+optimized instance like the r3 instance
+if you need a lot of compute start with
+
+49
+00:05:44.000 --> 00:05:50.000
+the c-4 if your application is actually
+pretty well balanced you probably want
+to be in the general-purpose category
+
+50
+00:05:50.000 --> 00:05:59.000
+with an m4 or a t2 instance by choosing
+your instance from the perspective of
+your constraint it's pretty easy to find
+
+51
+00:05:59.000 --> 00:06:05.000
+the right family and then from there
+it's just a little bit of testing to
+find the right size within that family
+
+52
+00:06:05.000 --> 00:06:11.000
+if you still need a little bit of help
+the ec2 document
+actually has a list of workloads for
+
+53
+00:06:11.000 --> 00:06:20.000
+every single family that are well suited
+for it so it's a great option to go if
+you're not sure but when you're going to
+
+54
+00:06:20.000 --> 00:06:25.000
+launch an instance you'll see something
+a property of that instance that you've
+probably not seen outside of AWS and
+
+55
+00:06:25.000 --> 00:06:34.000
+that's the vcpu or virtual CPU and I
+have a lot of customers asking you what
+is a virtual CPU well a vcpu or a
+
+56
+00:06:34.000 --> 00:06:41.000
+virtual CPU on modern instances except
+for the T family which is special for
+reasons we'll talk about later it's
+
+57
+00:06:41.000 --> 00:06:48.000
+actually just a hyper threaded physical
+core now hyper threading is a really
+cool technology that lets you get more
+
+58
+00:06:48.000 --> 00:06:55.000
+out of your CPU so it lets your CPU do
+almost two things at once so normally if
+you have a process that would be blocked
+
+59
+00:06:55.000 --> 00:07:04.000
+on Io or waiting on a user it would be
+stuck in your CPU wouldn't be able to do
+anything with hyper-threading that see
+
+60
+00:07:04.000 --> 00:07:10.000
+if you can wait and process some
+requests as they're coming in now we
+have some customers who want to know
+
+61
+00:07:10.000 --> 00:07:16.000
+their real core count or their physical
+core count on their instances and to do
+this you can usually just divide that
+
+62
+00:07:16.000 --> 00:07:25.000
+vcpu number by 2 to get that core count
+we also list for licensing purpose is a
+list of every ec2 instance and how many
+
+63
+00:07:25.000 --> 00:07:35.000
+physical cores it has on the link that
+you see below and to visualize what a
+virtual CPU looks like here's the output
+
+64
+00:07:35.000 --> 00:07:43.000
+of a program that I like to use it's
+called LS topo that's LS t.o.p oh and I
+really like it because it gives you a
+
+65
+00:07:43.000 --> 00:07:51.000
+visual representation of the underlying
+physical hardware of your instance so
+here you can see the output of an m4 10
+
+66
+00:07:51.000 --> 00:07:58.000
+x large instance you can see how many
+sockets it has how much memory is
+assigned to each socket the level 1
+
+67
+00:07:58.000 --> 00:08:05.000
+through level 3 cash that it has most
+importantly for these purposes you can
+actually see the physical core count and
+
+68
+00:08:05.000 --> 00:08:12.000
+then the threads that are assigned to
+each core so in the case of the m4 10 x
+large you can see that you have 40
+
+69
+00:08:12.000 --> 00:08:21.000
+threads and 20 physical course now there
+are some applications that actually
+don't benefit from hyper threading where
+
+70
+00:08:21.000 --> 00:08:27.000
+the context switching involved in then
+you can actually slow down the
+performance these are typically compute
+
+71
+00:08:27.000 --> 00:08:34.000
+heavy applications things like financial
+risk calculations and engineering
+simulations that's been a lot of time
+
+72
+00:08:34.000 --> 00:08:43.000
+working on that processor these
+applications both on-premise and on AWS
+usually disabled hyper-threading now if
+
+73
+00:08:43.000 --> 00:08:49.000
+you're not sure if this applies for your
+workloads look at what you do with your
+on-premise or your bare metal machines
+
+74
+00:08:49.000 --> 00:08:56.000
+or what your co-workers do if you
+normally disable it on promise you'll
+probably also want to disable it on AWS
+
+75
+00:08:56.000 --> 00:09:03.000
+if you're not sure you probably don't
+need to worry about any of this but it's
+really easy to do on Linux slightly
+
+76
+00:09:03.000 --> 00:09:11.000
+harder on windows on Linux the way
+threads are numerated makes it really
+easy to turn off that hyper threading so
+
+77
+00:09:11.000 --> 00:09:18.000
+you have let's say you have two
+processors the a threads of each
+processor are listed first so say 0
+
+78
+00:09:18.000 --> 00:09:29.000
+through 10 on a m4 and then you got 10
+through 20 on the other cpu socket the B
+threads are then listed second so to
+
+79
+00:09:29.000 --> 00:09:37.000
+disable hyper-threading all you need to
+do is turn off those be threads and you
+can do this two different ways the first
+
+80
+00:09:37.000 --> 00:09:45.000
+way that you'll see here is you can do
+it online so this is just a simple floor
+for loop and bash and what it's doing is
+
+81
+00:09:45.000 --> 00:09:52.000
+it's disabling every online processor
+now this is a great option because it
+doesn't require a reboot however the
+
+82
+00:09:52.000 --> 00:09:58.000
+downsides of this is that it could
+potentially cause system instability
+because your data say blowing processors
+
+83
+00:09:58.000 --> 00:10:05.000
+that applications might be running on
+you'll also lose all these changes once
+you reboot the machine so the way that I
+
+84
+00:10:05.000 --> 00:10:12.000
+prefer is the second way which is just
+in Linux to set a grub boot parameter
+for the number of physical cores of that
+
+85
+00:10:12.000 --> 00:10:19.000
+box minus one because it starts at zero
+the only downside of this approach is
+that it does require a reboot and that
+
+86
+00:10:19.000 --> 00:10:24.000
+if you ever change from one instant size
+to another you're going to have to
+remember to update that setting on
+
+87
+00:10:24.000 --> 00:10:31.000
+Windows this process is a little bit
+harder and that's because instead of
+listing the a first and then the be like
+
+88
+00:10:31.000 --> 00:10:38.000
+Linux does windows actually interleaves
+the a and the B processors so it
+order to disable hyper-threading on a
+
+89
+00:10:38.000 --> 00:10:45.000
+windows box you've actually got to use
+something like CPU thread affinity to
+lock specific processors to their
+
+90
+00:10:45.000 --> 00:10:55.000
+specific physical course and here you
+can see that same output of that same m4
+10 x large but just with hyper-threading
+
+91
+00:10:55.000 --> 00:11:06.000
+enabled you'll notice now that there's
+one thread for every physical core
+whereas there were two earlier so next
+
+92
+00:11:06.000 --> 00:11:13.000
+let's dig a little bit deeper into how
+instant sizes work the way we build
+instances actually is built to allow you
+
+93
+00:11:13.000 --> 00:11:22.000
+to scale pretty easily both vertically
+and horizontally so let's take the c4
+family as an example here you can see on
+
+94
+00:11:22.000 --> 00:11:30.000
+the left is the C 48 x large instance
+which is the largest sea for a taxi for
+instance that we have available that c
+
+95
+00:11:30.000 --> 00:11:40.000
+48 x large instance is roughly equal and
+resources to two of the c-4 4x large
+resource c 4 for x large instances sorry
+
+96
+00:11:40.000 --> 00:11:49.000
+and this is these are things like
+virtual cpus that that instance has the
+amount of memory that's allocated to it
+
+97
+00:11:49.000 --> 00:11:56.000
+given the amount of network bandwidth
+that's available to that instance is
+roughly half of that size and this
+
+98
+00:11:56.000 --> 00:12:04.000
+follows all the way down the line so
+four of the sea for 2x larges are
+roughly equal to two of the sea for 4x
+
+99
+00:12:04.000 --> 00:12:12.000
+largest and so on and so forth and the
+reason that things are set up this way
+is because of how we partition are
+
+100
+00:12:12.000 --> 00:12:20.000
+instances typically when you're running
+the largest instance you're getting the
+whole physical server when you're
+
+101
+00:12:20.000 --> 00:12:27.000
+running smaller instances you're
+actually getting a fraction of that
+server now virtualization has
+
+102
+00:12:27.000 --> 00:12:33.000
+historically gotten a pretty bad
+reputation because it's often used to
+manage the over utilization of resources
+
+103
+00:12:33.000 --> 00:12:42.000
+so you have more VMs than you have
+physical hardware to satisfy them we on
+the other hand use virtualization for a
+
+104
+00:12:42.000 --> 00:12:48.000
+lot of other reasons one of the most
+important ones is for security and
+isolation from one virtual machine to
+
+105
+00:12:48.000 --> 00:12:53.000
+another on the same piece of physical
+hardware
+but we also use virtualization so that
+
+106
+00:12:53.000 --> 00:13:02.000
+we can dedicate specific resources to
+specific customers so taking virtual
+CPUs as an example again with the
+
+107
+00:13:02.000 --> 00:13:09.000
+exception of the T family which is
+special for reasons we'll talk about
+later when you're assigned a virtual CPU
+
+108
+00:13:09.000 --> 00:13:16.000
+you are the only customer that's using
+that cpu and you're not sharing it with
+anyone else on the box the same thing
+
+109
+00:13:16.000 --> 00:13:24.000
+applies to memory and network allocation
+we build ec2 instances with the goal of
+providing you with a consistent
+
+110
+00:13:24.000 --> 00:13:35.000
+experience every time you use it no
+matter what else is happening on that
+hardware and the last thing I want to
+
+111
+00:13:35.000 --> 00:13:43.000
+talk about when it comes to choosing
+your instance and I know it's pretty
+cheesy to quote your own ec2
+
+112
+00:13:43.000 --> 00:13:51.000
+documentation but I really like the
+sentiment behind this it's really easy
+to smit up in an ec2 instance and
+
+113
+00:13:51.000 --> 00:13:58.000
+install your application and do some
+testing in it so instead of doing what I
+see customers do which is launched a
+
+114
+00:13:58.000 --> 00:14:05.000
+synthetic load testing tool to count the
+number of flops or I ops or whatever
+they can get out of the instance install
+
+115
+00:14:05.000 --> 00:14:12.000
+your real application and test on that
+so if you have a mobile app simulate a
+real user navigating through it if you
+
+116
+00:14:12.000 --> 00:14:18.000
+have an HP see application run some of
+your common models if you have a
+business intelligence database run some
+
+117
+00:14:18.000 --> 00:14:25.000
+your common queries use a real work load
+so that you know how your application is
+actually going to perform as you go into
+
+118
+00:14:25.000 --> 00:14:30.000
+production and not only that you're
+going to be able to understand as you're
+testing different instants sizes how
+
+119
+00:14:30.000 --> 00:14:40.000
+your application is in a scale and
+perform as you grow and scale out now I
+want to start digging a little bit
+
+120
+00:14:40.000 --> 00:14:48.000
+deeper into the operating system and how
+the operating system interacts with the
+ec2 hardware on any instance physical or
+
+121
+00:14:48.000 --> 00:14:56.000
+virtual timekeeping is a really
+important operation it's used for things
+like processing interrupts getting the
+
+122
+00:14:56.000 --> 00:15:04.000
+time and date and measuring performance
+of cyclists most a.m. is that you
+launched on AWS are going to
+
+123
+00:15:04.000 --> 00:15:10.000
+is the zen clock source by default and
+the reason they do this is because the
+zen clock source is compatible with
+
+124
+00:15:10.000 --> 00:15:18.000
+every single instance that we have
+however there's around the time of the
+sandy bridge processor that the tsc
+
+125
+00:15:18.000 --> 00:15:26.000
+clock source became available now the
+tsc clock source compared to the zen
+clock source is actually handled by bare
+
+126
+00:15:26.000 --> 00:15:32.000
+metal and not the hypervisor so every
+time you make a timekeeping call you're
+going to be talking to the physical
+
+127
+00:15:32.000 --> 00:15:39.000
+processor and not to a virtual device
+and because of this calls to the CSC
+clock source are going to be
+
+128
+00:15:39.000 --> 00:15:48.000
+significantly quicker so to demonstrate
+this I wrote a very simple application
+don't worry about trying to read it my
+
+129
+00:15:48.000 --> 00:15:57.000
+code is terrible emesis admin but it
+does two things it performs a large
+number of get time of day calls and it
+
+130
+00:15:57.000 --> 00:16:07.000
+also performs a little bit of
+floating-point math and here's the
+results of it with the Zen clock source
+
+131
+00:16:07.000 --> 00:16:14.000
+i also used estrace to profile this
+application as it's running and I really
+liked estrace because it'll tell you how
+
+132
+00:16:14.000 --> 00:16:23.000
+many system calls are being made in the
+amount of time that they're taking up so
+here you can see it this test took about
+
+133
+00:16:23.000 --> 00:16:30.000
+12 seconds and get time of day was the
+number one call in that list there were
+a lot of calls being made and it took up
+
+134
+00:16:30.000 --> 00:16:38.000
+a significant amount of time the same
+exact system the only thing I did is
+switch that clock source from zen to tsc
+
+135
+00:16:38.000 --> 00:16:46.000
+the test now ran in two seconds as
+compared to 12 the floor and if you look
+at that estrace output get time of day
+
+136
+00:16:46.000 --> 00:16:55.000
+was so quick it doesn't even show up
+anymore now I know this is a pretty
+simple application and a pretty extreme
+
+137
+00:16:55.000 --> 00:17:01.000
+set of results but I've seen some
+applications get as much as a 40-percent
+performance improvement just by
+
+138
+00:17:01.000 --> 00:17:08.000
+switching their clock source from zen to
+tsc and I could tell that they would
+because I profiled them with estrace and
+
+139
+00:17:08.000 --> 00:17:17.000
+I saw those number of timekeeping calls
+so it's an easy change to make on Linux
+you can see three commands here the
+
+140
+00:17:17.000 --> 00:17:23.000
+top command is going to list all the
+available clock sources on your system
+so you can see if tsc is available and
+
+141
+00:17:23.000 --> 00:17:30.000
+if you're running a modern instance it
+should be the second command is going to
+list your current clock source and if
+
+142
+00:17:30.000 --> 00:17:37.000
+you launched a standard Linux ami that's
+probably going to be Zen the last
+command is just going to hot online or
+
+143
+00:17:37.000 --> 00:17:46.000
+hot switch your clock source from zen to
+tsc so if you're running a recently
+released ec2 instance and you're running
+
+144
+00:17:46.000 --> 00:17:53.000
+an application that's doing maybe some
+JVM debugging or performance tracing or
+even SI p your database operations that
+
+145
+00:17:53.000 --> 00:17:59.000
+have a lot of timekeeping calls I highly
+recommend you switch to the TSE clock
+source because it could make a big boost
+
+146
+00:17:59.000 --> 00:18:08.000
+in your performance another recent
+change that we made to the platform is
+giving you the ability to control the c
+
+147
+00:18:08.000 --> 00:18:16.000
+& p states of your instances so we
+launched this with the sea 48 x large
+instance but it's available on many more
+
+148
+00:18:16.000 --> 00:18:27.000
+today first let's talk about the sea
+state so C states allow you to actually
+set the power savings features of that
+
+149
+00:18:27.000 --> 00:18:36.000
+processor so using a sea 48 x large as
+an example see 48 x large instance as a
+base clock speed of 2.9 gigahertz
+
+150
+00:18:36.000 --> 00:18:46.000
+however if you're only doing work on one
+or two cores those cores can turbo boost
+up to about 3.5 gigahertz but it does so
+
+151
+00:18:46.000 --> 00:18:54.000
+by letting all those other cores on the
+system idle down now this is really
+great when you are doing an application
+
+152
+00:18:54.000 --> 00:19:01.000
+that requires a very high clock speed
+but if you're doing work that requires
+all of your course to be available and
+
+153
+00:19:01.000 --> 00:19:10.000
+working it can actually increase the
+latency of bringing up those idle course
+so I have some customers will actually
+
+154
+00:19:10.000 --> 00:19:18.000
+set this the command that you see down
+at the bottom in rub so to limit how far
+those instant how far those other cores
+
+155
+00:19:18.000 --> 00:19:27.000
+can idle down so that when you go to use
+them you won't have the increased
+latency of spinning them up
+
+156
+00:19:27.000 --> 00:19:35.000
+next thing I will talk about is the P
+States p states allow you to set the
+desired frequency of your course so
+
+157
+00:19:35.000 --> 00:19:41.000
+perhaps you have an application where
+you can where you need consistency more
+than performance and you want your
+
+158
+00:19:41.000 --> 00:19:48.000
+course to operate at the same clock
+speed all the time game servers are a
+pretty good example for these which stay
+
+159
+00:19:48.000 --> 00:19:54.000
+operated in loops and they expect that
+loop to happen take the exact same
+amount of time every time it runs so
+
+160
+00:19:54.000 --> 00:20:01.000
+customers with these needs will actually
+set the P state of their course so that
+they don't turbo boost and they just
+
+161
+00:20:01.000 --> 00:20:10.000
+operate at that base clock rate all the
+time next I finally want to talk about
+those T two instances that I've been
+
+162
+00:20:10.000 --> 00:20:17.000
+referring to and why they're special so
+T two instances they're great general
+purpose instances and they're actually
+
+163
+00:20:17.000 --> 00:20:24.000
+the lowest cost instance it's available
+on ec2 today so that T to nano which is
+the smallest one you can get for about
+
+164
+00:20:24.000 --> 00:20:31.000
+half a penny per hour and it's the T two
+instances they're great for work loads
+that have burstable CPU performance
+
+165
+00:20:31.000 --> 00:20:41.000
+these are things like database servers
+websites even and especially development
+environments with a t2 instance you
+
+166
+00:20:41.000 --> 00:20:46.000
+start with a baseline level of
+performance and you're going to get that
+all the time on the instance and as you
+
+167
+00:20:46.000 --> 00:20:54.000
+can see that baseline is different
+depending on which instance size that
+you go with but the magic of t2 comes in
+
+168
+00:20:54.000 --> 00:21:04.000
+with the burst credits that allow you to
+burst above that baseline so we launched
+t two instances because we saw that most
+
+169
+00:21:04.000 --> 00:21:13.000
+customer workloads aren't using a
+hundred percent of the CPU all the time
+so using the cpu burst credits it allows
+
+170
+00:21:13.000 --> 00:21:21.000
+you to get the performance that you need
+when you need it and not pay for it when
+you don't so let's dig into how those
+
+171
+00:21:21.000 --> 00:21:28.000
+credits actually work and how you can
+use them so you can think of the credits
+and a t2 instance kind of like a bucket
+
+172
+00:21:28.000 --> 00:21:34.000
+so you boot your instance and you're
+going to get enough credits that are in
+that bucket to handle things like
+
+173
+00:21:34.000 --> 00:21:40.000
+booting your operating system and
+launching your application and doing
+whatever work your instance was booted
+
+174
+00:21:40.000 --> 00:21:44.000
+for
+while your instance is running and doing
+all that work you're going to slowly
+
+175
+00:21:44.000 --> 00:21:51.000
+start pulling credits out of that bucket
+one cpu credit allows you to burst for a
+hundred percent of one core for one
+
+176
+00:21:51.000 --> 00:21:59.000
+minute now when the work I when the work
+dies down and your instance becomes idle
+you're going to start earning new
+
+177
+00:21:59.000 --> 00:22:07.000
+credits going into that bucket also
+credits are going to expire out of that
+bucket if their unused for 24 hours so
+
+178
+00:22:07.000 --> 00:22:14.000
+finding the right size of that t2
+instance is important to make sure that
+you're always boosting and to help you
+
+179
+00:22:14.000 --> 00:22:20.000
+make sure that we offer two different
+CloudWatch metrics that you can monitor
+with your instances so the first one in
+
+180
+00:22:20.000 --> 00:22:26.000
+orange this is your CPU credit usage so
+this is going to tell you how many CPU
+credits per minute you're using as your
+
+181
+00:22:26.000 --> 00:22:35.000
+CPU is spiking the second one is the cpu
+credit balance and this is going to be
+an important metric for you if you
+
+182
+00:22:35.000 --> 00:22:40.000
+always want to be getting the burst
+performance out of your t2 instance so
+if you always want to be in that burst
+
+183
+00:22:40.000 --> 00:22:46.000
+level of performance and not at that
+baseline you're going to make sure that
+this credit balance never drops down to
+
+184
+00:22:46.000 --> 00:22:52.000
+zero if you're using something like auto
+scaling this is probably the metric that
+you want to start hooking on instead of
+
+185
+00:22:52.000 --> 00:23:03.000
+CPU usage because your CPU usage is
+going to drop once you exhaust all the
+credits in that bucket the next instance
+
+186
+00:23:03.000 --> 00:23:08.000
+and I want to talk about is the x1
+instance and the x1 is really exciting
+because it's the biggest instance that
+
+187
+00:23:08.000 --> 00:23:19.000
+we have available on AWS the X 1 32 x
+large has it's a quad socket system has
+almost two terabytes of ram and it has
+
+188
+00:23:19.000 --> 00:23:27.000
+128 virtual CPUs so it's a massive
+machine that's really great if you have
+you know a big in-memory database if
+
+189
+00:23:27.000 --> 00:23:35.000
+you're doing some big data processing or
+even some hpc workloads that need that
+much memory footprint all on a single
+
+190
+00:23:35.000 --> 00:23:45.000
+machine but when you have that much
+memory effective management of it is
+even more important on any system with
+
+191
+00:23:45.000 --> 00:23:52.000
+multiple sockets accessing the memory
+and the socket closest to you is always
+going to be faster than accessing memory
+
+192
+00:23:52.000 --> 00:23:59.000
+in the socket
+in a remote socket and this concept is
+called Numa or non-uniform memory access
+
+193
+00:23:59.000 --> 00:24:07.000
+between those two sockets you have
+what's called especially on Intel
+systems that's called a QP I or
+
+194
+00:24:07.000 --> 00:24:16.000
+quickpath interconnect and this is the
+bus the transfers memory from woonsocket
+to another so let's look at the are 38 x
+
+195
+00:24:16.000 --> 00:24:24.000
+large as an example so this is a two
+socket box and you can see that there's
+120 2 gigabytes of ram that are attached
+
+196
+00:24:24.000 --> 00:24:33.000
+to each socket between each socket you
+have two qpi links to transfer that
+memory from woonsocket to another so if
+
+197
+00:24:33.000 --> 00:24:39.000
+you have an application that's running
+in the socket on the left that's copying
+data from the socket from memory in the
+
+198
+00:24:39.000 --> 00:24:47.000
+socket on the right it's got to send
+that memory or send that data over those
+qpi paths which well fast are never
+
+199
+00:24:47.000 --> 00:24:56.000
+going to be as fast as accessing memory
+that's local to that socket now when you
+go to the x1 instance and you go to four
+
+200
+00:24:56.000 --> 00:25:06.000
+sockets things get a lot more complex
+and numa is even more important compared
+to the r 38 x large instance we now have
+
+201
+00:25:06.000 --> 00:25:14.000
+far more memory / socket 488 gigabytes
+of ram on each socket and you'll notice
+that instead of two qpi pass because we
+
+202
+00:25:14.000 --> 00:25:22.000
+have more sockets to spread them across
+we now only have one qpi connecting each
+socket so memory transfers from one Numa
+
+203
+00:25:22.000 --> 00:25:32.000
+zone to another are going to take longer
+on the x1 than they are on the r3 so
+what can you do about this well if
+
+204
+00:25:32.000 --> 00:25:41.000
+you've ever monitored a system let's say
+the top or a process monitor you'll
+notice that the process scheduler in
+
+205
+00:25:41.000 --> 00:25:47.000
+your operating system is actually moving
+processes around from one core to
+another all the time the scheduling
+
+206
+00:25:47.000 --> 00:25:55.000
+helps ensure that your CPU performance
+is balanced over all the cores in your
+system on Linux it wasn't until around
+
+207
+00:25:55.000 --> 00:26:03.000
+the 38 kernel that it started to take
+Numa into a consideration so with that
+addition to the kernel or with that
+
+208
+00:26:03.000 --> 00:26:08.000
+addition to the scheduler it's actually
+going to be moving processes
+closer to the memory that they're
+
+209
+00:26:08.000 --> 00:26:17.000
+accessing and also moving memory closer
+to the processes the downside of this is
+that it can actually slow down
+
+210
+00:26:17.000 --> 00:26:23.000
+performance of some applications
+especially if they have a huge memory
+footprint so if your memory footprint
+
+211
+00:26:23.000 --> 00:26:29.000
+overlaps two different Numa zones if
+you're using a lot of memory for your
+application it's going to be needlessly
+
+212
+00:26:29.000 --> 00:26:36.000
+moving memory around from one zone to
+another even though your processes are
+going to operate in both places and need
+
+213
+00:26:36.000 --> 00:26:46.000
+access to them so you can do a couple of
+things to mitigate this on Linux the
+first option is to set Numa equals off
+
+214
+00:26:46.000 --> 00:26:54.000
+in your grub boot parameter and what
+this does is it actually disables all
+Numa knowledge of that scheduler and of
+
+215
+00:26:54.000 --> 00:27:01.000
+the system itself so it sees one big new
+Mazzone overlapping all of the sockets
+on your system so it's not trying to
+
+216
+00:27:01.000 --> 00:27:09.000
+needlessly move memory around from one
+zone to another the alternative is if
+you have an application that you can
+
+217
+00:27:09.000 --> 00:27:15.000
+actually fit within a single Numa zone
+you may want to use application like
+Numa CTL when you launch whatever
+
+218
+00:27:15.000 --> 00:27:23.000
+workload you have to lock your process
+into a single Numa zone so that it'll
+only ever read and write memory that's
+
+219
+00:27:23.000 --> 00:27:34.000
+local to it and in those processes won't
+be able to switch from one socket to
+another another thing to keep in mind
+
+220
+00:27:34.000 --> 00:27:41.000
+when it comes to operating systems is
+how important the version of your
+operating system is I was working with a
+
+221
+00:27:41.000 --> 00:27:49.000
+customer not too long ago who was
+migrating a custom in-house developed
+application from on-premise to AWS and
+
+222
+00:27:49.000 --> 00:27:57.000
+they weren't seeing the performance they
+were expecting two out of the system now
+this was a pretty complex application
+
+223
+00:27:57.000 --> 00:28:04.000
+and testing it took a lot of work so
+what we did is we found an analog a
+performance testing analog tool online
+
+224
+00:28:04.000 --> 00:28:14.000
+called a busy which exhibited the same
+exact behavior as they were seeing so
+this is the first round of their tests
+
+225
+00:28:14.000 --> 00:28:22.000
+it was run on rel 6 and this is with a
+busy and we also profiled it
+perf which is another great tool to
+
+226
+00:28:22.000 --> 00:28:28.000
+understand what's going on at a system
+level from your application and here you
+can see the first time we ran it we got
+
+227
+00:28:28.000 --> 00:28:35.000
+about twelve thousand records per second
+but we noticed there was a lot of time
+being spent in system space in the
+
+228
+00:28:35.000 --> 00:28:41.000
+colonel instead of user space we also
+looked at the page faults and saw that
+there's about a million and a half page
+
+229
+00:28:41.000 --> 00:28:49.000
+faults just in this ten second run so
+obviously something is wrong here's the
+output of another tool that we used
+
+230
+00:28:49.000 --> 00:28:56.000
+called flame grass now if you haven't
+used flame grass before I highly
+recommend it because and these are this
+
+231
+00:28:56.000 --> 00:29:01.000
+is a tool it was created by Brendan Greg
+who's given talks at reinvent before
+it's a really great way of understanding
+
+232
+00:29:01.000 --> 00:29:08.000
+where the time is spent in your
+application and the code paths that are
+happening in there so here you can see a
+
+233
+00:29:08.000 --> 00:29:17.000
+busy is the bottom bar in this chart and
+the bulk of that time is actually spent
+in an M advised Paul which is a memory
+
+234
+00:29:17.000 --> 00:29:24.000
+management call and that memory
+management call it's going through a lot
+of different code but eventually it ends
+
+235
+00:29:24.000 --> 00:29:33.000
+up in a Zen hyper call which accounts
+for all that system time that we're
+using so we took this same exact code
+
+236
+00:29:33.000 --> 00:29:42.000
+and weary compiled it for rel seven and
+ranted on the exact same type of
+instance just by recompiling it and
+
+237
+00:29:42.000 --> 00:29:48.000
+moving it to the newest operating system
+our performance went from 12,000 records
+per second to four hundred twenty-five
+
+238
+00:29:48.000 --> 00:29:55.000
+thousand records per second and all that
+time that was spent in system space
+moved into user space where we'd expect
+
+239
+00:29:55.000 --> 00:30:03.000
+it to be we can also see that page
+faults went down from around million and
+a half to only 14,000 so what happened
+
+240
+00:30:03.000 --> 00:30:13.000
+what what's the cause of this again
+flame graphs tell the story here this is
+the exact same flame graph generated
+
+241
+00:30:13.000 --> 00:30:23.000
+from just a rel 7 system same exact code
+same exact run type it turns out in rel
+7g Lib C changed the way that some
+
+242
+00:30:23.000 --> 00:30:30.000
+memory calls happen so instead of that
+long m advice call that ended up in that
+Zen hyper call which aid all our CPU
+
+243
+00:30:30.000 --> 00:30:39.000
+time it's now doing a intel optimized
+memory man
+task so the moral of the story is that
+
+244
+00:30:39.000 --> 00:30:46.000
+when you're moving to AWS compile your
+application or run your application on
+the latest version of the operating
+
+245
+00:30:46.000 --> 00:30:53.000
+system that it's compatible with and if
+you can recompile it because it can make
+a huge difference this customer we even
+
+246
+00:30:53.000 --> 00:31:03.000
+tried bringing over the rail 6 binary to
+rel 7 that was statically compiled and
+we saw the same problems another subject
+
+247
+00:31:03.000 --> 00:31:10.000
+related to memory and this is going to
+be my last one on memory is to disable
+transparent huge pages now huge pages
+
+248
+00:31:10.000 --> 00:31:18.000
+they are it is a huge subject so I'm not
+going to go into the depths of what huge
+pages are how they work the link that
+
+249
+00:31:18.000 --> 00:31:23.000
+you see at the bottom of this slide
+actually it's probably the best article
+that i found that explains how they work
+
+250
+00:31:23.000 --> 00:31:33.000
+but transparent huge pages are enabled
+by default on most litigating systems
+disabling transparent huge pages and
+
+251
+00:31:33.000 --> 00:31:40.000
+instead going to an explicit huge page
+model can significantly boost the
+performance of any application that's of
+
+252
+00:31:40.000 --> 00:31:47.000
+most applications I should probably say
+that are accessing a lot of memory so i
+definitely recommend if you're a memory
+
+253
+00:31:47.000 --> 00:31:58.000
+intensive workload look at huge pages
+and it's especially explicit next I want
+to talk about I oh we have a few
+
+254
+00:31:58.000 --> 00:32:05.000
+different instance families that are
+optimized for i/o usage we have the I to
+instance which is an I ops based
+
+255
+00:32:05.000 --> 00:32:13.000
+instance it has a bunch of SSD drives
+and then we have the d2 instance which
+is dense storage and uses magnetic but
+
+256
+00:32:13.000 --> 00:32:19.000
+in order to get the best possible
+performance out of these instances you
+need to be running a modern linux kernel
+
+257
+00:32:19.000 --> 00:32:26.000
+and on a modern operating system and the
+reason for this is because of the split
+driver model that zen uses to
+
+258
+00:32:26.000 --> 00:32:32.000
+communicate so let's say you're an
+application in the upper right that
+needs to write to a storage device
+
+259
+00:32:32.000 --> 00:32:41.000
+inside of your application or inside of
+your operating system that application
+rights to a front-end driver that front
+
+260
+00:32:41.000 --> 00:32:47.000
+end driver then goes through the
+hypervisor and talks to a back-end
+driver that back-end driver then has to
+
+261
+00:32:47.000 --> 00:32:53.000
+write to the real
+physical device driver before sending it
+down to the storage device from their
+
+262
+00:32:53.000 --> 00:33:00.000
+data transfer happens through shared
+pages that need to be granted that need
+permissions to be granted and released
+
+263
+00:33:00.000 --> 00:33:08.000
+and this granting process has a lot of
+overhead especially on early kernels
+every time you need to talk to that disk
+
+264
+00:33:08.000 --> 00:33:14.000
+you need to talk to the VMM get
+permission to write to the Vice fill a
+buffer with the data you want to
+
+265
+00:33:14.000 --> 00:33:21.000
+transfer pass that data back to the
+backend wait for it to be written and
+then remove the grant this is a really
+
+266
+00:33:21.000 --> 00:33:28.000
+expensive operation that includes up
+that involves a lot of buffer flushing
+that only gets worse the more cpus that
+
+267
+00:33:28.000 --> 00:33:38.000
+you add to it so to solve this
+persistent grants were created and with
+persistent grants the permission to
+
+268
+00:33:38.000 --> 00:33:46.000
+write to that device is actually reused
+for all the transactions between the
+front-end and the backend driver so
+
+269
+00:33:46.000 --> 00:33:52.000
+grants no need to be unmapped anymore
+and that translation buffer never needs
+to be flushed because of this you'll get
+
+270
+00:33:52.000 --> 00:33:57.000
+significantly better performance for all
+your i/o operations as long as you're
+running a kernel that supports
+
+271
+00:33:57.000 --> 00:34:05.000
+persistent grants so to validate that
+you are using persistent grants or that
+they're enabled in your Linux kernel you
+
+272
+00:34:05.000 --> 00:34:12.000
+can simply just run the D message
+command and grip for the block front
+driver here you can see I'm running an
+
+273
+00:34:12.000 --> 00:34:22.000
+eye to aid x-large instance and as you
+can see all of my all of my volumes have
+persists and grants enabled so if I
+
+274
+00:34:22.000 --> 00:34:29.000
+haven't said it already using a modern
+kernel is really important I have a lot
+of customers that still use sent OS six
+
+275
+00:34:29.000 --> 00:34:35.000
+because it's what they've been running
+their data centers for years but I've
+seen as much as a sixty percent
+
+276
+00:34:35.000 --> 00:34:41.000
+performance improvement just by
+switching your operating system from
+something that's running a 28 kernel or
+
+277
+00:34:41.000 --> 00:34:52.000
+a 26 kernel to a 310 colonel the kernel
+that was released with tooth with sent
+os6 was released in 2009 and while it
+
+278
+00:34:52.000 --> 00:34:58.000
+may not always feel like it it was a
+really long time ago in the cloud
+computing world so please use a modern
+
+279
+00:34:58.000 --> 00:35:09.000
+operating system with a modern
+now along the lines of the split driver
+model around it was at the time the c3
+
+280
+00:35:09.000 --> 00:35:16.000
+launch that we introduced a new way to
+talk to network devices and that's
+enhanced networking now under the hood
+
+281
+00:35:16.000 --> 00:35:25.000
+enhanced networking uses a technology
+called SR IOV or single route io
+virtualization and what this does is it
+
+282
+00:35:25.000 --> 00:35:31.000
+allows the physical Network device to be
+exposed directly to your operating
+system so that your calls don't need to
+
+283
+00:35:31.000 --> 00:35:39.000
+go through that hypervisor now to use an
+enhanced networking it does have a few
+requirements you do need a special
+
+284
+00:35:39.000 --> 00:35:45.000
+driver to be installed in your operating
+system and easy to needs to be told to
+expose the network device in this
+
+285
+00:35:45.000 --> 00:35:53.000
+different way but as you can see the
+network path is much much simpler
+packets don't need to go through that
+
+286
+00:35:53.000 --> 00:35:58.000
+hypervisor anymore and because you're
+talking to bare metal you're going to
+get a higher rate of packets per second
+
+287
+00:35:58.000 --> 00:36:07.000
+and decrease jitter because the CPU is
+not longer involved in that process it's
+free enhanced networking is free on all
+
+288
+00:36:07.000 --> 00:36:15.000
+supported operating on all supported
+instances and it's enabled by default
+and most amies however if you're doing
+
+289
+00:36:15.000 --> 00:36:22.000
+an import of a virtual machine from
+on-premise to ec2 you probably don't
+have it enabled unless you've explicitly
+
+290
+00:36:22.000 --> 00:36:32.000
+done so i highly recommend it if you're
+doing anything that touches the network
+on an ec2 instance and when it comes to
+
+291
+00:36:32.000 --> 00:36:38.000
+network performance we're still not done
+along with the x1 instance we release
+the next generation of enhanced
+
+292
+00:36:38.000 --> 00:36:47.000
+networking which is called ena or the
+elastic network adapter now na launched
+with the x1 and it's beginning to roll
+
+293
+00:36:47.000 --> 00:36:57.000
+out on newer and newer instances as we
+come about so it's on the m416 and the
+p2 instance but what ena does is it now
+
+294
+00:36:57.000 --> 00:37:03.000
+offers you 20 gigabits of network
+performance as compared to the 10 that
+you just get with enhanced networking it
+
+295
+00:37:03.000 --> 00:37:09.000
+also has features like hardware
+checksums and receive side steering give
+you even more control of the packet
+
+296
+00:37:09.000 --> 00:37:19.000
+processing pipeline so that you can make
+sure that you're getting the highest
+rate of packets per second now when it
+
+297
+00:37:19.000 --> 00:37:25.000
+comes to network performance I want to
+touch briefly on the subject and we have
+a deep dive at reinvent that I highly
+
+298
+00:37:25.000 --> 00:37:32.000
+recommend that you go to on this but
+when it comes to networking performance
+that 20 gigabit and that 10 gigabit that
+
+299
+00:37:32.000 --> 00:37:39.000
+you see listed on those instances that
+only applies to instance to instance
+communication when those instances are
+
+300
+00:37:39.000 --> 00:37:46.000
+in a placement group but if you do use
+placement groups you can actually get by
+sectional bandwidth out of those
+
+301
+00:37:46.000 --> 00:37:52.000
+instances so that means you can get 20
+gigabits out and 20 to give it's in at
+the same time you'll also need to be
+
+302
+00:37:52.000 --> 00:38:02.000
+using multiple TCP streams to achieve
+that for things like talking to s3 any
+network traffic out of ec2 is going to
+
+303
+00:38:02.000 --> 00:38:09.000
+be capped at about five gigabits per
+second but it's easy to forget that
+networking throughput is also a function
+
+304
+00:38:09.000 --> 00:38:16.000
+of instant sizes I had a customer who is
+doing some performance testing with s3
+and they weren't getting the performance
+
+305
+00:38:16.000 --> 00:38:22.000
+they were hoping for out of it it turns
+out their routing all of their internet
+traffic through a t2 micronet instance
+
+306
+00:38:22.000 --> 00:38:28.000
+which is definitely going to be your
+bottleneck so definitely keep in mind
+the network performance of the instance
+
+307
+00:38:28.000 --> 00:38:35.000
+that you launch and if you care about
+care about it use iperf to test the
+throughput from one instance to another
+
+308
+00:38:35.000 --> 00:38:46.000
+in that placement group and just like
+network performance EBS performance is
+also a factor of instant sizes EBS
+
+309
+00:38:46.000 --> 00:38:53.000
+optimization is a great way to get great
+EBS performance out of your ec2 instance
+what it does is it creates a dedicated
+
+310
+00:38:53.000 --> 00:39:00.000
+path for EDS traffic that's separate
+from your standard network traffic it's
+actually enabled by default on a lot of
+
+311
+00:39:00.000 --> 00:39:07.000
+our newest instances so if you're doing
+anything that's requires a lot of heavy
+storage utilization make sure that
+
+312
+00:39:07.000 --> 00:39:14.000
+you're using EBS optimized now EBS
+optimized we actually have the chart
+that you see here is just an excerpt
+
+313
+00:39:14.000 --> 00:39:21.000
+from the EBS optimization pages and this
+chart will show you that for every
+instance that supports EBS optimization
+
+314
+00:39:21.000 --> 00:39:27.000
+how much throughput you can get to EBS
+out of that instance you can see how
+many I ups you can get out of that
+
+315
+00:39:27.000 --> 00:39:35.000
+so it should definitely be your
+reference when you're using a workload
+that uses a heavy that uses EBS heavily
+
+316
+00:39:35.000 --> 00:39:45.000
+so in conclusion there are a lot of
+things that you can do to get great ec2
+performance at the bare minimum use a
+
+317
+00:39:45.000 --> 00:39:52.000
+modern operating system make sure you're
+using an h vm based on me so that you're
+talking to hardware as much as possible
+
+318
+00:39:52.000 --> 00:40:01.000
+used enhance networking it's free and
+it's going to significantly increase
+your packet performance and always
+
+319
+00:40:01.000 --> 00:40:08.000
+profile your application on your
+instances and test them to see how
+they'll perform and when it comes to
+
+320
+00:40:08.000 --> 00:40:14.000
+virtualization i want to talk i want to
+mention that our goal is to make
+virtualization as transparent as
+
+321
+00:40:14.000 --> 00:40:21.000
+possible argo and eliminate any
+efficiencies that it can cause our goal
+is to give you bare metal like
+
+322
+00:40:21.000 --> 00:40:30.000
+performance out of your ec2 instance and
+in a lot of ways we're already there so
+if you have any questions we actually
+
+323
+00:40:30.000 --> 00:40:38.000
+have a couple of microphones set up if
+you want to go up and ask otherwise
+visit the ec2 documentation page and
+start testing your app thanks

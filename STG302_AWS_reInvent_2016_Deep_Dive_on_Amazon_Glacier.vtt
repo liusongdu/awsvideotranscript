@@ -1,0 +1,2261 @@
+WEBVTT FILE
+
+1
+00:00:00.000 --> 00:00:06.000
+it's been a tremendous journey and
+really exciting to see the tremendous
+growth both in terms of the volume of
+
+2
+00:00:06.000 --> 00:00:13.000
+archives the customers are storing on
+glacier as well as the breadth of use
+cases their customers are using Amazon
+
+3
+00:00:13.000 --> 00:00:23.000
+glacier for and ranging from and media
+entertainment financial services
+government institutions healthcare and
+
+4
+00:00:23.000 --> 00:00:30.000
+life sciences and many more and i want
+to start today by talking about and
+highlighting some of those use cases and
+
+5
+00:00:30.000 --> 00:00:37.000
+a couple customers who have built in
+pretty cool applications using amazon
+glacier so to start with for the
+
+6
+00:00:37.000 --> 00:00:45.000
+musicians in the house soundcloud is a
+great example of storing
+mission-critical data on glacier some
+
+7
+00:00:45.000 --> 00:00:54.000
+cloud is a leading social platform that
+enables musicians to create their music
+upload it into soundcloud who then
+
+8
+00:00:54.000 --> 00:01:02.000
+transcodes that into a low proxy
+resolution format that makes it easy for
+them to share with their fans or other
+
+9
+00:01:02.000 --> 00:01:12.000
+musicians for collaboration to sharon on
+to other social platforms and soundcloud
+then stores the original copy you know
+
+10
+00:01:12.000 --> 00:01:21.000
+the raw copy of the of the musicians
+into glacier and they really leverage
+the durability model of glacier to
+
+11
+00:01:21.000 --> 00:01:27.000
+safely store that data for their end
+users which is really invaluable to
+their end users so and today soundcloud
+
+12
+00:01:27.000 --> 00:01:34.000
+is storing petabytes of data on glacier
+a large number of enterprises and
+government institutions like are using
+
+13
+00:01:34.000 --> 00:01:44.000
+amazon glacier to compliantly store data
+sensitive data that are bound by various
+regulations and a good example of that
+
+14
+00:01:44.000 --> 00:01:51.000
+is Philips Healthcare who runs their
+healthcare digital health care spell
+sorry health sweet digital platform on
+
+15
+00:01:51.000 --> 00:02:01.000
+AWS and they leverage Amazon glacier
+which is one of nine HIPAA eligible
+services on AWS Philips Healthcare loves
+
+16
+00:02:01.000 --> 00:02:09.000
+that Amazon glacier is highly scalable
+because they operate in over 1,500
+hospitals that generate patient data and
+
+17
+00:02:09.000 --> 00:02:17.000
+medical images on a daily basis and they
+require that comply
+it a compliance service and they also
+
+18
+00:02:17.000 --> 00:02:23.000
+need that service to be highly cost
+effective because they are required to
+store their patient data for the
+
+19
+00:02:23.000 --> 00:02:32.000
+lifetime of that patient so we're
+talking about decades where and cost
+really matters to them a local example
+
+20
+00:02:32.000 --> 00:02:41.000
+from Seattle King County uses Amazon
+glacier to replace their old legacy tape
+systems which they used for backups for
+
+21
+00:02:41.000 --> 00:02:50.000
+17 locations around the Seattle area and
+King County and they found that they
+were able to save over a million dollars
+
+22
+00:02:50.000 --> 00:02:57.000
+in just the first year as well as avoid
+that high touch maintenance of old
+legacy tape hardware systems and as a
+
+23
+00:02:57.000 --> 00:03:03.000
+government institution they also needed
+to meet various regulatory requirements
+which they were able to either meet or
+
+24
+00:03:03.000 --> 00:03:10.000
+exceed using Amazon glacier and lastly
+I'm very excited to have our special
+guest speaker Andy Sinclair from sony
+
+25
+00:03:10.000 --> 00:03:19.000
+dadc speak today in detail during the
+later half of this presentation on how
+they're using amazon glacier to power
+
+26
+00:03:19.000 --> 00:03:31.000
+their new digital media supply chain
+solution venue so stepping back for a
+moment to look at storage on AWS as a
+
+27
+00:03:31.000 --> 00:03:38.000
+whole customers have taught us over the
+years to look at cloud storage based on
+four key elements and that's file object
+
+28
+00:03:38.000 --> 00:03:46.000
+block storage products supported by a
+number of you know batching and
+streaming features that help you make
+
+29
+00:03:46.000 --> 00:03:55.000
+the most out of those storage products
+and we the customers i've talked to have
+told me that they consider AWS really is
+
+30
+00:03:55.000 --> 00:04:03.000
+the gold standard for cloud storage and
+we and they love leveraging the breadth
+and the depth of those products and the
+
+31
+00:04:03.000 --> 00:04:09.000
+features that we offer and we
+continuously are receiving feedback and
+requirements and continue to iterate
+
+32
+00:04:09.000 --> 00:04:16.000
+very quickly to meet those customer
+requirements customers for a long time
+ask for file systems for examples for
+
+33
+00:04:16.000 --> 00:04:23.000
+example that worked at a petabyte scale
+with really consistent latency and so we
+launched elastic file system that is
+
+34
+00:04:23.000 --> 00:04:32.000
+both highly scalable and very performant
+amazon s3 and glacier or object storage
+that is very highly durable and very
+
+35
+00:04:32.000 --> 00:04:42.000
+cost effective and great for everything
+from cloud native applications to large
+big data workloads and and then finally
+
+36
+00:04:42.000 --> 00:04:49.000
+elastic block storage is the lowest
+latency offering in the profile in our
+portfolio and offers everything from
+
+37
+00:04:49.000 --> 00:05:00.000
+provisioned I ops to low-cost throughput
+optimized storages offerings as well and
+then finally we have a whole slew of
+
+38
+00:05:00.000 --> 00:05:11.000
+batching and streaming products and
+servers that help make the most out of
+these storage products regardless of the
+
+39
+00:05:11.000 --> 00:05:20.000
+industry or the type of storage we've
+seen really a trend of just exploding
+data explode an explosion of data across
+
+40
+00:05:20.000 --> 00:05:28.000
+all industries that have been driven by
+things like the proliferation of data
+producing devices like cell phones and
+
+41
+00:05:28.000 --> 00:05:41.000
+IOT devices higher data formats larger
+data formats like 4k 8k advancements in
+new life health and life sciences such
+
+42
+00:05:41.000 --> 00:05:50.000
+as genomics data single genomics
+sequence can take up to a terabyte of
+data these days and that increases as
+
+43
+00:05:50.000 --> 00:05:58.000
+that technology gets better and in
+general there's kind of a virtuous cycle
+in storage where as the prices of cloud
+
+44
+00:05:58.000 --> 00:06:05.000
+storage have dropped customers or you
+are storing more data for longer
+extracting more value out of that data
+
+45
+00:06:05.000 --> 00:06:12.000
+which then increases the demand and
+therefore the scale that AWS can operate
+at which in turn reduces our costs and
+
+46
+00:06:12.000 --> 00:06:19.000
+we pass those savings on to you in the
+form of lower prices case in point last
+week we announced a storage price drop
+
+47
+00:06:19.000 --> 00:06:26.000
+for both s3 and glacier for as much as
+43 by as much as forty three percent
+which we're very excited to pass on to
+
+48
+00:06:26.000 --> 00:06:33.000
+customers so really regardless of the
+use case for the industry companies face
+large and fast-growing george
+
+49
+00:06:33.000 --> 00:06:38.000
+requirements and many face the challenge
+of finding a solution that's both
+scalable
+
+50
+00:06:38.000 --> 00:06:49.000
+cost-effective and offers the
+performance that they require to two
+best monetize their data so in this
+
+51
+00:06:49.000 --> 00:06:56.000
+session I'm going to discuss how Amazon
+glacier is really designed to address
+those concerns in particular for
+
+52
+00:06:56.000 --> 00:07:04.000
+archival workloads so whether this is
+your first time hearing about glacier
+because you're considering moving a
+
+53
+00:07:04.000 --> 00:07:13.000
+archival work load onto glacier or you
+are already using glacier and are
+looking to find out more about new
+
+54
+00:07:13.000 --> 00:07:19.000
+features that can help you better
+optimize your archive of workload I
+think you're going to get a lot out of
+
+55
+00:07:19.000 --> 00:07:25.000
+this presentation but if there's one
+thing that I want you to get out of this
+presentation other than excitement that
+
+56
+00:07:25.000 --> 00:07:34.000
+it's finally time for the pub crawl it's
+that Amazon glacier is more than just a
+solution for deep archival to lower your
+
+57
+00:07:34.000 --> 00:07:42.000
+storage costs it especially with the new
+retrieval features that we launched last
+week it is really a powerful storage
+
+58
+00:07:42.000 --> 00:07:52.000
+solution that can address the full
+spectrum of archival use cases so let's
+start diving into Amazon glacier first
+
+59
+00:07:52.000 --> 00:08:01.000
+of all it's extremely low cost we start
+at point four cents per gigabyte per
+month we offer three ways for you to get
+
+60
+00:08:01.000 --> 00:08:08.000
+at your data that range in both price as
+well as performance they range from
+accessing your data in minutes to
+
+61
+00:08:08.000 --> 00:08:15.000
+accessing it in hours in a more
+cost-effective way we offer an eleven
+nines of durability what does that mean
+
+62
+00:08:15.000 --> 00:08:23.000
+in mathematical terms it means that if
+for every ten thousand objects that you
+store you can expect to lose one every
+
+63
+00:08:23.000 --> 00:08:30.000
+ten million years so even that's hard to
+wrap your head around if you're using
+tape what is that what would be a good
+
+64
+00:08:30.000 --> 00:08:41.000
+comp comparison we asked a Hollywood
+Hollywood studio major Hollywood studio
+to run the same markov model that we
+
+65
+00:08:41.000 --> 00:08:51.000
+used to derive the eleven nines but for
+two copies of their data on tape and
+what they came back with was five to six
+
+66
+00:08:51.000 --> 00:08:57.000
+nine
+durability and so to have six additional
+nines of durability using glacier what
+
+67
+00:08:57.000 --> 00:09:07.000
+that means is that glacier is five
+orders of magnitude more durable than
+two copies of your data on tape which is
+
+68
+00:09:07.000 --> 00:09:15.000
+the common durability model used for
+tape all data on glaciers encrypted at
+rest regardless of how you pass it to us
+
+69
+00:09:15.000 --> 00:09:22.000
+you might encrypt it beforehand but we
+will then encrypt it again all data that
+comes onto glacier is encrypted at rest
+
+70
+00:09:22.000 --> 00:09:32.000
+and then finally we have a set of
+features around both compliance access
+control cost management etc that I'm
+
+71
+00:09:32.000 --> 00:09:40.000
+going to dive into from a value value
+proposition standpoint amazon glacier
+removes the need for upfront capital
+
+72
+00:09:40.000 --> 00:09:49.000
+expenditures that in particular in the
+archive world is particularly meaningful
+considering the long investment periods
+
+73
+00:09:49.000 --> 00:09:57.000
+that are involved with archival
+solutions hardware solutions which
+increases the risk of you know involved
+
+74
+00:09:57.000 --> 00:10:03.000
+with having to live with that decision
+for many years 7 10 years what have you
+with Amazon glacier there's no upfront
+
+75
+00:10:03.000 --> 00:10:11.000
+commitment you pay only for what you use
+all that good cloud stuff we also remove
+the need for time-consuming capacity
+
+76
+00:10:11.000 --> 00:10:18.000
+planning and ongoing negotiations with
+multiple hardware and software vendors
+the risk of managing physical media as
+
+77
+00:10:18.000 --> 00:10:28.000
+well as empowering you to control your
+geographic locality your performance and
+your compliance requirements as well so
+
+78
+00:10:28.000 --> 00:10:34.000
+to begin to having a little deeper I
+want to cover some of the basic terms
+for glacier as well as the concepts that
+
+79
+00:10:34.000 --> 00:10:41.000
+I'll be covering in this presentation so
+first of all with your AWS account you
+first use glacier by creating a vault
+
+80
+00:10:41.000 --> 00:10:50.000
+which is our term for the container that
+you store data in in which you store
+archives and Archives are the basic unit
+
+81
+00:10:50.000 --> 00:10:59.000
+of data archives are right once they can
+be up to 40 terabytes and you can store
+an unlimited amount of archives in a
+
+82
+00:10:59.000 --> 00:11:06.000
+given vault and then we also have this
+notion of an inventory which is a cold
+decks of your archives and this is
+
+83
+00:11:06.000 --> 00:11:13.000
+refreshed every 24 hours so the fourth
+thing for areas that I want to cover
+today are around how to access glacier
+
+84
+00:11:13.000 --> 00:11:20.000
+how to upload your data how to manage
+that data and manage your Amazon glacier
+account and then also how to access your
+
+85
+00:11:20.000 --> 00:11:28.000
+data and make the most out of your data
+and i'll be going over best practices
+have to optimize those things in detail
+
+86
+00:11:28.000 --> 00:11:38.000
+so first accessing there's three ways to
+access amazon glacier the first is
+directly with by using glaciers api's or
+
+87
+00:11:38.000 --> 00:11:45.000
+through its sdk which gives you access
+to the full set of AP is and is a great
+way to build applications on glacier
+
+88
+00:11:45.000 --> 00:11:54.000
+like NE AWS service it's really
+important when you're setting up you
+know a service or an account to always
+
+89
+00:11:54.000 --> 00:11:59.000
+be thoughtful and diligent around
+setting the right access policies for
+your accounts so that you're meeting
+
+90
+00:11:59.000 --> 00:12:06.000
+your security requirements around who
+can access what or delete or retrieve
+etc and oftentimes you know with
+
+91
+00:12:06.000 --> 00:12:13.000
+archival workloads it's it involves
+mission or business and critical data so
+very important to do that if you are
+
+92
+00:12:13.000 --> 00:12:21.000
+already using Amazon s3 or if you have
+both an online and an ark in conjunction
+with an archival storage layer then you
+
+93
+00:12:21.000 --> 00:12:29.000
+accessing glacier via s3 lifecycle is a
+great way to go it's an automated way to
+tier your storage into the lower cost
+
+94
+00:12:29.000 --> 00:12:35.000
+storage options and i'll be going into
+that in detail later and then lastly
+there's a large number and an
+
+95
+00:12:35.000 --> 00:12:42.000
+ever-growing number of third-party
+vendors who are integrated with both s3
+lifecycle and glacier that make it easy
+
+96
+00:12:42.000 --> 00:12:50.000
+for for you to manage your data and they
+range from consumer grade tools like
+fast glacier and cloudberry to all the
+
+97
+00:12:50.000 --> 00:12:59.000
+way up to enterprise grade gateways and
+appliances such as netapp ulta fault or
+commvault one thing to keep in mind with
+
+98
+00:12:59.000 --> 00:13:07.000
+third-party vendors is that some of them
+will reformat your data for various
+purposes like indexing or to optimize
+
+99
+00:13:07.000 --> 00:13:16.000
+the the data transfer process and and
+then this makes it necessary to continue
+to use that third party
+
+100
+00:13:16.000 --> 00:13:25.000
+vendor once that data is in AWS for
+leveraging it for analysis or other
+types of workflows which might be fine
+
+101
+00:13:25.000 --> 00:13:31.000
+depending on on what your use case is
+but a lot of customers find it really
+useful to have to keep that native
+
+102
+00:13:31.000 --> 00:13:38.000
+format of their data in the cloud not be
+tied to a third party vendor when
+they're considering different ways to
+
+103
+00:13:38.000 --> 00:13:45.000
+utilize that data just something to keep
+in mind when you're exploring
+third-party tools and a quick reminder
+
+104
+00:13:45.000 --> 00:13:53.000
+when you're uploading data there we have
+several really powerful tools and
+services that can help you transfer in
+
+105
+00:13:53.000 --> 00:13:59.000
+particular large amounts of data so if
+you have large amounts of data to
+transfer either as a one-time migration
+
+106
+00:13:59.000 --> 00:14:07.000
+or on an ongoing basis AWS direct and
+that gives you a dedicated bandwidth
+between your on-premises infrastructure
+
+107
+00:14:07.000 --> 00:14:14.000
+in AWS up to 10 gigabits per second per
+uplink and then AWS snowball and the
+recently launched snowball edge are
+
+108
+00:14:14.000 --> 00:14:24.000
+great ways to not only transfer data
+cost efficiently but in so many cases if
+you have lots of data to transfer it can
+
+109
+00:14:24.000 --> 00:14:34.000
+be actually faster than the public
+Internet so when you're uploading data
+into glacier directly through its api's
+
+110
+00:14:34.000 --> 00:14:45.000
+we will pass you a pass you back an
+archive ID and then throw away the file
+name and then customers then maintain a
+
+111
+00:14:45.000 --> 00:14:53.000
+local index mapping their file names to
+their archive IDs and one thing some
+customers miss is that we enable
+
+112
+00:14:53.000 --> 00:15:01.000
+customers to include a description of up
+to 1024 characters along with that
+archive as metadata and so some
+
+113
+00:15:01.000 --> 00:15:12.000
+customers find it useful to create a
+replica of the index information in that
+in that description field in case
+
+114
+00:15:12.000 --> 00:15:19.000
+something were to happen to that local
+index so that's one thing to keep in
+mind another tip is that glacier is
+
+115
+00:15:19.000 --> 00:15:29.000
+really designed for objects for archives
+sorry where your data set the average
+archive size is in the megabytes
+
+116
+00:15:29.000 --> 00:15:38.000
+at the very least and the reason for
+that is because there's a 32 kilobyte
+overhead charge for every object archive
+
+117
+00:15:38.000 --> 00:15:49.000
+that you store in glacier and so if your
+average archive size is 3.2 mega bytes
+are higher than your total overhead
+
+118
+00:15:49.000 --> 00:15:55.000
+charge will be less than 1 percent of
+your total costs which most customers
+find reasonable if your average archive
+
+119
+00:15:55.000 --> 00:16:03.000
+size is less than that then you might
+consider aggregating your data before
+you upload it and when you're
+
+120
+00:16:03.000 --> 00:16:12.000
+aggregating one tip that customers have
+used is to include a checksum along with
+those files that are being aggregated
+
+121
+00:16:12.000 --> 00:16:19.000
+into a larger archive so that when you
+retrieve that data you can ensure that
+you're getting the bytes that you want
+
+122
+00:16:19.000 --> 00:16:24.000
+in this becomes in particularly
+important when you leverage range
+retrievals which is a feature that i'll
+
+123
+00:16:24.000 --> 00:16:31.000
+go into at the end of this presentation
+which allows you to pull just a bite
+range a range of bytes within the
+
+124
+00:16:31.000 --> 00:16:39.000
+archive rather than pull them back the
+entire archive so that you can minimize
+your retrieval costs in that way and
+
+125
+00:16:39.000 --> 00:16:45.000
+then the checksum has become important
+for validating that you're getting the
+bytes that you really want and lastly in
+
+126
+00:16:45.000 --> 00:16:55.000
+terms of uploads a lot of customers use
+multi-part uploads to optimize that
+transfer into glacier you know a lot of
+
+127
+00:16:55.000 --> 00:17:03.000
+customers find that HTTP is great
+because it's a widely adopted standard
+in all but it's not great oftentimes for
+
+128
+00:17:03.000 --> 00:17:11.000
+very large our archives for transferring
+very large archives so to both help
+ensure that that transfer is successful
+
+129
+00:17:11.000 --> 00:17:20.000
+as well as help you increase the
+utilization of your bandwidth you can
+use multi-part uploads to spread out
+
+130
+00:17:20.000 --> 00:17:27.000
+that upload process into many smaller
+chunks the process is very simple as a
+three-step process you first initiate a
+
+131
+00:17:27.000 --> 00:17:35.000
+multi-part upload we then pass you back
+a an upload ID which you then pass back
+to us with every part that you send to
+
+132
+00:17:35.000 --> 00:17:44.000
+us and then once it's complete you send
+a complete multi
+upload call at which point will then
+
+133
+00:17:44.000 --> 00:17:53.000
+send you the archive ID representing the
+sum of those parts that you uploaded so
+as I mentioned earlier accessing glacier
+
+134
+00:17:53.000 --> 00:18:00.000
+through life cycle policies is there is
+a great way to use glacier especially if
+you have other tiers of storage in s
+
+135
+00:18:00.000 --> 00:18:06.000
+through standard or SD standard and
+frequent access and want to tear your
+storage over the life of those objects
+
+136
+00:18:06.000 --> 00:18:16.000
+into Glacier lifecycle policies are
+applied to the based on the age of the
+data and can be transitioned into
+
+137
+00:18:16.000 --> 00:18:24.000
+downward into infrequent access or into
+glacier and then eventually to be
+deleted in the example here glacier
+
+138
+00:18:24.000 --> 00:18:33.000
+objects' that have the prefix logs and
+there are 30 days older transition to
+glacier and then delete it after after
+
+139
+00:18:33.000 --> 00:18:42.000
+365 days livecycle policy is applied to
+at the bucket level but you can go a
+little bit more granular by specifying
+
+140
+00:18:42.000 --> 00:18:50.000
+the prefix that you want to apply and so
+what that means is that all objects that
+meet that criteria will be will will
+
+141
+00:18:50.000 --> 00:18:59.000
+have the the lifecycle policy executed
+on it now a lot of customers store all
+their objects or a large portion of
+
+142
+00:18:59.000 --> 00:19:05.000
+their objects in particular for
+particular applications in one bucket
+for application design reasons and so
+
+143
+00:19:05.000 --> 00:19:14.000
+some customers have said that it's been
+challenging for them to transition only
+the objects that they want transitioned
+
+144
+00:19:14.000 --> 00:19:19.000
+into glacier and they don't want all of
+them from the bucket to do that and
+they've had a hard time defining
+
+145
+00:19:19.000 --> 00:19:27.000
+policies that are able to do that so I'm
+very excited about s3's announcement
+yesterday around object level tagging
+
+146
+00:19:27.000 --> 00:19:34.000
+because it's integrated with lifecycle
+policies and now finally enables you to
+create very specific on lifecycle
+
+147
+00:19:34.000 --> 00:19:43.000
+policies that apply only to the objects
+that you want transition to glacier so
+the way this works is an object you can
+
+148
+00:19:43.000 --> 00:19:52.000
+well just looking at the example here
+this policy which applies to all objects
+in the bucket will only apply to objects
+
+149
+00:19:52.000 --> 00:19:58.000
+that are tagged with project equals
+Delta and data
+type equals hpi so you can imagine this
+
+150
+00:19:58.000 --> 00:20:04.000
+allows for a lot of customization one
+other thing that customers have asked
+for for a long time is the ability to
+
+151
+00:20:04.000 --> 00:20:15.000
+Emmanuel II transition objects from s3
+into glacier explicitly rather than
+through a life cycle policy and this is
+
+152
+00:20:15.000 --> 00:20:22.000
+now possible using object level tags and
+lifecycle policies in the way you do
+that is create a zero-day policy meaning
+
+153
+00:20:22.000 --> 00:20:30.000
+that any objects that meaning that any
+objects that match the criteria are
+transitioned immediately and then having
+
+154
+00:20:30.000 --> 00:20:37.000
+a tag that you can then a tag reference
+in that policy that you can then tag an
+object with which will then trigger it
+
+155
+00:20:37.000 --> 00:20:45.000
+to be transitioned into glacier and so
+for example you can create a policy that
+says a zero-day policy that's you know
+
+156
+00:20:45.000 --> 00:20:53.000
+refers to any objects with the tag
+freeze it and you know then with the new
+object level tagging you can simply make
+
+157
+00:20:53.000 --> 00:21:01.000
+a call on an object to add the tag
+freeze it at which point it will be
+immediately frozen into glacier that
+
+158
+00:21:01.000 --> 00:21:11.000
+joke did not go very well but that's
+okay I'll work on it okay lots of other
+feet management features to help you
+
+159
+00:21:11.000 --> 00:21:18.000
+manage your glacier account tagging is
+at the vault level for glacier and it
+enables you to do things like look at
+
+160
+00:21:18.000 --> 00:21:26.000
+your costs across different departments
+or however you're managing your vaults
+via tags as well as to create access
+
+161
+00:21:26.000 --> 00:21:34.000
+policies based on those tags which makes
+it really easy to customize those access
+policies we also are integrated with
+
+162
+00:21:34.000 --> 00:21:42.000
+cloud trail a lot of customers have used
+archive storage for mission or business
+critical data and so it's really
+
+163
+00:21:42.000 --> 00:21:51.000
+important for them to know who touched
+what when was it approved or denied and
+for what reason so enabling cloud trail
+
+164
+00:21:51.000 --> 00:22:03.000
+enables you to have access to those logs
+and is very simple just going to the
+console and turn it on we also offer two
+
+165
+00:22:03.000 --> 00:22:11.000
+really powerful access features the
+first is vault access policy
+so rather than having to go through each
+
+166
+00:22:11.000 --> 00:22:20.000
+of your users or your groups to define
+what they have access to you can create
+access policies at the vault level that
+
+167
+00:22:20.000 --> 00:22:27.000
+apply to all users so for example if you
+want a vault where nobody has access to
+deleting that they are in that vault you
+
+168
+00:22:27.000 --> 00:22:35.000
+can do so using volt access policies but
+more importantly vault access policies
+enables cross account access to the data
+
+169
+00:22:35.000 --> 00:22:42.000
+in your vault this is particularly
+important for customers who work with
+other departments or other third-party
+
+170
+00:22:42.000 --> 00:22:50.000
+entities that have separate accounts but
+are part of whatever workflow they're
+working on and this makes it very easy
+
+171
+00:22:50.000 --> 00:23:02.000
+to to give that access to two other
+accounts a very powerful governance tool
+is vault lock vault lock enables you to
+
+172
+00:23:02.000 --> 00:23:10.000
+create an immutable access policy on a
+vault we're not even the root user is
+able to change that policy and this is
+
+173
+00:23:10.000 --> 00:23:19.000
+required for certain regular regulation
+regulations in particular in the
+financial services industry so to go
+
+174
+00:23:19.000 --> 00:23:30.000
+over an example let's jump to the
+example here so sorry so to give you an
+example in this example we're combining
+
+175
+00:23:30.000 --> 00:23:40.000
+the use of tags on a vault as well as
+vault access policies to enable legal
+hold on a vault so here you create a tag
+
+176
+00:23:40.000 --> 00:23:50.000
+called legal hold on a vault and you
+initially set it up as false and then
+you would create a policy that denies
+
+177
+00:23:50.000 --> 00:24:01.000
+delete archive operations for all users
+when that tag is set to true and then
+and with this policy a you know some
+
+178
+00:24:01.000 --> 00:24:11.000
+lawyer for example could place a legal
+hold on a vault for the data for
+whatever reason the vault lock is a
+
+179
+00:24:11.000 --> 00:24:18.000
+two-step process you initially you first
+initiate a bolt lock and this allows you
+a 24-hour period to test that policy to
+
+180
+00:24:18.000 --> 00:24:27.000
+make sure it's exactly what you want
+before making it immutable by even the
+root user it that'll then expire after
+
+181
+00:24:27.000 --> 00:24:34.000
+24 hours or you can simply delete it in
+order to change it before locking it
+once you're sure that it's good to go
+
+182
+00:24:34.000 --> 00:24:42.000
+you then complete the vault lock and it
+then becomes locked and immutable some
+best practices oh by the way this is
+
+183
+00:24:42.000 --> 00:24:51.000
+what that policy looks like very simple
+very short a few lines of code but very
+powerful you can see here the effect is
+
+184
+00:24:51.000 --> 00:24:59.000
+deny on the operation delete archive and
+the reference to the tag legal hold
+there at the bottom some best practices
+
+185
+00:24:59.000 --> 00:25:08.000
+around vault lock it's a good idea to
+map one vault to a single retention
+range so one year six year what have you
+
+186
+00:25:08.000 --> 00:25:17.000
+makes it easy and simple to create
+policies that apply to all the objects
+or archives in that vault it's also a
+
+187
+00:25:17.000 --> 00:25:25.000
+good idea to create a new vault and lock
+it before storing any data in it to
+prevent any gaps in those existing
+
+188
+00:25:25.000 --> 00:25:33.000
+archives and then lastly again make sure
+you really thoroughly test that vault
+lock policy before locking it down and
+
+189
+00:25:33.000 --> 00:25:38.000
+then you know consider using vault
+access policies for any flexible
+controls that you might want to change
+
+190
+00:25:38.000 --> 00:25:50.000
+over time versus this immutable policy
+and lastly on vault lock we have a
+third-party assessment by cohasset
+
+191
+00:25:50.000 --> 00:26:02.000
+associates who verified that it it
+passed muster if you will for SEC 17 a
+dash for F and CFTC 131 B dash C which
+
+192
+00:26:02.000 --> 00:26:12.000
+are table stakes requirements in the
+financial industries for financial
+industry companies and as we continue to
+
+193
+00:26:12.000 --> 00:26:21.000
+get feedback and requirements you can
+expect us to add more algebraic formulas
+to this list also not a trip that went
+
+194
+00:26:21.000 --> 00:26:28.000
+over very well I really got to work on
+that one okay it's cool you guys just
+want to go to pub crawl I get it it's
+
+195
+00:26:28.000 --> 00:26:40.000
+fine okay so last section here is a
+around retrieving your data so the some
+basic concepts here when retrieving data
+
+196
+00:26:40.000 --> 00:26:53.000
+it's a two-step process first you
+initiate retrieval request which point
+we'll give you a job ID then we that
+
+197
+00:26:53.000 --> 00:26:58.000
+retreat that retrieval request is
+processed by glacier depending on the
+retrieval option that you choose it
+
+198
+00:26:58.000 --> 00:27:03.000
+could be minutes or hours depending on
+the option that you choose once it's
+complete we'll send you a notification
+
+199
+00:27:03.000 --> 00:27:15.000
+that that retrieval job is done at which
+point that object or archive is ready to
+be used or downloaded to illustrate what
+
+200
+00:27:15.000 --> 00:27:24.000
+this looks like for customers who are
+using glacier via lifecycle policies you
+can retrieve data using the console you
+
+201
+00:27:24.000 --> 00:27:31.000
+can simply select the archive or in this
+case object that you want to restore
+you'll then be prompted to specify how
+
+202
+00:27:31.000 --> 00:27:43.000
+long you want that data to be usable and
+to clarify the retrieval process is not
+a move it is a copy it is a creates a
+
+203
+00:27:43.000 --> 00:27:53.000
+temporary copy that is then made usable
+and the original is still kept store
+durably stored in amazon glacier until
+
+204
+00:27:53.000 --> 00:28:02.000
+you choose to delete it you'll notice in
+the console that the restoration is in
+progress during the three to five hours
+
+205
+00:28:02.000 --> 00:28:08.000
+or depending on which retrieval option
+you choose and once it's ready you'll
+see the time period during which it's
+
+206
+00:28:08.000 --> 00:28:20.000
+made available as if it were stored in
+s3 standard we also offer a retrieval
+policy tool to help you control your
+
+207
+00:28:20.000 --> 00:28:28.000
+retrieval costs you can choose between
+three options one is to keep your
+retrievals within the free tier which is
+
+208
+00:28:28.000 --> 00:28:36.000
+10 gigabytes per month which you can use
+it anytime and with this your request
+will be synchronously rejected if you
+
+209
+00:28:36.000 --> 00:28:45.000
+surpass the free tier you can also
+choose a max retrieval rate that's
+applied at an hourly rate in order to
+
+210
+00:28:45.000 --> 00:28:52.000
+control your costs that way or you can
+simply put no limit on the amount of
+data you retrieve can retrieve on from
+
+211
+00:28:52.000 --> 00:29:00.000
+glacier and coming back to the
+multi-part uploads if you were to
+aggregate your data and separate them by
+
+212
+00:29:00.000 --> 00:29:09.000
+file and include the checksums you can
+we enable range retrievals so if you
+know a priori the bite range that you
+
+213
+00:29:09.000 --> 00:29:15.000
+want to retrieve from that archive you
+can pull just a chomp of that archive
+without having to pull the entire
+
+214
+00:29:15.000 --> 00:29:26.000
+archive itself and this can help reduce
+and minimize retrieval costs lastly and
+most excitingly last week we launched a
+
+215
+00:29:26.000 --> 00:29:36.000
+new retrieval options so until last week
+there was one option to retrieve data in
+three to five hours from glacier and it
+
+216
+00:29:36.000 --> 00:29:47.000
+was an accompanied accompanied by a very
+complex pricing model based on the rate
+at which you retrieve data and we have
+
+217
+00:29:47.000 --> 00:29:57.000
+completely replaced that pricing model
+with a simple flat / GV price of one
+cent per gigabyte retrieve one gigabyte
+
+218
+00:29:57.000 --> 00:30:07.000
+pay one set it's simple it's predictable
+and should make accessing your data much
+easier and a much lower cost but
+
+219
+00:30:07.000 --> 00:30:15.000
+customers also told us that they wanted
+to occasionally get at their data
+quicker and and they also asked for an
+
+220
+00:30:15.000 --> 00:30:22.000
+option to get to retrieve large amounts
+of their data for very low cost and so
+we introduced expedited retrievals and
+
+221
+00:30:22.000 --> 00:30:30.000
+bulk retrievals expedited retrievals
+enabled you to get your data in one to
+five minutes it's really designed for
+
+222
+00:30:30.000 --> 00:30:37.000
+just that rare occasional urgent
+requirement for a small subset of your
+data or a few archives you pay a little
+
+223
+00:30:37.000 --> 00:30:45.000
+more it's 3 cents per gigabyte and it's
+1 cent per archive compared to standard
+retrievals which is five cents per 1,000
+
+224
+00:30:45.000 --> 00:30:52.000
+or archives so it's really designed for
+when you in that rare occasion when you
+need your data really quickly and then
+
+225
+00:30:52.000 --> 00:31:00.000
+as I said customers also asked for a way
+to retrieve large portions of their data
+and
+
+226
+00:31:00.000 --> 00:31:06.000
+so we introduced bulk retrievals which
+is a highly cost efficient way to
+retrieve even petabytes of your data
+
+227
+00:31:06.000 --> 00:31:16.000
+within 12 hours and that the cost is a
+low quarter of a cent per gigabyte and
+2.5 cents per 1,000 archives and this is
+
+228
+00:31:16.000 --> 00:31:25.000
+going to be I think a really powerful
+tool for that will enable all sorts of
+use cases more active use cases such as
+
+229
+00:31:25.000 --> 00:31:39.000
+mass content distribution big data
+analytics etc and so with these three
+retrievable options you can choose which
+
+230
+00:31:39.000 --> 00:31:49.000
+option you want simply by designating
+the parameter a new parameter that's
+included in the retrieval API and if you
+
+231
+00:31:49.000 --> 00:31:57.000
+don't specify it will the default on the
+default option will be standard so if
+you have existing applications today and
+
+232
+00:31:57.000 --> 00:32:02.000
+you're not specifying those will still
+work and will continue to just be
+retrieved at the standard retrieval rate
+
+233
+00:32:02.000 --> 00:32:10.000
+so with this full set of three
+retrievable options glacier is really
+now more than ever able to address the
+
+234
+00:32:10.000 --> 00:32:16.000
+full spectrum of archival workloads
+ranging from deep archives that take
+advantage of glaciers extremely low
+
+235
+00:32:16.000 --> 00:32:26.000
+storage costs all the way to active
+workloads like a you know media
+transcoding content distribution big
+
+236
+00:32:26.000 --> 00:32:35.000
+data analytics what have you that not
+only store petabytes of data but also
+retrieve petabytes of data all at an
+
+237
+00:32:35.000 --> 00:32:45.000
+extremely low cost and so without
+further ado I'd it's my pleasure to
+introduce and each angler from sony dadc
+
+238
+00:32:45.000 --> 00:32:54.000
+to tell us all about how they chose to
+go all-in on AWS and leverage amazon
+glacier to power their their application
+
+239
+00:32:54.000 --> 00:33:06.000
+venue well everybody welcome Andy thank
+you
+good afternoon I have a short 75 deck
+
+240
+00:33:06.000 --> 00:33:16.000
+slide back here for you now it's going
+to be pretty quick mas was right we we
+made a choice several months ago to go
+
+241
+00:33:16.000 --> 00:33:25.000
+all-in with AWS and when I say all in we
+had on premise facilities in our marina
+del rey office London and a large data
+
+242
+00:33:25.000 --> 00:33:31.000
+center in Phoenix Arizona and we are
+exiting all of them and we will be
+exiting all of them by the end of our
+
+243
+00:33:31.000 --> 00:33:40.000
+fiscal year which is March of next year
+and everything that we do will be
+running on AWS and give you a bit of a
+
+244
+00:33:40.000 --> 00:33:49.000
+view of what we do we run global supply
+chains for Sony Pictures BBC Worldwide
+Village Roadshow back in solutions for
+
+245
+00:33:49.000 --> 00:33:57.000
+PlayStation OTP services for companies
+like Funimation and a wide range of
+others and it's everything from content
+
+246
+00:33:57.000 --> 00:34:05.000
+distribution out to about 1,500
+different endpoints globally as well as
+running full linear play out services as
+
+247
+00:34:05.000 --> 00:34:13.000
+well as OTT and commerce solutions and
+to get a sense of you probably all know
+a little bit about how the world has
+
+248
+00:34:13.000 --> 00:34:21.000
+changed in the media life cycle but to
+get a good sense of it you know if we if
+we just look at how you know media
+
+249
+00:34:21.000 --> 00:34:27.000
+releases have changed over the last
+several years even the last several days
+it feels like we use their very long
+
+250
+00:34:27.000 --> 00:34:34.000
+windows of time we used to have periods
+of time where something would come out
+theatrically or get released you know as
+
+251
+00:34:34.000 --> 00:34:39.000
+a show on TV and then you might have it
+be on airlines and then it goes to cable
+and then it gave us the home
+
+252
+00:34:39.000 --> 00:34:45.000
+entertainment and there was a very long
+period of time and that that time frame
+is completely consolidated now and it's
+
+253
+00:34:45.000 --> 00:34:50.000
+somewhat unpredictable right and we've
+seen it just with I know nobody wants to
+talk about the election but we've seen
+
+254
+00:34:50.000 --> 00:34:57.000
+it how you know social media has
+absolutely created this this vacuum for
+all of this information that needs to be
+
+255
+00:34:57.000 --> 00:35:03.000
+readily available and people Nabal need
+to be able to pull stuff on demand and
+so the problem that we started to
+
+256
+00:35:03.000 --> 00:35:08.000
+struggle with is how do you fulfill that
+right and if you're using data center
+where you have
+
+257
+00:35:08.000 --> 00:35:14.000
+you know a fixed set of capacity or a
+long period of time where you can
+actually procure more equipment how can
+
+258
+00:35:14.000 --> 00:35:22.000
+you possibly expect to keep up with the
+times and so you know one of the one of
+the things that I constantly say
+
+259
+00:35:22.000 --> 00:35:30.000
+especially as we look at amazon.com not
+even the AWS side is if I can go online
+and order a product and it's at my house
+
+260
+00:35:30.000 --> 00:35:37.000
+within an hour physically in Los Angeles
+with all the traffic how is it possible
+that digitally I can't do the same thing
+
+261
+00:35:37.000 --> 00:35:45.000
+that is that is a metric that should
+absolutely be the standard for everybody
+to do something and what's incredible is
+
+262
+00:35:45.000 --> 00:35:53.000
+when you work in the industry for as
+long as I have people talk about things
+on the measure of days you know it
+
+263
+00:35:53.000 --> 00:35:58.000
+really becomes the the exception to the
+rule when somebody says well I need to
+get something out and it's got to happen
+
+264
+00:35:58.000 --> 00:36:04.000
+tonight and it you know it takes a team
+of people generally you know working
+together to make that happen that should
+
+265
+00:36:04.000 --> 00:36:10.000
+not be an exception process that should
+be the absolute standard right and we
+lived with these problems of we've
+
+266
+00:36:10.000 --> 00:36:15.000
+created what I call emotional
+prioritization that computers don't
+understand right somebody will call up
+
+267
+00:36:15.000 --> 00:36:20.000
+and say I need this right now and then
+they start moving stuff and we created
+priorities and then we have high and
+
+268
+00:36:20.000 --> 00:36:27.000
+urgent and super urgent and all sorts of
+ridiculous concepts that we that we
+apply because we're humans and we tend
+
+269
+00:36:27.000 --> 00:36:34.000
+to group things but meanwhile if you can
+just scale you don't have that problem
+at all you can just scale to fit your
+
+270
+00:36:34.000 --> 00:36:42.000
+needs and so glacier was actually a
+really big piece for us when we were
+looking at this because in order to make
+
+271
+00:36:42.000 --> 00:36:49.000
+it cost-effective in you know an offline
+world or a non cloud-based world we were
+all taped driven right we were using
+
+272
+00:36:49.000 --> 00:36:54.000
+large lgo libraries I think we actually
+had one of the one of the largest in the
+country something on the magnitude of
+
+273
+00:36:54.000 --> 00:37:01.000
+nine to ten thousand tapes in a robot at
+all times because we couldn't afford to
+have any delay where somebody had to go
+
+274
+00:37:01.000 --> 00:37:08.000
+look it up and go put a tape into a
+library so we kept everything in the
+robot all the time well robots break
+
+275
+00:37:08.000 --> 00:37:15.000
+they're cool but they break and we
+needed a mechanism to be able to to kind
+of keep up with with what's going right
+
+276
+00:37:15.000 --> 00:37:21.000
+so our challenge was how do we take 20
+petabytes of content we store about a
+million hours of
+
+277
+00:37:21.000 --> 00:37:27.000
+today that's growing at about a petabyte
+a quarter we've started to see a little
+bit of an inflection and that's even
+
+278
+00:37:27.000 --> 00:37:35.000
+getting higher and how do we turn that
+into our desired goal of one hour
+delivery that's in a predictable and
+
+279
+00:37:35.000 --> 00:37:41.000
+scalable environment without having to
+constantly invest in major
+capitalization initiatives we wanted to
+
+280
+00:37:41.000 --> 00:37:48.000
+move our money and investment into
+innovation and stop having to worry
+about three to five-year life cycles of
+
+281
+00:37:48.000 --> 00:37:58.000
+hardware and investment in that model so
+this is what our workflow used to look
+like right it really used to look like
+
+282
+00:37:58.000 --> 00:38:05.000
+and many of you probably have similar
+things to this both from a security
+perspective and just how many touch
+
+283
+00:38:05.000 --> 00:38:11.000
+points we had to have in the different
+storage zones that we needed the number
+of hops and movement of an asset coming
+
+284
+00:38:11.000 --> 00:38:17.000
+into our environment and having to go
+all the way through our workflow in
+order to be able to facilitate that
+
+285
+00:38:17.000 --> 00:38:23.000
+endpoint distribution is fairly massive
+so what we what we tried to kind of
+diagram out here a little bit you know
+
+286
+00:38:23.000 --> 00:38:31.000
+and it's is that a high level you know
+120 gigabyte pro res file is you know
+roughly the size of a normal HD movie
+
+287
+00:38:31.000 --> 00:38:38.000
+right and i think is everybody's
+starting to see even HD movies are now
+becoming you know the smaller size asset
+
+288
+00:38:38.000 --> 00:38:43.000
+that we're dealing with we're dealing
+with 4k and awful lot at Sony we're
+starting to see some 8k test files come
+
+289
+00:38:43.000 --> 00:38:50.000
+in those you know those present all new
+challenges for us that this workflow
+just simply would not accommodate right
+
+290
+00:38:50.000 --> 00:38:59.000
+we get files in from various sources all
+over the world usually using aspera or
+cygnet or some other type of file
+
+291
+00:38:59.000 --> 00:39:05.000
+transport accelerator and even if even
+if we have an unlimited amount of
+bandwidth it's very rare that the people
+
+292
+00:39:05.000 --> 00:39:10.000
+who are sending to us or receiving from
+us have that same level of
+infrastructure and bandwidth that they
+
+293
+00:39:10.000 --> 00:39:18.000
+could support those kind of speeds so we
+we see things about 300 megabits a
+second we actually have some fairly
+
+294
+00:39:18.000 --> 00:39:26.000
+funny anecdotes of things like we we
+sent to a facility for a broadcaster in
+South Korea and over one weekend we just
+
+295
+00:39:26.000 --> 00:39:31.000
+stopped receiving we called and we said
+what what's going on we can't send you
+content it turned out that the operator
+
+296
+00:39:31.000 --> 00:39:34.000
+just took the computer home for the
+weekend like those are real worlds in
+area
+
+297
+00:39:34.000 --> 00:39:41.000
+that we deal with right so you know I'm
+delivering to somebody's cable modem so
+you start looking at you know the source
+
+298
+00:39:41.000 --> 00:39:48.000
+asset comes in its 300 megabits a second
+takes an hour to get in there we put it
+on to some DMZ storage right we
+
+299
+00:39:48.000 --> 00:39:53.000
+obviously have some you know pretty
+specific security arrangements where
+we're never going to let people get to
+
+300
+00:39:53.000 --> 00:39:58.000
+you know the deep archives are the
+work-in-progress storage that we have we
+then have to move that either through
+
+301
+00:39:58.000 --> 00:40:05.000
+our own internal movement process or
+fiber connections that we run behind the
+DMZ that goes into quarantine it then
+
+302
+00:40:05.000 --> 00:40:11.000
+has to be evaluated that then has to lay
+back to tape because all of the the
+workflows are you know whether it's
+
+303
+00:40:11.000 --> 00:40:18.000
+using a front porch library or something
+like that and so now you're limited by
+tape speed now what tends to happen is
+
+304
+00:40:18.000 --> 00:40:24.000
+when we talk about these workflows
+people just naturally gravitate to a
+single file right it's like oh yeah it's
+
+305
+00:40:24.000 --> 00:40:30.000
+not a big deal we can get one file
+through we process somewhere between
+50,000 and sixty thousand titles a month
+
+306
+00:40:30.000 --> 00:40:37.000
+and what's really important about that
+is not the fact that the numbers are
+that size it's that it's a completely
+
+307
+00:40:37.000 --> 00:40:45.000
+unpredictable model in terms of when
+that request comes in right it's not
+smooth at all it's not like somebody
+
+308
+00:40:45.000 --> 00:40:50.000
+tells us in the beginning of the month
+hey I'm gonna do 60,000 title deliveries
+and so let's just average it out it
+
+309
+00:40:50.000 --> 00:40:55.000
+comes in and we don't know whether sony
+pictures or BBC are going to place
+orders on the same day we don't know
+
+310
+00:40:55.000 --> 00:40:59.000
+whether it's going to be a lot of
+television shows or a lot of feature
+films and we don't know where they're
+
+311
+00:40:59.000 --> 00:41:06.000
+going and so you start to look at this
+you say well how on earth am I gonna get
+through an X number amount of content
+
+312
+00:41:06.000 --> 00:41:12.000
+right which represents you know why
+petabytes and I have no predictability
+and no mechanism to smooth that out and
+
+313
+00:41:12.000 --> 00:41:20.000
+my entire limiting factor here is a tape
+library that may go down I may have an
+outage of some type the tape may be bad
+
+314
+00:41:20.000 --> 00:41:26.000
+and I have to go retrieve a second copy
+like there are a number of things that
+really come into play that you have to
+
+315
+00:41:26.000 --> 00:41:31.000
+think about when you're dealing with
+those kind of scales and then of course
+you know you you go all the way through
+
+316
+00:41:31.000 --> 00:41:36.000
+there's work in progress and work in
+progress this doesn't even contemplate
+the concepts of transcoding packaging
+
+317
+00:41:36.000 --> 00:41:43.000
+all of the things that are create other
+latency issues beyond just moving a file
+through through the workflow and of
+
+318
+00:41:43.000 --> 00:41:49.000
+course at the beginning and end as we
+talk
+about finite capacity so that's when we
+
+319
+00:41:49.000 --> 00:41:55.000
+really started to look at how does this
+cloud storage model help us and you know
+as much just talked about you know we're
+
+320
+00:41:55.000 --> 00:42:01.000
+certainly incredibly happy about the new
+expedited retrieval model especially
+when you start looking at how are we
+
+321
+00:42:01.000 --> 00:42:07.000
+going to do twenty thousand titles and I
+want to deliver everything in one hour
+if my my first bottle back was a
+
+322
+00:42:07.000 --> 00:42:14.000
+retrieval time that's now been
+eliminated now I can focus on everything
+else that comes in so we we finally have
+
+323
+00:42:14.000 --> 00:42:20.000
+a period here where we effectively have
+infinite concurrency I no longer have to
+worry about that scaling problem I no
+
+324
+00:42:20.000 --> 00:42:26.000
+longer have to worry about whether or
+not a tape library is going to go down
+and using you know we use the lifecycle
+
+325
+00:42:26.000 --> 00:42:32.000
+management right and using those
+policies I no longer even have to worry
+about controlling when something is on
+
+326
+00:42:32.000 --> 00:42:37.000
+tape or off tape or actually going in
+and touching assets that have been
+sitting on a tape for a year or a year
+
+327
+00:42:37.000 --> 00:42:42.000
+and a half that nobody's ever ordered
+again because it was used once for
+something and then we have in touch
+
+328
+00:42:42.000 --> 00:42:49.000
+again and concern myself whether or not
+that's a good asset those are all things
+that we just no longer have to deal with
+
+329
+00:42:49.000 --> 00:42:55.000
+we can go focus on you know really
+honing in our business processes and and
+just not worrying about it we look at
+
+330
+00:42:55.000 --> 00:43:00.000
+glacier now very much like we look at
+power I don't spend a lot of energy
+calling the power company and really
+
+331
+00:43:00.000 --> 00:43:05.000
+questioning how it is that they're
+getting electricity in my house I have
+better things to do I just want to go
+
+332
+00:43:05.000 --> 00:43:11.000
+play with the new drone that I plugged
+in and used with it glacier has been
+really helpful for that and I must also
+
+333
+00:43:11.000 --> 00:43:19.000
+say the 11-9 of durability has been a
+really big helper we have been storing
+three copies I know that we you know you
+
+334
+00:43:19.000 --> 00:43:26.000
+saw some stats before about two copies
+we've been storing three copies of
+assets and the three copies of assets
+
+335
+00:43:26.000 --> 00:43:32.000
+while it creates a lot of protection for
+us it takes an enormous amount of
+overhead for us to have to make two
+
+336
+00:43:32.000 --> 00:43:38.000
+separate copies of everything ship one
+off-site keep one enough right outside
+the robot and then the third copy in the
+
+337
+00:43:38.000 --> 00:43:45.000
+library itself the amount of tape drives
+that I need to keep running 24 hours a
+day that aren't actually generating any
+
+338
+00:43:45.000 --> 00:43:53.000
+revenue for our company but just making
+backups that's a huge amount of overhead
+and and that's a real big concern for us
+
+339
+00:43:53.000 --> 00:44:01.000
+and so you know we hear that
+the great anecdote of you know you store
+something with 11 9s and you know you
+
+340
+00:44:01.000 --> 00:44:06.000
+lose an object every ten million years
+and i like to say the moment somebody
+gives me a 10 million year contract
+
+341
+00:44:06.000 --> 00:44:13.000
+that's the first time i worry about
+whether or not i have to actually deal
+with losing a file on on glacier one of
+
+342
+00:44:13.000 --> 00:44:21.000
+the things I get asked a lot when we're
+talking to other companies or clients or
+whomever is well that's great where you
+
+343
+00:44:21.000 --> 00:44:25.000
+know a lot of people are looking at the
+same things they're dealing with the
+same kind of problems it really becomes
+
+344
+00:44:25.000 --> 00:44:33.000
+an economic problem and so what we
+decided to do is just share our economic
+model and I think this may help some
+
+345
+00:44:33.000 --> 00:44:42.000
+people right and so we were at a point
+in time last year where we had to make a
+decision to replace our tape library
+
+346
+00:44:42.000 --> 00:44:52.000
+right we were using lto-5 we we had been
+from a mindset perspective jumping every
+second version of ltl so we were going
+
+347
+00:44:52.000 --> 00:44:57.000
+to do an investment in upgrade to LT 07
+or actually we're even looking at some
+newer technologies from IBM that would
+
+348
+00:44:57.000 --> 00:45:03.000
+give us 10 terabyte tapes which of
+course in either of those scenarios we
+were going to have to replace every
+
+349
+00:45:03.000 --> 00:45:08.000
+single asset that we have we would have
+to migrate everything to a new tape
+format we're going to have to create new
+
+350
+00:45:08.000 --> 00:45:16.000
+secondary tapes and so you have this
+problem where we were going to have to
+make a decision that if we did that we
+
+351
+00:45:16.000 --> 00:45:22.000
+were not going to the cloud we cannot
+afford to process and deal with 20
+petabytes of content that's growing at
+
+352
+00:45:22.000 --> 00:45:30.000
+the rate that it is and and have it be
+kind of hybrid that's just not realistic
+we see competitors of ours putting out
+
+353
+00:45:30.000 --> 00:45:36.000
+press releases you know recently that
+say hey we bought a new tape library and
+we put one in London and one in burbank
+
+354
+00:45:36.000 --> 00:45:42.000
+and I can only feel like that must have
+been what the turn of the last century
+was when somebody saw the car and was
+
+355
+00:45:42.000 --> 00:45:47.000
+like hey we just bought a new horse and
+we just bought a new whip and it's going
+to be the best thing ever and then three
+
+356
+00:45:47.000 --> 00:45:51.000
+years later they're still feeding that
+horse and everybody else is driving
+around in a car like that's ridiculous
+
+357
+00:45:51.000 --> 00:45:59.000
+and so we made a conscious decision that
+we were going to have to you know do a
+wholesale chain and move everything that
+
+358
+00:45:59.000 --> 00:46:08.000
+we have and so what you see here is that
+blue line represents a reinvestment in
+the tape library up front and and
+
+359
+00:46:08.000 --> 00:46:14.000
+migrating all the assets
+and we actually we actually created a
+better model for the tape library in a
+
+360
+00:46:14.000 --> 00:46:20.000
+worse model for AWS right as we just
+seen today they've lowered the price
+which was wonderful for a glacier and
+
+361
+00:46:20.000 --> 00:46:29.000
+for us we did not take into account any
+price reduction on Amazon but we did
+take into account tape reduction prices
+
+362
+00:46:29.000 --> 00:46:36.000
+as we look at the multi years and what
+we said is even in a five-year period we
+have over a five million dollar savings
+
+363
+00:46:36.000 --> 00:46:42.000
+just based on the infrastructure
+investment alone when you take that out
+seven years because you assume that
+
+364
+00:46:42.000 --> 00:46:47.000
+there's going to be yet another hardware
+refresh required in a tape library now
+you're looking at something on the
+
+365
+00:46:47.000 --> 00:46:53.000
+magnitude of 10 million dollars in
+savings all based on the growth and the
+model that we're talking about so for us
+
+366
+00:46:53.000 --> 00:47:01.000
+moving into amazon wholesale even if we
+just looked at it from a pure glacier
+perspective and nothing else made
+
+367
+00:47:01.000 --> 00:47:07.000
+absolute sense all of the other
+byproducts and benefits that we get from
+it is just icing on the cake and that's
+
+368
+00:47:07.000 --> 00:47:13.000
+why we started with the team from
+glacier and we really focused on how do
+you go about moving it nobody had a
+
+369
+00:47:13.000 --> 00:47:18.000
+snowmobile when we started right look
+great if somebody pulled up a giant
+truck with hundred petabytes of storage
+
+370
+00:47:18.000 --> 00:47:25.000
+that that did not exist we are moving
+everything and we're almost finished
+with it but we moved at all just using
+
+371
+00:47:25.000 --> 00:47:33.000
+multi-part transfers and so you know
+that's been that's been really critical
+for us and I think that as you guys look
+
+372
+00:47:33.000 --> 00:47:39.000
+at some of your own workflows as you're
+evaluating these things you know we just
+we just want to share we just want to
+
+373
+00:47:39.000 --> 00:47:45.000
+share what it is that we're doing and
+how we came to these conclusions and it
+you can you can just see from you know
+
+374
+00:47:45.000 --> 00:47:51.000
+the terabytes stored and and the price
+point it just really works very well for
+us and it puts us in a very unique
+
+375
+00:47:51.000 --> 00:47:59.000
+position to be able to deliver on
+promises to our clients that are really
+necessary for what's happening in the
+
+376
+00:47:59.000 --> 00:48:07.000
+market today right which just hasn't
+been possible before so I was kidding
+about 75 slides that's all I planned for
+
+377
+00:48:07.000 --> 00:.000
+you so thank
