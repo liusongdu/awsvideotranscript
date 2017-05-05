@@ -44,7 +44,7 @@ redshift or columnar data store and
 
 8
 00:00:49.000 --> 00:00:57.000
-elastic cash customers have data centers
+ElastiCache customers have data centers
 these are data centers they've owned for
 years they're expensive capital
 
@@ -98,15 +98,15 @@ order to win this business in order to
 
 17
 00:01:45.000 --> 00:01:53.000
-do club right we're going to have to
+do cloud right we're going to have to
 support this for the long term so at the
 first reinvent we had a talk entitled
 
 18
 00:01:53.000 --> 00:02:00.000
-drinking your own champagne by Laura
-grid it's available on YouTube I highly
-recommend it it's about Amazon's own
+drinking your own champagne by Laura grid 
+it's available on YouTube I highly recommend it 
+it's about Amazon's own
 
 19
 00:02:00.000 --> 00:02:07.000
@@ -134,7 +134,7 @@ and when you launched an instance we
 
 23
 00:02:28.000 --> 00:02:35.000
-would sign an IP address to that
+would assign an IP address to that
 instance it was effectively a 32-bit
 random number it was it was unique in
 
@@ -166,23 +166,23 @@ center and let's say that someday 20
 00:03:02.000 --> 00:03:09.000
 years ago 10 years ago whenever this
 data center was built some network
-engineer chose 192 168 00 / 16 as the IP
+engineer chose 192.168.0.0/16 as the IP
 
 29
 00:03:09.000 --> 00:03:16.000
 range for the data center perfectly
 reasonable choice there's a router there
-this is a router router like piece of
+this is a router router like 
 
 30
 00:03:16.000 --> 00:03:23.000
-sheet metal comes from one of the major
+piece of sheet metal comes from one of the major
 router vendors it's got some embedded
-firmware on it some tcam and it's got a
+firmware on it some TCAM and it's got a
 
 31
 00:03:23.000 --> 00:03:30.000
-routing table in it and it says 192 168
+routing table in it and it says 192.168
 that's here so if we're going to plug
 that into the cloud we're going to plug
 
@@ -196,7 +196,7 @@ and we're going to need to route to that
 00:03:36.000 --> 00:03:41.000
 instance we're gonna have to add it to
 your routing table but we have to add a
-/ 32 right we have to add a host route
+/32 right we have to add a host route
 
 34
 00:03:41.000 --> 00:03:46.000
@@ -218,37 +218,37 @@ remove them from the routing table so
 
 37
 00:04:00.000 --> 00:04:09.000
-your routing table is going to one
-contain a set of routes the size of your
-instance fleet not good and to your
+your routing table is going to 
+1, contain a set of routes the size of your instance fleet 
+not good and 2, your
 
 38
 00:04:09.000 --> 00:04:15.000
 routing table is going to absorb updates
-at the rate of instance launch and
-terminate also not good but that's not
+at the rate of instance launch and terminate 
+also not good but that's not
 
 39
 00:04:15.000 --> 00:04:24.000
 all let's say that a decade ago your
-network engineer chose 10 dot 4400 / 16
-an equally reasonable choice it's RFC
+network engineer chose 10.44.0.0/16
+an equally reasonable choice it's 
 
 40
 00:04:24.000 --> 00:04:30.000
-1918 it's not going to be right on the
+RFC1918 it's not going to be right on the
 internet there's absolutely nothing that
 we can put in that routing table that'll
 
 41
 00:04:30.000 --> 00:04:35.000
-that make sense we've got 10 dot 44 in
-the cloud we've got 10 dot 44 in the
+that make sense we've got 10.44 in
+the cloud we've got 10.44 in the
 data center you can do things like
 
 42
 00:04:35.000 --> 00:04:42.000
-double NAT if you ever say double Matt
+double NAT if you ever say double NAT
 to a network engineer make sure that
 you're standing far away from them like
 
@@ -261,7 +261,7 @@ facing perspective we have customer
 44
 00:04:52.000 --> 00:04:58.000
 selected IP addresses customers want to
-bring their own ip's you have a network
+bring their own IPs you have a network
 it has some design decisions that were
 
 45
@@ -272,7 +272,7 @@ needs to work with our stuff we need
 
 46
 00:05:04.000 --> 00:05:10.000
-router gregation your router that you
+router aggregation your router that you
 can try this if you want but I guarantee
 you your router will be sad if you add
 
@@ -315,14 +315,14 @@ you need to allow them to photocopy
 53
 00:05:47.000 --> 00:05:54.000
 their existing network designs through
-our api's and then we had an early
+our APIs and then we had an early
 customer who happens to be sponsoring
 
 54
 00:05:54.000 --> 00:06:00.000
 this conference and they came to us when
-they said all networks have to be /
-24-hour provisioning tools can't deal
+they said all networks have to be /24
+hour provisioning tools can't deal
 
 55
 00:06:00.000 --> 00:06:07.000
@@ -340,12 +340,12 @@ tools there were built by us to work in
 00:06:13.000 --> 00:06:20.000
 our data centers for our provisioning
 use cases and all of our subnets were
-rack sized they're all / 24 and we
+rack sized they're all /24 and we
 
 58
 00:06:20.000 --> 00:06:25.000
 assume that all networks forever would
-be / 24 s which was the right decision
+be /24 which was the right decision
 to make when we built those provisioning
 
 59
@@ -368,8 +368,8 @@ when you create the VPC you specify the
 
 62
 00:06:48.000 --> 00:06:57.000
-site or block you want for the VPC so
-this customers chosen 17 to 30 100 / 18
+CIDR block you want for the VPC so
+this customers chosen 172.31.0.0/18
 it's an arbitrary choice it's up to you
 
 63
@@ -382,7 +382,7 @@ plug into it then you create a VPN
 00:07:03.000 --> 00:07:11.000
 gateway this is our end of a private
 connection you create a customer gateway
-and we don't yet have api's that cause
+and we don't yet have APIs that cause
 
 65
 00:07:11.000 --> 00:07:17.000
@@ -412,7 +412,7 @@ that VPC one route that covers the
 00:07:35.000 --> 00:07:42.000
 entire VPC within the VPC you can
 allocate subnets the subnets have to be
-within the site or for the VPC itself
+within the CIDR for the VPC itself
 
 70
 00:07:42.000 --> 00:07:51.000
@@ -422,7 +422,7 @@ terminate them there are no changes to
 
 71
 00:07:51.000 --> 00:07:57.000
-your routing table on prem so we've
+your routing table on-prem so we've
 solved the overlapping IP address
 problem and we've solved the high
 
@@ -472,13 +472,13 @@ constraint we publicly talked about how
 00:08:47.000 --> 00:09:00.000
 AWS has more than a million customers a
 million is larger than 4096
-even more concerning like the the 4000
+even more concerning like the the
 
 80
 00:09:00.000 --> 00:09:06.000
-86 that's easy to test like it's a
+4096 that's easy to test like it's a
 12-bit field in the header you can
-iterate through all of them vrf SAR
+iterate through all of them VRFs are
 
 81
 00:09:06.000 --> 00:09:15.000
@@ -494,26 +494,26 @@ your house support one to two thousand
 
 83
 00:09:22.000 --> 00:09:30.000
-BR f's one to two thousand is still less
+VRFs one to two thousand is still less
 than a million if you're buying a device
-that's claims to support more than two
+that's claims to support more than
 
 84
 00:09:30.000 --> 00:09:37.000
-kv RFS and you are intending to use more
-than two kb RFS you are a beta tester is
+2K VRFs and you are intending to use more
+than 2K VRFs you are a beta tester is
 not what we want to be building our
 
 85
 00:09:37.000 --> 00:09:46.000
 production services on and there's a
-fixed ratio of vlans to VR f's you get
-4096 V lens on a port you get a thousand
+fixed ratio of vlans to VRFs you get
+4096 VLANs on a port you get a thousand
 
 86
 00:09:46.000 --> 00:09:52.000
-vr f s in the box what if your customers
-want more than four subnets / v pc what
+VRFs in the box what if your customers
+want more than 4 subnets/VPC what
 if they want less you're going to be
 
 87
@@ -544,7 +544,7 @@ horsepower than this laptop and they
 00:10:23.000 --> 00:10:32.000
 cost as much as a car and it's connected
 to the data plane via a straw you've got
-a data plane that's got 110 gig parts
+a data plane that's got 100 10-Gig parts
 
 92
 00:10:32.000 --> 00:10:38.000
@@ -627,7 +627,7 @@ they have the same bugs that every other
 105
 00:12:04.000 --> 00:12:11.000
 system has that the software is written
-by humans humans right all the bugs and
+by humans humans write all the bugs and
 so there are assumptions in these
 
 106
@@ -814,7 +814,7 @@ instances we arbitrarily choose to place
 00:15:17.000 --> 00:15:26.000
 them on the left silo customer b shows
 up arbitrarily place them on the right
-silo customer see like there's some sort
+silo customer c like there's some sort
 
 137
 00:15:26.000 --> 00:15:30.000
@@ -916,7 +916,7 @@ they're co-located with be I have to
 00:17:16.000 --> 00:17:21.000
 expose that to them they have to go
 create another subnet or they have to
-create a new VP see that's an
+create a new VPC that's an
 
 154
 00:17:21.000 --> 00:17:29.000
@@ -927,7 +927,7 @@ a line from our original design doc we
 155
 00:17:29.000 --> 00:17:36.000
 want to support millions of environments
-the size of amazon com we must not
+the size of amazon.com we must not
 further constrain the placement problem
 
 156
@@ -946,23 +946,23 @@ got a physical network with physical
 00:17:51.000 --> 00:18:00.000
 servers on those servers we place
 instances those instances are grouped
-together into V pcs virtual private
+together into VPCs virtual private
 
 159
 00:18:00.000 --> 00:18:09.000
-clouds and our API is V pcs have
-identify as v pc dash 8 hex cars i also
+clouds and our API is VPCs have
+identify as vpc- 8-characters i also
 got tired of typing goes in so i used
 
 160
 00:18:09.000 --> 00:18:17.000
-colors here so we've got 3 v pc is
+colors here so we've got 3 VPC is
 running around in this network and then
-the mapping service this is a piece of v
+the mapping service this is a piece of
 
 161
 00:18:17.000 --> 00:18:23.000
-pc that's not exposed directly to
+VPC that's not exposed directly to
 customers the mapping service is the
 linchpin around everything around which
 
@@ -980,8 +980,8 @@ it is we used to distribute out OSS
 
 164
 00:18:38.000 --> 00:18:49.000
-these days 1000 to wants to talk to 1000
-3 he's going to arc last time I gave
+these days 10.0.0.2 wants to talk to 10.0.0.3
+he's going to ARP last time I gave
 this talk i said i'm using this this mac
 
 165
@@ -1012,7 +1012,7 @@ freshly booted so you thur nets which is
 00:19:17.000 --> 00:19:25.000
 going to flood that r / quest out every
 port including the part that happens to
-have 1000 3 connected to it 1000 3 is
+have 10.0.0.3 connected to it 10.0.0.3 is
 
 170
 00:19:25.000 --> 00:19:30.000
@@ -1022,19 +1022,19 @@ switch and the ethernet switch will
 
 171
 00:19:30.000 --> 00:19:37.000
-forward the response so now 1000 to is
-managed to learn the mac of 1000 3 the
-switch happens to have programmed it
+forward the response so now 10.0.0.2 is
+managed to learn the mac of 10.0.0.3 the
+switch happens to have programmed its
 
 172
 00:19:37.000 --> 00:19:47.000
-scan and so now we can send some sort of
+CAM and so now we can send some sort of
 IP packet the l2 and l3 source match the
 l2 and l3 destinations match the
 
 173
 00:19:47.000 --> 00:19:53.000
-ethernet switch ford's it across the
+ethernet switch forwards it across the
 network this is happening I don't know
 how many trillions of times a second all
 
