@@ -3,7 +3,7 @@ WEBVTT FILE
 1
 00:00:00.000 --> 00:00:05.000
 so thank you everyone for coming to the
-session my name is Mike fur I'm an
+session my name is Mike Furr I'm an
 engineer with AWS in the ec2
 
 2
@@ -32,25 +32,25 @@ going on kind of under the covers when
 
 6
 00:00:31.000 --> 00:00:38.000
-TCP is is running underneath your
+TCP is running underneath your
 application then we'll look at some
 tools to try to inspect what decision is
 
 7
 00:00:38.000 --> 00:00:45.000
-TCP is making these tools can can kind
+TCP is making these tools can kind
 of pull back the wool on the black box
-which can be the network and they give
+which can be the network 
 
 8
 00:00:45.000 --> 00:00:51.000
-us really good insights and then I will
-show some examples of how we can change
+and they give us really good insights and then 
+I will show some examples of how we can change
 some of the parameters of TCP to alter
 
 9
 00:00:51.000 --> 00:00:59.000
-our performance a lot of the talk a lot
+our performance a lot
 of the examples in this talk are going
 to be in Linux but of course TCP is a
 
@@ -70,7 +70,7 @@ then the last part of my talk i'm going
 00:01:10.000 --> 00:01:15.000
 to have some sample applications or i'm
 going to demonstrate what happens when
-we start tuning tcp under various
+we start tuning TCP under various
 
 13
 00:01:15.000 --> 00:01:21.000
@@ -88,7 +88,7 @@ techniques have and what I hope you take
 00:01:29.000 --> 00:01:33.000
 away from this talk is actually a new
 set of tools in your tool kit rather
-than an exact you know performance
+than an exact performance
 
 16
 00:01:33.000 --> 00:01:39.000
@@ -112,17 +112,17 @@ touching the application itself so i'm
 00:01:51.000 --> 00:01:57.000
 not going to be touching the code i'm
 not going to changing the application
-you know in any way i'm just going to be
+in any way i'm just going to be
 
 20
 00:01:57.000 --> 00:02:03.000
-manipulating the the linux system are
+manipulating the linux system are
 going to be running it on and just
-playing with some of the tcp tuning
+playing with some of the 
 
 21
 00:02:03.000 --> 00:02:12.000
-parameters there so i've been working at
+TCP tuning parameters there so i've been working at
 amazon for a little over seven years now
 I really love working on the cloud and
 
@@ -146,20 +146,20 @@ you're remotely administrating an ec2
 
 25
 00:02:31.000 --> 00:02:40.000
-instance over ssh that's of course going
+instance over SSH that's of course going
 over TCP same with browsing the web or
 sending an email from your phone all
 
 26
 00:02:40.000 --> 00:02:46.000
 running on top of TCP right and then gcb
-while it's the it's the dominant one of
+while it's the dominant one of
 course you have other options such as
 
 27
 00:02:46.000 --> 00:02:52.000
 you know UDP and others but the reason
-tcp I think is so popular for a couple
+TCP I think is so popular for a couple
 of reasons one is that it gives you kind
 
 28
@@ -171,14 +171,14 @@ you in stancu the tcp connection your
 29
 00:02:59.000 --> 00:03:05.000
 application gets a socket where it can
-read and write bytes to write the
+read and write bytes to right the
 application doesn't have to concern
 
 30
 00:03:05.000 --> 00:03:11.000
-itself with what happens to those bites
-after it rise to the socket it's TCPS
-job to make sure all the bites are
+itself with what happens to those bytes
+after it rise to the socket it's TCP's
+job to make sure all the bytes are
 
 31
 00:03:11.000 --> 00:03:18.000
@@ -188,7 +188,7 @@ duplicated and they aren't reordered in
 
 32
 00:03:18.000 --> 00:03:25.000
-any way the second thing that tcp does
+any way the second thing that TCP does
 for us is dynamically adjusts to the
 current networking conditions right so
 
@@ -201,13 +201,13 @@ always trying to maximize its throughput
 34
 00:03:31.000 --> 00:03:39.000
 based on what it perceives to be the
-current network condition so let's let's
+current network condition so let's 
 start talking a little bit about what
 
 35
 00:03:39.000 --> 00:03:46.000
 TCP looks like kind of from a high level
-right so when I when you ask most people
+right so when you ask most people
 about TCP the first thing they say is
 
 36
@@ -242,14 +242,14 @@ simultaneously and it's kind of a nice
 
 41
 00:04:16.000 --> 00:04:22.000
-abstraction for you know application
+abstraction for application
 programmers to view however when we
 start looking at actual TCP performance
 
 42
 00:04:22.000 --> 00:04:27.000
 itself
-often helps to kind of go level deeper
+it often helps to kind of go level deeper
 and not think of this is one connection
 
 43
@@ -266,7 +266,7 @@ they might take paths in that they
 
 45
 00:04:44.000 --> 00:04:49.000
-Traverse different routers or that they
+traverse different routers or that they
 might go through the same router is put
 the particular interface buffers they
 
@@ -356,14 +356,14 @@ so of course what this means is that if
 
 60
 00:06:21.000 --> 00:06:26.000
-the application is not reading those
-buff those bites out of the buffer the
-buffer can fill up and if the buffer is
+the application is not reading those bytes 
+out of the buffer 
+the buffer can fill up and if the buffer is
 
 61
 00:06:26.000 --> 00:06:33.000
 full there's no point in Jack sending
-any more data to jail if Jill's buffers
+any more data to Jill if Jill's buffers
 full right so that's one of the reasons
 
 62
@@ -382,7 +382,7 @@ round-trip time between these two
 00:06:44.000 --> 00:06:50.000
 instances and the reason that's
 important is that when you're talking
-about you know bites on the wire and and
+about you know bytes on the wire
 
 65
 00:06:50.000 --> 00:06:56.000
@@ -406,12 +406,12 @@ I've done here on this slide is I've
 00:07:09.000 --> 00:07:16.000
 taken that equation and I kind of solved
 for a different field which is that if I
-know my my receive window if I know the
+know my receive window if I know the
 
 69
 00:07:16.000 --> 00:07:22.000
 number of bytes I'm gonna have in flight
-at a given time let's say 100 kilobytes
+at a given time let's say 100KB
 and I know my round trip time I can't
 
 70
@@ -476,15 +476,15 @@ that we stay on top of what's going into
 
 80
 00:08:27.000 --> 00:08:33.000
-these decisions that T speeds making to
+these decisions that TCP's making to
 make sure it's maximizing and is able to
 fully utilize the bandwidth that might
 
 81
 00:08:33.000 --> 00:08:40.000
 be there and not artificially limited
-itself so here's a here's a couple
-examples from from Linux these are
+itself so here's a couple
+examples from Linux these are
 
 82
 00:08:40.000 --> 00:08:45.000
@@ -495,13 +495,12 @@ these are pretty standard across almost
 83
 00:08:45.000 --> 00:08:52.000
 all linux distributions these days so
-this first sis CTL
-is setting the maximum received window
+this first sysctl is setting the 
 
 84
 00:08:52.000 --> 00:09:02.000
-for kind of all IP protocols across the
-box the second sis CTL there is doing it
+maximum received window for kind of all IP protocols 
+across the box the second sysctl there is doing it
 specifically for TCP and TCP actually
 
 85
@@ -513,7 +512,7 @@ if you have a maximum TCP received
 86
 00:09:11.000 --> 00:09:18.000
 window that's too small no matter how
-hard T spew tries it might never be able
+hard TCP tries it might never be able
 to take full advantage of available
 
 87
@@ -532,7 +531,7 @@ there's congestion somewhere in the
 00:09:34.000 --> 00:09:43.000
 middle of the network it's maintained by
 the sender and it's trying to figure out
-you know how fast should I send data
+how fast should I send data
 
 90
 00:09:43.000 --> 00:09:49.000
@@ -548,8 +547,8 @@ of optimize my chances that all the data
 
 92
 00:09:56.000 --> 00:10:03.000
-will eventually arrive at the other end
-point the inputs to try to figure out
+will eventually arrive at the other endpoint 
+the inputs to try to figure out
 what to set the congestion window to
 
 93
@@ -602,7 +601,7 @@ out there and I'm going to mention this
 
 101
 00:10:53.000 --> 00:10:59.000
-late a little bit later that uh I'll
+late a little bit later that I'll
 actually try to figure out the spacing
 between the packets to try to guess just
 
@@ -644,15 +643,15 @@ three packets on the wire and let's
 
 108
 00:11:39.000 --> 00:11:47.000
-assume we have a 15 bite and 1,500 bite
+assume we have a 1,500 byte
 MTU that means each packet is gonna be
-about 14 48 bytes and our total number
+about 1,448 bytes and our total number
 
 109
 00:11:47.000 --> 00:11:53.000
 of lights on the wire before waiting for
 our first response is only about 4,300
-bytes so I send out 4,300 bites I wait
+bytes so I send out 4,300 bytes I wait
 
 110
 00:11:53.000 --> 00:12:00.000
@@ -674,9 +673,8 @@ change it and the way we change it is
 
 113
 00:12:15.000 --> 00:12:21.000
-actually on a per route basis so if we
-would like to change the route or excuse
-me if you like to change the initial
+actually on a per route basis so 
+if you like to change the initial
 
 114
 00:12:21.000 --> 00:12:27.000
@@ -700,7 +698,7 @@ segment sizes that will allow to go into
 00:12:39.000 --> 00:12:46.000
 the network and then if I show by if I
 print out my routes again but by default
-it won't print it if it if it hasn't
+it won't print it if it hasn't
 
 118
 00:12:46.000 --> 00:12:52.000
@@ -716,8 +714,8 @@ now gone from instead of 4,300 bytes for
 
 120
 00:13:00.000 --> 00:13:07.000
-waiting for my first packet to almost 23
-/ 23 k before I wait for that first
+waiting for my first packet to almost 
+23KB before I wait for that first
 acknowledgment so this is going to be a
 
 121
@@ -758,7 +756,7 @@ so at zero percent loss you're getting a
 
 127
 00:13:49.000 --> 00:13:56.000
-hundred percent of your you know
+hundred percent of your 
 idealized throughput as you start to see
 more and more loss of the network the
 
@@ -868,11 +866,11 @@ if you ever see a retransmission what
 00:15:53.000 --> 00:16:01.000
 that means is that your tcp stack thinks
 that the packets it sent the first time
-did not arrive now that's that while
+did not arrive 
 
 146
 00:16:01.000 --> 00:16:08.000
-it's very useful is also very
+now it's very useful is also very
 coarse-grained it actually these
 counters are for all your sockets across
 
@@ -2863,7 +2861,7 @@ to kind of a tackle first that's it
 thank you very much for coming to the
 
 478
-00:52:43.000 --> 00:52:51.000
+00:52:43.000 --> 00:52:52.000
 talk I really appreciate your time
 please remember to commit your
 valuations I'm happy to stay up here at
