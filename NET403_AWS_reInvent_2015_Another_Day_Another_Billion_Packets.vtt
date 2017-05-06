@@ -1047,26 +1047,26 @@ make work so 1000 to wants to talk to
 175
 00:20:01.000 --> 00:20:06.000
 same ARP request we're going to trap
-that art / quest we're going to send a
+that ARP request we're going to send a
 query to the mapping service I'm going
 
 176
 00:20:06.000 --> 00:20:13.000
-to say hey we're looking for blue 1000 3
+to say hey we're looking for blue 10.0.0.3
 mapping service is going to tell us
-where 1000 3 is we learn the mac but we
+where 10.0.0.3 is we learn the mac but we
 
 177
 00:20:13.000 --> 00:20:21.000
 also learn the physical server on which
-blue 1000 three lives and we form an art
+blue 10.0.0.3 lives and we form an ARP
 response and propagate it back to the
 
 178
 00:20:21.000 --> 00:20:29.000
 guest one interesting wrinkle here that
-art / quest never made it to 1000 3 you
-can do this today in bpc spin up an
+ARP request never made it to 10.0.0.3 you
+can do this today in VPC spin up an
 
 179
 00:20:29.000 --> 00:20:35.000
@@ -1082,37 +1082,37 @@ packet we're going to send across the
 
 181
 00:20:43.000 --> 00:20:49.000
-physical Network we're going to trap
+physical network we're going to trap
 that packet we're going to wrap it with
-a VPC Hatter it's tagged to the blue VPC
+a VPC header it's tagged to the 
 
 182
 00:20:49.000 --> 00:20:56.000
-we're going to wrap it with this
+blue VPC we're going to wrap it with this
 physical network a substrate network IP
 header and we're going to send it
 
 183
 00:20:56.000 --> 00:21:04.000
 directly to the server that's hosting
-blue 1000 3 on receipt we're going to
+blue 10.0.0.3 on receipt we're going to
 ask the mapping service hey I just got
 
 184
 00:21:04.000 --> 00:21:12.000
 this packet from someone claiming to be
-blue 1000 to what's up the mapping
+blue 10.0.0.2 what's up the mapping
 services because they that's cool and it
 
 185
 00:21:12.000 --> 00:21:20.000
 didn't draw it here in the slide but
-this is how we feel in the mac address
-for the source at receive time and then
+this is how we fill in the mac address
+for the source at receive time 
 
 186
 00:21:20.000 --> 00:21:26.000
-we can deliver this packet to the guest
+and then we can deliver this packet to the guest
 so this is
 that this is the ethernet stack this is
 
@@ -1142,7 +1142,7 @@ succeeded here we have not constrained
 
 191
 00:21:52.000 --> 00:21:59.000
-the placement problem any to physical
+the placement problem any 2 physical
 servers can host a pair of instances in
 any subnet regardless of their placement
 
@@ -1156,11 +1156,11 @@ the physical topology step napping check
 00:22:07.000 --> 00:22:17.000
 on receipt let's dig into that for a
 moment so let's say that for whatever
-reason Rey 1000 for wants to talk to
+reason grey 10.0.0.4 wants to talk to
 
 194
 00:22:17.000 --> 00:22:25.000
-1000 3 we're going to send a query to
+10.0.0.3 we're going to send a query to
 the mapping service but it's going to be
 tagged to grey you have full access to
 
@@ -1174,13 +1174,13 @@ destination address you want we will
 00:22:30.000 --> 00:22:37.000
 always interpret that in the context of
 your VPC and so you can scan you can
-literally scan a slash 0 from within
+literally scan a /0 from within
 
 197
 00:22:37.000 --> 00:22:48.000
 your VPC and unless you have routes to
 them you can't talk two instances in
-other V pcs via some means we've got a
+other VPCs via some means we've got a
 
 198
 00:22:48.000 --> 00:22:58.000
@@ -1198,7 +1198,7 @@ any blue instances on that physical
 00:23:04.000 --> 00:23:10.000
 server this is an errant packet it
 should not flow so we're going to deny
-that napping we're not going to tell the
+that mapping we're not going to tell the
 
 201
 00:23:10.000 --> 00:23:18.000
@@ -1216,7 +1216,7 @@ to do that reverse mapping check we're
 00:23:26.000 --> 00:23:32.000
 going to say could you please verify for
 me that the instance claiming to be blue
-1000 for is really at that physical
+10.0.0.4 is really at that physical
 
 204
 00:23:32.000 --> 00:23:41.000
@@ -1250,19 +1250,19 @@ it's worked for years in this case we
 
 209
 00:24:09.000 --> 00:24:17.000
-have if we assume / 24 net masks we're
-talking across a subnet boundary so 1000
-to wants to talk to Tim 013 this is in a
+have if we assume /24 net masks we're
+talking across a subnet boundary so 
+10.0.0.2 wants to talk to 10.0.1.3 
 
 210
 00:24:17.000 --> 00:24:23.000
-different subnet we have to go through
-our gateway so we're going to art for a
-gateway it's the exact same dance packet
+this is in a different subnet we have 
+to go through our gateway so we're going to 
+ARP for a gateway it's the exact same 
 
 211
 00:24:23.000 --> 00:24:32.000
-floods we learn the mac and we learn the
+dance packet floods we learn the mac and we learn the
 destination MAC address and so now we
 can send a packet and in this case the
 
@@ -1288,7 +1288,7 @@ and we deliver it this is l3 IP
 00:24:55.000 --> 00:25:04.000
 forwarding as routers have been doing it
 since time began so we've got the same
-situation in VPC we're going to arc for
+situation in VPC we're going to ARP for
 
 216
 00:25:04.000 --> 00:25:11.000
@@ -1299,7 +1299,7 @@ gateway so we get a mac address for it
 217
 00:25:11.000 --> 00:25:18.000
 we don't have a physical destination for
-it we can send the artists ponce back to
+it we can send the ARP response back to
 the guests thus completing the protocol
 
 218
@@ -1318,17 +1318,17 @@ secondary query to the mapping service
 00:25:31.000 --> 00:25:39.000
 and this time we don't query on the l2
 destination with query on the l3
-destination so we learned that blue 1001
+destination so we learned that blue 
 
 221
 00:25:39.000 --> 00:25:46.000
-3 is located in that box in the lower
-right 192 168 1 4 so now we can send
+10.0.1.3 is located in that box in the lower
+right 192.168.1.4 so now we can send
 this packet across the physical Network
 
 222
 00:25:46.000 --> 00:25:53.000
-wrapped in the VPC how to wrap it in a
+wrapped in the VPC header wrap it in a
 physical header and deliver it
 the exact same reverse mapping check
 
@@ -1341,7 +1341,7 @@ again achieves our goal we've placed no
 224
 00:26:09.000 --> 00:26:15.000
 further constraints on l3 packet
-forwarding compared to L 2 packet
+forwarding compared to L2 packet
 forwarding any two boxes that have IP
 
 225
@@ -1352,7 +1352,7 @@ instances in any VPC across subnet
 
 226
 00:26:20.000 --> 00:26:29.000
-boundaries so this is this is the system
+boundaries so this is the system
 we went with the system is not without
 scaling limits but it's with scaling
 
@@ -1390,7 +1390,7 @@ there's a slow pathway if the cue
 00:27:05.000 --> 00:27:13.000
 packets in query the mapping service and
 so in reality there's a mapping service
-replica a little cash on every single
+replica a little cache on every single
 
 233
 00:27:13.000 --> 00:27:20.000
@@ -1400,7 +1400,7 @@ logically exactly the same we have
 
 234
 00:27:20.000 --> 00:27:25.000
-strict ackles on all of the records in
+strict ACLs on all of the records in
 the mapping service the cache can't
 populate records that it shouldn't have
 
@@ -1412,13 +1412,13 @@ fetch the wrong records but it means
 
 236
 00:27:31.000 --> 00:27:38.000
-that we have a 100-percent kashyap ratio
+that we have a 100% cache ratio
 we actually did not implement the cache
 miss path the only way to translate
 
 237
 00:27:38.000 --> 00:27:43.000
-packets is through this cash so that
+packets is through this cache so that
 gets us dead flat latency and it
 mitigates a bunch of availability
 
@@ -1473,12 +1473,12 @@ kinds of mappings there there's flash
 246
 00:28:47.000 --> 00:28:54.000
 this is for talking to other instances
-but then there's also browse their site
-or mappings and so we have a route here
+but then there's also browse their CIDR
+mappings and so we have a route here
 
 247
 00:28:54.000 --> 00:29:04.000
-that says 17 to 16 00 / 16 which is the
+that says 172.16.0.0/16 which is the
 home office or the data center routes to
 this edge and so we know how to do this
 
@@ -1528,7 +1528,7 @@ gigabit 10 gigabit connection to AWS if
 00:29:57.000 --> 00:30:04.000
 you're using direct connect we do almost
 exactly the same thing except it rather
-than doing IPSec we put a dot 1q VLAN
+than doing IPSec we put a 802.1Q VLAN
 
 256
 00:30:04.000 --> 00:30:13.000
@@ -1538,9 +1538,8 @@ earlier so I owe you guys an explanation
 
 257
 00:30:13.000 --> 00:30:19.000
-4096 isn't a lot but this v line is
-literally
-long it moves from one router in a cage
+4096 isn't a lot but this VLAN is
+literally long it moves from one router in a cage
 
 258
 00:30:19.000 --> 00:30:27.000
@@ -1568,7 +1567,7 @@ encapsulate it to send it to the
 
 262
 00:30:51.000 --> 00:31:02.000
-internet we just want I p packets that's
+internet we just want IP packets that's
 what the internet runs on and so there
 you go if I send this packet out to the
 
@@ -1580,7 +1579,7 @@ it and it will attempt to send return
 
 264
 00:31:09.000 --> 00:31:16.000
-traffic 1000 to is an RFC 1918 IP
+traffic 10.0.0.2 is an RFC1918 IP
 address it's not routable on the
 internet so the host actually doesn't
 
@@ -1598,7 +1597,7 @@ unsuccessful network connection so we do
 
 267
 00:31:27.000 --> 00:31:34.000
-one-to-one nat this is where elastic IP
+one-to-one NAT this is where elastic IP
 addresses enter the story so when you
 map an EIP an elastic IP address a
 
@@ -1611,8 +1610,8 @@ that's performing that one to one
 269
 00:31:39.000 --> 00:31:46.000
 translation some the way out we replace
-the source IP with your eip on the way
-back it's going to be sent to your e IP
+the source IP with your EIP on the way
+back it's going to be sent to your EIP
 
 270
 00:31:46.000 --> 00:31:54.000
@@ -1706,7 +1705,7 @@ rendered by an ec2 instance one hundred
 
 285
 00:33:59.000 --> 00:34:07.000
-percent of us retail boy pages have been
+percent of us retail pages have been
 rendered in DC to since this date so
 this is not a research project for us
 
@@ -1724,20 +1723,20 @@ become a platform so you were always
 
 288
 00:34:28.000 --> 00:34:37.000
-able to get instances in your v pc but a
+able to get instances in your VPC but a
 lot of our services like RDS databases
 and redshift clusters can be launched
 
 289
 00:34:37.000 --> 00:34:42.000
-inside your v pc and so now clients in
-your home office
+inside your VPC and so now clients in
+your home office can
 access these things over the private
 
 290
 00:34:42.000 --> 00:34:48.000
 network these things can access your
-existing data centers / Direct Connect
+existing data centers over Direct Connect
 connections to load data and to interact
 
 291
@@ -1767,13 +1766,13 @@ filtering so if you want to filter
 295
 00:35:12.000 --> 00:35:18.000
 packets outbound from your instances you
-can do it in VPC Network ackles we have
+can do it in VPC network ACLs we have
 a lot of customers that are used to
 
 296
 00:35:18.000 --> 00:35:25.000
-grouping instances together in ec to IP
-addresses were random numbers to IP
+grouping instances together in EC2 IP
+addresses were random numbers 2 IP
 addresses that were close together
 
 297
@@ -1796,7 +1795,7 @@ of API calls and then you can use
 
 300
 00:35:41.000 --> 00:35:47.000
-network ackles as you do today in your
+network ACLs as you do today in your
 data center to separate those servers
 routing tables this allows you to
 
@@ -1821,12 +1820,12 @@ whatever it is that you want to program
 304
 00:36:09.000 --> 00:36:17.000
 that box to do multiple IP addresses /
-Nick we had customers that want to serve
+NIC we had customers that want to serve
 multiple sites off of their instances
 
 305
 00:36:17.000 --> 00:36:23.000
-and they didn't have sni support so they
+and they didn't have SNI support so they
 needed to serve different sorts based on
 who is contacting them things like this
 
