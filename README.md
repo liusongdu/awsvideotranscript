@@ -1,10 +1,8 @@
 # awsvideotranscript
 transcripts of aws videos from youtube
 
-from static_root folder enter Git bash
+from static_root/awsvideotranscript folder enter Git bash
 
-$ cd awsvideotranscript/
-
-$ git remote -v
+($ git remote -v)
 
 $ git pull origin master
