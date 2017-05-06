@@ -236,7 +236,7 @@ an equally reasonable choice it's
 
 40
 00:04:24.000 --> 00:04:30.000
-RFC1918 it's not going to be right on the
+RFC1918 it's not going to be route on the
 internet there's absolutely nothing that
 we can put in that routing table that'll
 
@@ -280,7 +280,7 @@ you your router will be sad if you add
 00:05:10.000 --> 00:05:16.000
 and remove route updates if you add and
 remove routing table entries every time
-you launch a terminator an instance so
+you launch or terminate an instance so
 
 48
 00:05:16.000 --> 00:05:21.000
@@ -303,7 +303,7 @@ build a beautiful new abstract cloud
 51
 00:05:34.000 --> 00:05:41.000
 network and I was arguing that no
-actually customers have a preconceived
+actually customers have a preconceived (预想的，先入为主的)
 notion of how networks go together and
 
 52
@@ -322,7 +322,7 @@ customer who happens to be sponsoring
 00:05:54.000 --> 00:06:00.000
 this conference and they came to us when
 they said all networks have to be /24
-hour provisioning tools can't deal
+our provisioning tools can't deal
 
 55
 00:06:00.000 --> 00:06:07.000
@@ -393,7 +393,7 @@ side so you give us the IP address and
 66
 00:07:17.000 --> 00:07:24.000
 things like that and we know now what
-the far end of the the VPN connection is
+the far end of the VPN connection is
 and then you configure a VPN connection
 
 67
@@ -472,7 +472,7 @@ constraint we publicly talked about how
 00:08:47.000 --> 00:09:00.000
 AWS has more than a million customers a
 million is larger than 4096
-even more concerning like the the
+even more concerning like the
 
 80
 00:09:00.000 --> 00:09:06.000
@@ -507,7 +507,7 @@ not what we want to be building our
 85
 00:09:37.000 --> 00:09:46.000
 production services on and there's a
-fixed ratio of vlans to VRFs you get
+fixed ratio of VLANs to VRFs you get
 4096 VLANs on a port you get a thousand
 
 86
@@ -536,8 +536,8 @@ plane many of them are actually x86
 
 90
 00:10:16.000 --> 00:10:23.000
-boxes running freebsd or linux these
-days except they have less ram and less
+boxes running FreeBSD or Linux these
+days except they have less RAM and less
 horsepower than this laptop and they
 
 91
@@ -602,19 +602,19 @@ VPC of vrf figure an average of four
 
 101
 00:11:34.000 --> 00:11:41.000
-subnets / VPC takes us five lines of
+subnets/VPC takes us 5 lines of
 router config to describe a subnet and
 we've got 2,000 customers on the box
 
 102
 00:11:41.000 --> 00:11:50.000
-it's a three megabyte text file
+it's a 3MB text file
 committing one of these configs on one
 of these routers literally it could take
 
 103
 00:11:50.000 --> 00:11:57.000
-it three to five minutes just to parse
+it 3 to 5 minutes just to parse
 the configuration not to apply anything
 just to parse the configuration and
 
@@ -634,11 +634,11 @@ so there are assumptions in these
 00:12:11.000 --> 00:12:16.000
 routers and they work really well for
 their design point but they work really
-poorly if you use them outside that
+poorly if you use them 
 
 107
 00:12:16.000 --> 00:12:23.000
-design point sometimes for example we
+outside that design point sometimes for example we
 had a device that we were using and it
 was a similar use case we had a lot of a
 
@@ -646,11 +646,11 @@ was a similar use case we had a lot of a
 00:12:23.000 --> 00:12:29.000
 certain kind of config where the typical
 you'd have like a dozen of these and we
-would have thousands or tens of
+would have thousands or 
 
 109
 00:12:29.000 --> 00:12:35.000
-thousands of them it turns out the
+tens of thousands of them it turns out the
 internal implementation of that was a
 singly linked list so if you wanted to
 
@@ -670,41 +670,41 @@ it out when you have eight of them or 12
 00:12:45.000 --> 00:12:50.000
 of them no one notices this computers
 are fast when you have 10,000 of them
-all of a sudden the control plane starts
+all of a sudden 
 
 113
 00:12:50.000 --> 00:12:56.000
-to fall over there's another problem we
-found with a device every time you
-committed the config it would leak two
+the control plane starts to fall over 
+there's another problem we found with a device 
+every time you committed the config 
 
 114
 00:12:56.000 --> 00:13:03.000
-words of memory well how often you
-commit config on a router like a dozen
-times and you're building the thing out
+it would leak two words of memory 
+well how often you commit config on a router 
+like a dozen times and you're building the thing out
 
 115
 00:13:03.000 --> 00:13:08.000
 maybe every couple of months when
 there's a network design change you add
-new capacity we commit config two
+new capacity we commit config to
 
 116
 00:13:08.000 --> 00:13:13.000
 routers every time customers make API
 calls you want a VPC you want a new
-subnet we're going to be committing
+subnet we're going to be 
 
 117
 00:13:13.000 --> 00:13:19.000
-config so we exhausted memory on
+committing config so we exhausted memory on
 control plane due to this memory leak it
-had been present in the code for like
+had been present in the code 
 
 118
 00:13:19.000 --> 00:13:25.000
-ten years and no one had found it until
+for like ten years and no one had found it until
 we did this it's because we were
 operating outside of the common envelope
 
@@ -712,13 +712,13 @@ operating outside of the common envelope
 00:13:25.000 --> 00:13:35.000
 we'd become beta testers again so this
 doesn't scale it's going to be expensive
-the closest I have come to career
+the closest I have come to 
 
 120
 00:13:35.000 --> 00:13:42.000
-suicide was when I proposed this design
+career suicide was when I proposed this design
 in front of a bunch of network engineers
-at amazon i swear to god one of them was
+at amazon I swear to god one of them was
 
 121
 00:13:42.000 --> 00:13:51.000
