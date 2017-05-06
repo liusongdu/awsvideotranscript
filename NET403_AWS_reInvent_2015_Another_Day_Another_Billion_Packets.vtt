@@ -1843,7 +1843,7 @@ to do so over the Internet you to create
 
 308
 00:36:41.000 --> 00:36:47.000
-an Internet gateway in your v pc and you
+an Internet gateway in your VPC and you
 sent the traffic out this meant that
 either this instance or an at instance
 
@@ -1856,7 +1856,7 @@ border network
 310
 00:36:53.000 --> 00:37:02.000
 so we introduced the ability to create
-an s3 endpoint you declare this VR api's
+an s3 endpoint you declare this via APIs
 you say I want an s3 endpoint and I want
 
 311
@@ -1875,18 +1875,18 @@ Amazon's private network and the way we
 00:37:18.000 --> 00:37:27.000
 implemented this this should look very
 familiar we edit a new kind of route so
-rather than routing a cider block you
+rather than routing a CIDR block you
 
 314
 00:37:27.000 --> 00:37:35.000
 can now route what we call the name to
 prefix so there's a set of IP addresses
-that represent s3 in this case in u.s.
+that represent s3 in this case in 
 
 315
 00:37:35.000 --> 00:37:44.000
-East one and you can say s3 and Us East
-one doesn't go towards the Internet it
+us-east-1 and you can say s3 and us-east-1
+doesn't go towards the Internet it
 goes towards there and so exactly the
 
 316
@@ -1909,20 +1909,20 @@ specific to VPC endpoints and we don't
 
 319
 00:38:06.000 --> 00:38:14.000
-nat when this packet arrives at s3 it
+NAT when this packet arrives at s3 it
 has the original source IP address the
 private IP address of that instance when
 
 320
 00:38:14.000 --> 00:38:21.000
-it gets dest 3 and it also has that
+it gets S3 and it also has that
 green header there it's tagged with a
 VPC endpoint ID the reason we created a
 
 321
 00:38:21.000 --> 00:38:26.000
 new encapsulation was to decouple state
-we didn't want us three to have to
+we didn't want S3 to have to
 understand all of the placement of
 
 322
@@ -2023,7 +2023,7 @@ reasonable thing to do we like it when
 
 338
 00:40:31.000 --> 00:40:36.000
-people on GC two instances and you
+people on EC2 instances and you
 decide three years later that now you're
 scaled application needs private
 
@@ -2031,7 +2031,7 @@ scaled application needs private
 00:40:36.000 --> 00:40:43.000
 connectivity somewhere you want egress
 filtering on your security groups or you
-want an s3 end point you have to move
+want an s3 endpoint you have to move
 
 340
 00:40:43.000 --> 00:40:52.000
@@ -2041,13 +2041,13 @@ didn't want everyone to have to deal
 
 341
 00:40:52.000 --> 00:40:59.000
-with all of the complexity of epc on
+with all of the complexity of VPC on
 their first day as a customer and so it
-needed to be code compatible with you
+needed to be code compatible with
 
 342
 00:40:59.000 --> 00:41:05.000
-see too we've got a getting started
+EC2 we've got a getting started
 guide we can fix our getting started
 guide we've got an SDK we can fix our
 
@@ -2085,7 +2085,7 @@ created a VPC we laid out subnets and
 00:41:36.000 --> 00:41:42.000
 then we hid everything from you and so
 the getting started guide is still
-pickin ami run an instance but if you
+pickin AMI run an instance but if you
 
 349
 00:41:42.000 --> 00:41:49.000
@@ -2107,12 +2107,12 @@ need the additional flexibility
 
 352
 00:42:03.000 --> 00:42:13.000
-additional functionality of epc to
+additional functionality of VPC to
 adjust some very complicated use cases
 so thank you for your time and I've been
 
 353
-00:42:13.000 --> 00:42:19.000
+00:42:13.000 --> 00:42:24.000
 told that my return ticket home is in
 danger if you do not fill out your
 evaluation so please fill out your
