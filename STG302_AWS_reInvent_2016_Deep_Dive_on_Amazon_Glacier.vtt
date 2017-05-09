@@ -81,8 +81,7 @@ regulations and a good example of that
 14
 00:01:44.000 --> 00:01:51.000
 is Philips Healthcare who runs their
-healthcare digital health care spell
-sorry health sweet digital platform on
+HealthSuite digital platform on
 
 15
 00:01:51.000 --> 00:02:01.000
@@ -190,7 +189,7 @@ requirements and continue to iterate
 00:04:09.000 --> 00:04:16.000
 very quickly to meet those customer
 requirements customers for a long time
-ask for file systems for examples for
+ask for file systems for
 
 33
 00:04:16.000 --> 00:04:23.000
@@ -218,9 +217,9 @@ portfolio and offers everything from
 
 37
 00:04:49.000 --> 00:05:00.000
-provisioned I ops to low-cost throughput
+provisioned IOPS to low-cost throughput
 optimized storages offerings as well and
-then finally we have a whole slew of
+then finally we have a whole slew (许多) of
 
 38
 00:05:00.000 --> 00:05:11.000
@@ -237,12 +236,12 @@ data explode an explosion of data across
 40
 00:05:20.000 --> 00:05:28.000
 all industries that have been driven by
-things like the proliferation of data
+things like the proliferation (增生; 增殖) of data
 producing devices like cell phones and
 
 41
 00:05:28.000 --> 00:05:41.000
-IOT devices higher data formats larger
+IOT devices larger
 data formats like 4k 8k advancements in
 new life health and life sciences such
 
@@ -278,8 +277,7 @@ week we announced a storage price drop
 
 47
 00:06:19.000 --> 00:06:26.000
-for both s3 and glacier for as much as
-43 by as much as forty three percent
+for both s3 and glacier by as much as 43%
 which we're very excited to pass on to
 
 48
@@ -298,7 +296,7 @@ scalable
 00:06:38.000 --> 00:06:49.000
 cost-effective and offers the
 performance that they require to two
-best monetize their data so in this
+best monetize (定为货币) their data so in this
 
 51
 00:06:49.000 --> 00:06:56.000
@@ -351,7 +349,7 @@ start diving into Amazon glacier first
 59
 00:07:52.000 --> 00:08:01.000
 of all it's extremely low cost we start
-at point four cents per gigabyte per
+at $0.004 per gigabyte per
 month we offer three ways for you to get
 
 60
@@ -380,8 +378,7 @@ tape what is that what would be a good
 
 64
 00:08:30.000 --> 00:08:41.000
-comp comparison we asked a Hollywood
-Hollywood studio major Hollywood studio
+comparison we asked a major Hollywood studio
 to run the same markov model that we
 
 65
@@ -422,7 +419,7 @@ control cost management etc that I'm
 
 71
 00:09:32.000 --> 00:09:40.000
-going to dive into from a value value
+going to dive into from a value
 proposition standpoint amazon glacier
 removes the need for upfront capital
 
@@ -482,7 +479,7 @@ archives and Archives are the basic unit
 
 81
 00:10:50.000 --> 00:10:59.000
-of data archives are right once they can
+of data archives are write-once they can
 be up to 40 terabytes and you can store
 an unlimited amount of archives in a
 
@@ -519,12 +516,12 @@ directly with by using glaciers api's or
 87
 00:11:38.000 --> 00:11:45.000
 through its sdk which gives you access
-to the full set of AP is and is a great
+to the full set of APIs and is a great
 way to build applications on glacier
 
 88
 00:11:45.000 --> 00:11:54.000
-like NE AWS service it's really
+like any AWS service it's really
 important when you're setting up you
 know a service or an account to always
 
@@ -572,7 +569,7 @@ lifecycle and glacier that make it easy
 
 96
 00:12:42.000 --> 00:12:50.000
-for for you to manage your data and they
+for you to manage your data and they
 range from consumer grade tools like
 fast glacier and cloudberry to all the
 
@@ -590,7 +587,7 @@ purposes like indexing or to optimize
 
 99
 00:13:07.000 --> 00:13:16.000
-the the data transfer process and and
+the data transfer process and
 then this makes it necessary to continue
 to use that third party
 
@@ -602,7 +599,7 @@ types of workflows which might be fine
 
 101
 00:13:25.000 --> 00:13:31.000
-depending on on what your use case is
+depending on what your use case is
 but a lot of customers find it really
 useful to have to keep that native
 
@@ -632,8 +629,8 @@ transfer either as a one-time migration
 
 106
 00:13:59.000 --> 00:14:07.000
-or on an ongoing basis AWS direct and
-that gives you a dedicated bandwidth
+or on an ongoing basis AWS DX
+gives you a dedicated bandwidth
 between your on-premises infrastructure
 
 107
@@ -652,11 +649,11 @@ you have lots of data to transfer it can
 00:14:24.000 --> 00:14:34.000
 be actually faster than the public
 Internet so when you're uploading data
-into glacier directly through its api's
+into glacier directly through its APIs
 
 110
 00:14:34.000 --> 00:14:45.000
-we will pass you a pass you back an
+we will pass you back an
 archive ID and then throw away the file
 name and then customers then maintain a
 
@@ -699,8 +696,8 @@ overhead charge for every object archive
 117
 00:15:38.000 --> 00:15:49.000
 that you store in glacier and so if your
-average archive size is 3.2 mega bytes
-are higher than your total overhead
+average archive size is 3.2 megabytes
+or higher than your total overhead
 
 118
 00:15:49.000 --> 00:15:55.000
@@ -735,7 +732,7 @@ retrievals which is a feature that i'll
 123
 00:16:24.000 --> 00:16:31.000
 go into at the end of this presentation
-which allows you to pull just a bite
+which allows you to pull just a byte
 range a range of bytes within the
 
 124
@@ -783,14 +780,14 @@ three-step process you first initiate a
 131
 00:17:27.000 --> 00:17:35.000
 multi-part upload we then pass you back
-a an upload ID which you then pass back
+an upload ID which you then pass back
 to us with every part that you send to
 
 132
 00:17:35.000 --> 00:17:44.000
 us and then once it's complete you send
-a complete multi
-upload call at which point will then
+a CompleteMultipartUpload call 
+at which point will then
 
 133
 00:17:44.000 --> 00:17:53.000
@@ -2251,11 +2248,8 @@ promises to our clients that are really
 necessary for what's happening in the
 
 376
-00:47:59.000 --> 00:48:07.000
+00:47:59.000 --> 00:48:13.000
 market today right which just hasn't
 been possible before so I was kidding
 about 75 slides that's all I planned for
-
-377
-00:48:07.000 --> 00:.000
 you so thank
